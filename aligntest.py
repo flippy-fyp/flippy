@@ -29,8 +29,37 @@ class ASM():
         self.G: Dict[int, Dict[int, Elem]] = {}
         self.set_up()
 
-    def __repr__(self):
-        return ''
+    def __repr__(self) -> str:
+        def get_set_str(s: Set[str]) -> str:
+            return '\\' + s.__repr__()[:-1] + '\\}'
+
+        res = ""
+        for y in range(2 + len(self.Psi), -1, -1):
+            for x in range(0, 2 + len(self.P)):
+                if (x, y) == (0, 0) or (x, y) == (1, 0) or (x, y) == (0, 1):
+                    pass
+                elif x == 0:
+                    g = self.get_G(x, y)
+                    psi = g['psi']
+                    if psi is None:
+                        raise ValueError(f'psi is None in ({x}, {y})')
+                    res += get_set_str(psi)
+                elif y == 0:
+                    g = self.get_G(x, y)
+                    c = g['c']
+                    if c is None:
+                        raise ValueError(f'c is None in ({x}, {y})')
+                    res += c
+                else:
+                    g = self.get_G(x, y)
+                    sc = g['score']
+                    if sc is None:
+                        raise ValueError(f'score is None in ({x}, {y})')
+                    res += str(sc)
+                res += ' & '
+            res += '\\\\n'
+        return res
+            
 
     def solve(self):
         x = 2 + len(self.P)
@@ -81,6 +110,11 @@ class ASM():
         self.G[x][y] = e
 
     def get_G(self, x: int, y: int) -> Elem:
+        if x not in self.G:
+            raise ValueError(f'No ({x}, ...) in G')
+        if y not in self.G[x]:
+            raise ValueError(f'No ({x}, {y}) in G')
+
         return self.G[x][y]
 
     def min_abs_dist(self, c: str, psi: Set[str]) -> int:
@@ -96,6 +130,39 @@ class ASM():
         if c in psi:
             return self.ALPHA
         return self.beta(c, psi)
+
+    def score_simple(self, x, y) -> int:
+        if x == 0 or y == 0: 
+            return -100000000
+        sc = self.get_G(x, y)['score']
+        if sc is None:
+            c = self.get_G(x, 0)['c']
+            if c is None:
+                raise ValueError(f'score called with invalid x: {x}')
+            psi = self.get_G(x, 0)['psi']
+            if psi is None:
+                raise ValueError(f'score called with invalid y: {y}')
+            
+            sim_val = 1 if c in psi else -1
+            g = get_def_elem()
+            
+            score_case_1 = self.score(x - 1, y - 1) + sim_val
+            score_case_2 = self.score(x - 1, y) + self.GAMMA
+            score_case_3 = self.score(x, y - 1) + self.GAMMA
+
+            sc = max(score_case_1, score_case_2, score_case_3)
+
+            g['score'] = sc
+            if score_case_1 == sc:
+                g['diag'] = True
+            if score_case_2 == sc:
+                g['left'] = True
+            if score_case_3 == sc:
+                g['down'] = True
+
+            self.set_G(x, y, g)
+
+        return sc
 
     def score(self, x, y) -> int:
         if x == 0 or y == 0: 
