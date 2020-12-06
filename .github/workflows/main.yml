@@ -25,10 +25,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.8.5'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+
+      - name: Mypy Check
+        uses: jpetrucciani/mypy-check@0.761
 
       # Runs a set of commands using the runners shell
       - name: Unit tests
