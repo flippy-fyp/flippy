@@ -50,11 +50,11 @@ class ASM:
 
         psi = self.get_G(0, y).psi
         if psi is None:
-            raise ValueError(f"Invalid y {y}")
+            psi = {'-'}
 
         c = self.get_G(x, 0).c
         if c is None:
-            raise ValueError(f"Invalid x {x}")
+            c = '-'
 
         if g.left:
             a = [(c, {'-'})] + copy.deepcopy(alignment)
@@ -102,7 +102,7 @@ class ASM:
                         res += "s"
                     if g.down:
                         res += "d"
-                res += " & "
+                if x != len(self.P): res += " & "
             res += "\\\\\n"
         return res
 
@@ -185,7 +185,7 @@ class ASM:
             else:
                 score_case_1 = self.score(x - 1, y - 1) + sim_val
                 score_case_2 = self.score(x - 1, y) + (
-                    min(0, sim_val) if x != 1 and y != 1 else self.GAMMA
+                    min(0, sim_val) if x != 1 and y != 1 and len(psi) > 1 else self.GAMMA
                 )
                 score_case_3 = self.score(x, y - 1) + self.GAMMA
 
@@ -202,14 +202,23 @@ class ASM:
             self.set_G(x, y, g)
         return sc
 
-
 if __name__ == "__main__":
-    # P = ['A', 'C', 'B', 'A', 'C', 'A', 'D']
-    # Psi: List[Set[str]] = [{'A'}, {'A', 'B', 'C'}, {'A', 'C'}, {'D'}]
+    P = ['A', 'C', 'B', 'A', 'C', 'A', 'D']
+    Psi: List[Set[str]] = [{'A'}, {'A', 'B', 'C'}, {'A', 'C'}, {'D'}]
 
-    P = ["A", "B", "C", "D", "A", "B", "E"]
-    Psi = [{"A"}, {"C"}, {"D"}, {"D"}, {"C"}, {"B"}, {"C"}]
-    asm = ASM(P, Psi)
+    # P = ["A", "B", "C", "D", "A", "B", "E"]
+    # Psi = [{"A"}, {"C"}, {"D"}, {"D"}, {"C"}, {"B"}, {"C"}]
+
+    asm = ASM(P, Psi, True)
+    print(asm)
+    print("=====")
+    alignments = asm.get_alignments()
+
+    for a in alignments:
+        print(a)
+
+    print("\n\n\n\n")
+    asm = ASM(P, Psi, False)
     print(asm)
     print("=====")
     alignments = asm.get_alignments()
