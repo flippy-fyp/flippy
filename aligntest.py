@@ -20,12 +20,13 @@ class GElem:
 
 Alignment = List[Tuple[str, Set[str]]]
 
-
+def clamp(a, x, b):
+    return max(a, min(x, b))
 class ASM:
     def __init__(self, P: List[str], Psi: List[Set[str]], simple=False):
         self.ALPHA = 1
         self.GAMMA = -1
-        self.BETA_HAT = -10
+        self.BETA_HAT = -12
         self.P = P
         self.Psi = Psi
         self.G: Dict[int, Dict[int, GElem]] = {}
@@ -59,12 +60,12 @@ class ASM:
         if g.left:
             a = [(c, {'-'})] + copy.deepcopy(alignment)
             self.get_alignments_helper(x - 1, y, a)
-        if g.down:
-            a = [('-', psi)] + copy.deepcopy(alignment)
-            self.get_alignments_helper(x, y - 1, a)
         if g.diag:
             a = [(c, psi)] + copy.deepcopy(alignment)
             self.get_alignments_helper(x - 1, y - 1, a)
+        if g.down:
+            a = [('-', psi)] + copy.deepcopy(alignment)
+            self.get_alignments_helper(x, y - 1, a)
 
     def solve(self):
         x = 1 + len(self.P)
@@ -75,7 +76,7 @@ class ASM:
     def __repr__(self) -> str:
         res = ""
         for y in range(1 + len(self.Psi), -1, -1):
-            for x in range(0, 1 + len(self.P)):
+            for x in range(0, 2 + len(self.P)):
                 if (x, y) == (0, 0) or (x, y) == (1, 0) or (x, y) == (0, 1):
                     pass
                 elif x == 0:
@@ -102,7 +103,7 @@ class ASM:
                         res += "s"
                     if g.down:
                         res += "d"
-                if x != len(self.P): res += " & "
+                if x != len(self.P) + 1: res += " & "
             res += "\\\\\n"
         return res
 
@@ -155,12 +156,21 @@ class ASM:
         return res
 
     def beta(self, c: str, psi: Set[str]) -> int:
-        return max(self.min_abs_dist(c, psi), self.BETA_HAT)
+        return max(-self.min_abs_dist(c, psi), self.BETA_HAT)
 
     def sim(self, c: str, psi: Set[str]) -> int:
+        if self.simple: 
+            return 1 if c in psi else -1
+
         if c in psi:
             return self.ALPHA
+
         return self.beta(c, psi)
+
+    def chord_score(self, x, y, sim_val: int, psi: Set[str]) -> int:
+        if x != 1 and y != 1 and len(psi) > 1:
+            return clamp(self.GAMMA, sim_val, self.ALPHA)
+        return self.GAMMA
 
     def score(self, x, y) -> int:
         if x == 0 or y == 0:
@@ -175,19 +185,15 @@ class ASM:
             if psi is None:
                 raise ValueError(f"score called with invalid y: {y}")
 
-            sim_val = 1 if c in psi else -1
+            sim_val = self.sim(c, psi)
             g = GElem()
 
+            score_case_1 = self.score(x - 1, y - 1) + sim_val
             if self.simple:
-                score_case_1 = self.score(x - 1, y - 1) + sim_val
                 score_case_2 = self.score(x - 1, y) + self.GAMMA
-                score_case_3 = self.score(x, y - 1) + self.GAMMA
             else:
-                score_case_1 = self.score(x - 1, y - 1) + sim_val
-                score_case_2 = self.score(x - 1, y) + (
-                    min(0, sim_val) if x != 1 and y != 1 and len(psi) > 1 else self.GAMMA
-                )
-                score_case_3 = self.score(x, y - 1) + self.GAMMA
+                score_case_2 = self.score(x - 1, y) + self.chord_score(x, y, sim_val, psi)
+            score_case_3 = self.score(x, y - 1) + self.GAMMA
 
             sc = max(score_case_1, score_case_2, score_case_3)
 
@@ -208,6 +214,9 @@ if __name__ == "__main__":
 
     # P = ["A", "B", "C", "D", "A", "B", "E"]
     # Psi = [{"A"}, {"C"}, {"D"}, {"D"}, {"C"}, {"B"}, {"C"}]
+
+    # P = ['A', 'B', 'C', 'D', 'D', 'E']
+    # Psi: List[Set[str]] = [{'A'}, {'B'}, {'C'}, {'D'}, {'E'}]
 
     asm = ASM(P, Psi, True)
     print(asm)
