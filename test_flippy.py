@@ -16,5 +16,6 @@ class TestAddMethod(unittest.TestCase):
             got = add(a, b)
             self.assertEqual(want, got)
 
+
 if __name__ == "__main__":
     unittest.main()
