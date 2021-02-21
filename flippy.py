@@ -2,20 +2,23 @@ from tap import Tap
 from utils.eprint import eprint
 from sys import exit
 from os import path
-class ArgumentParser(Tap):
-    mode: str = "online" # Mode: `offline` or `online`.
-    dtw: str = "oltw" # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
-    cqt: str = "slicq" # CQT Algo: `slicq` or `librosa`. `librosa` is only available for the `offline` mode.
-    max_run_count: int = 3 # `MaxRunCount` for `online` mode with `oltw` DTW.
-    search_window: int = 250 # `SearchWindow` for `online` mode with `oltw` DTW.
-    fmin: float = 130.8 # Minimum frequency (Hz) for CQT.
-    fmax: float = 4186.0 # Maximum frequency (Hz) for CQT.
-    slice_len: int = 2048 # Slice length for `slicq` cqt.
-    transition_len: int = 0 # Transition length for `slicq` cqt.
-    hop: int = 2048 # Hop length for `librosa` cqt.
 
-    perf_wave_path: str # Path to performance WAVE file.
-    score_midi_path: str # Path to score MIDI.
+
+class ArgumentParser(Tap):
+    mode: str = "online"  # Mode: `offline` or `online`.
+    dtw: str = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
+    cqt: str = "slicq"  # CQT Algo: `slicq` or `librosa`. `librosa` is only available for the `offline` mode.
+    max_run_count: int = 3  # `MaxRunCount` for `online` mode with `oltw` DTW.
+    search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
+    fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
+    fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
+    slice_len: int = 2048  # Slice length for `slicq` cqt.
+    transition_len: int = 0  # Transition length for `slicq` cqt.
+    hop: int = 2048  # Hop length for `librosa` cqt.
+
+    perf_wave_path: str  # Path to performance WAVE file.
+    score_midi_path: str  # Path to score MIDI.
+
 
 def sanitize_arguments(args: ArgumentParser):
     def eprint_and_exit(msg: str):
@@ -64,11 +67,11 @@ def sanitize_arguments(args: ArgumentParser):
 
     if not path.isfile(args.perf_wave_path):
         eprint_and_exit(f"Performance WAVE file ({args.perf_wave_path}) does not exist")
-        
+
     if not path.isfile(args.score_midi_path):
-        eprint_and_exit(f"Score MIDI file ({args.perf_midi_path}) does not exist")
+        eprint_and_exit(f"Score MIDI file ({args.score_midi_path}) does not exist")
+
 
 if __name__ == "__main__":
     args = ArgumentParser().parse_args()
     sanitize_arguments(args)
-    
