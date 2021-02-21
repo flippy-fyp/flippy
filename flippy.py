@@ -12,6 +12,7 @@ class ArgumentParser(Tap):
     fmax: float = 4186.0 # Maximum frequency (Hz) for CQT.
     slice_len: int = 2048 # Slice length for `slicq` cqt.
     transition_len: int = 0 # Transition length for `slicq` cqt.
+    hop: int = 2048 # Hop length for `librosa` cqt.
 
     perf_wave_path: str # Path to performance WAVE file.
     score_midi_path: str # Path to score MIDI.
@@ -51,6 +52,9 @@ def sanitize_arguments(args: ArgumentParser):
 
     if args.transition_len < 0:
         eprint_and_exit(f"transition_len must be positive")
+
+    if args.hop < 0:
+        eprint_and_exit(f"hop must be positive")
 
     if args.mode == "online":
         if args.dtw != "oltw":
