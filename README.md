@@ -1,7 +1,8 @@
 # Flippy
 
-Musical Score Audio Alignment
+Score-follower.
 
 ## Requirements
 - Python 3 
+- [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
