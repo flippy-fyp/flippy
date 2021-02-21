@@ -1,7 +1,7 @@
 from nsgt import CQ_NSGT_sliced, NSGT_sliced, OctScale  # type: ignore
 import numpy as np  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
-from pysndfile import PySndfile
+from pysndfile import PySndfile  # type: ignore
 
 if __name__ == "__main__":
     print("HELLO")

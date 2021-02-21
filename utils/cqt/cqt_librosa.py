@@ -1,4 +1,4 @@
-import librosa
+import librosa  # type: ignore
 import numpy as np
 
 
