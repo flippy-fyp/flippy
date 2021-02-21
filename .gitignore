@@ -138,3 +138,6 @@ dmypy.json
 cython_debug/
 
 .vscode
+
+flippy_experimental.py
+tmp
