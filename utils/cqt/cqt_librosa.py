@@ -1,4 +1,5 @@
 from typing import Any, Tuple
+from utils.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
 
@@ -16,7 +17,7 @@ def get_librosa_params(
     n_bins = end_midi - start_midi
 
     # Round fmin to closest note's frequency
-    fmin = librosa.midi_to_hz(start_midi)
+    fmin = quantise_hz_midi(fmin)
 
     return fmin, n_bins
 
