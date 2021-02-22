@@ -1,4 +1,4 @@
-from tap import Tap
+from tap import Tap  # type: ignore
 from utils.eprint import eprint
 from sys import exit
 from os import path
