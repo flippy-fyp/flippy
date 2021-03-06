@@ -1,5 +1,5 @@
 from typing import List
-from utils.sharedtypes import NoteInfo
+from lib.sharedtypes import NoteInfo
 import pretty_midi  # type: ignore
 from pretty_midi.pretty_midi import PrettyMIDI  # type: ignore
 import numpy as np

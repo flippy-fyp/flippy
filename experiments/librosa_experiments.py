@@ -1,5 +1,5 @@
-from utils.midi import midi_to_audio
-from utils.cqt.cqt_librosa import (
+from lib.midi import midi_to_audio
+from lib.cqt.cqt_librosa import (
     extract_features_librosa_cqt,
     extract_features_librosa_pseudo_cqt,
     extract_features_librosa_hybrid_cqt,
@@ -40,7 +40,7 @@ def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = 441
 
     curr_time_int = int(time.time())
 
-    plt.savefig(f"./tmp/{curr_time_int}.svg")
+    plt.savefig(f"./tmp/{curr_time_int}.pdf")
 
 
 def plot_librosa_features(extractor=extract_features_librosa_cqt):

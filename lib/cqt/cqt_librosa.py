@@ -1,5 +1,5 @@
 from typing import Any, Tuple
-from utils.utils import quantise_hz_midi
+from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
 
@@ -139,7 +139,7 @@ def extract_slice_features_librosa_pseudo_cqt(
     fs: int = 44100,
 ) -> np.ndarray:
     """
-    Extract features for a audio slice via librosa pseudo CQT.
+    Extract features for an audio slice via librosa pseudo CQT.
     """
     return slice_cqt_helper(
         librosa.pseudo_cqt,
@@ -157,7 +157,7 @@ def extract_slice_features_librosa_hybrid_cqt(
     fs: int = 44100,
 ) -> np.ndarray:
     """
-    Extract features for a audio slice via librosa hybrid CQT.
+    Extract features for an audio slice via librosa hybrid CQT.
     """
     return slice_cqt_helper(
         librosa.hybrid_cqt,
@@ -176,7 +176,7 @@ def extract_slice_features_librosa_hybrid_cqt(
 #     fs: int = 44100,
 # ) -> np.ndarray:
 #     """
-#     Extract features for a audio slice via librosa CQT.
+#     Extract features for an audio slice via librosa CQT.
 #     """
 #     return slice_cqt_helper(
 #         librosa.cqt,
