@@ -1,22 +1,18 @@
 from experiments.librosa_experiments import plot_cqt
 from lib.cqt.cqt_nsgt import extract_features_nsgt_cqt, get_nsgt_params
-from nsgt import CQ_NSGT_sliced, NSGT_sliced, OctScale  # type: ignore
-import numpy as np  # type: ignore
-import matplotlib.pyplot as plt  # type: ignore
-from pysndfile import PySndfile  # type: ignore
 import librosa  # type: ignore
 import librosa.display  # type: ignore
 
 
 def plot_nsgt_features():
-    audio, _ = librosa.load("./tmp/wtk-prelude1.wav", sr=44100, duration=5, mono=True)
+    audio, _ = librosa.load("./tmp/wtk-prelude1.wav", sr=44100, duration=10, mono=True)
 
     fmin, fmax = get_nsgt_params()
     cqt = extract_features_nsgt_cqt(audio, fmin, fmax)
 
-    print(len(cqt[0]))
+    # print(len(cqt[0]))
 
-    plot_cqt(cqt.T, fmin)
+    plot_cqt(cqt, fmin, hop_length = 2048 // 100)
 
 
 # if __name__ == "__main__":
