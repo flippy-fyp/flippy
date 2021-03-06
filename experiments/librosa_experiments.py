@@ -14,6 +14,7 @@ import soundfile as sf  # type: ignore
 import numpy as np
 import time
 import pyfftw  # type: ignore
+import time
 
 librosa.set_fftlib(pyfftw.interfaces.numpy_fft)
 
@@ -37,7 +38,9 @@ def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = 441
     )
     fig.colorbar(img, ax=ax)
 
-    plt.show()
+    curr_time_int = int(time.time())
+
+    plt.savefig(f"./tmp/{curr_time_int}.svg")
 
 
 def plot_librosa_features(extractor=extract_features_librosa_cqt):
