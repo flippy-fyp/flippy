@@ -39,7 +39,7 @@ def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = 441
     fig.colorbar(img, ax=ax)
 
     curr_time_int = int(time.time())
-
+    print(curr_time_int)
     plt.savefig(f"./tmp/{curr_time_int}.pdf")
 
 
