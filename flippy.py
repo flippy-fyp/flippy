@@ -90,6 +90,7 @@ def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
     eprint(f"fmax quantised from {args.fmax} to {fmax}")
     args.fmax = fmax
 
+    return args
 
 
 
