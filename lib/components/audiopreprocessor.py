@@ -16,7 +16,7 @@ class Slicer:
         wave_path: str,
         hop_length: int,
         frame_length: int,
-        slice_queue: mp.Queue[Union[np.ndarray, bool]],
+        slice_queue: mp.Queue[Optional[np.ndarray]],
     ):
         self.wave_path = wave_path
         self.hop_length = hop_length
@@ -35,14 +35,14 @@ class Slicer:
 
         for s in audio_stream:
             self.slice_queue.put(s)
-        self.slice_queue.put(True)  # end
+        self.slice_queue.put(None)  # end
 
 
 class FeatureExtractor:
     def __init__(
         self,
-        slice_queue: mp.Queue[Union[np.ndarray, bool]],
-        output_queue: mp.Queue[Union[np.ndarray, bool]],
+        slice_queue: mp.Queue[Optional[np.ndarray]],
+        output_queue: mp.Queue[Optional[np.ndarray]],
         mode: str,
         cqt: str,
         fmin: float,
@@ -76,11 +76,11 @@ class FeatureExtractor:
     def start(self):
         while 1:
             sl = self.slice_queue.get()
-            if type(sl) == bool:
+            if sl is None:
                 break
             o = self.extractor(sl)
             self.output_queue.put(o)
-        self.output_queue.put(True)  # end
+        self.output_queue.put(None)  # end
 
 
 class AudioPreprocessor:
@@ -98,9 +98,9 @@ class AudioPreprocessor:
         slice_len: int,
         transition_slice_ratio: int,
         # output features
-        output_queue: mp.Queue[Union[np.ndarray, bool]],
+        output_queue: mp.Queue[Optional[np.ndarray]],
     ):
-        self.slice_queue: mp.Queue[Union[np.ndarray, bool]] = mp.Queue()
+        self.slice_queue: mp.Queue[Optional[np.ndarray]] = mp.Queue()
 
         online_slicer_proc: Optional[mp.Process] = None
 
@@ -110,7 +110,7 @@ class AudioPreprocessor:
         elif mode == "offline":
             audio, _ = librosa.load(wave_path, sr=44100, mono=True)
             self.slice_queue.put(audio)
-            self.slice_queue.put(True)  # end
+            self.slice_queue.put(None)  # end
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
