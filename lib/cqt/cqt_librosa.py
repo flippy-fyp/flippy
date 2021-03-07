@@ -1,10 +1,8 @@
-import sys
-from typing import Any, Callable, Tuple
-
-from librosa.core import audio
+from typing import Any, Tuple
 from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
+from lib.sharedtypes import ExtractorFunctionType
 
 
 def get_librosa_params(

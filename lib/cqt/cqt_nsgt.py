@@ -4,7 +4,6 @@ from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
 from typing import Callable, Tuple
 import librosa  # type: ignore
 import numpy as np  # type: ignore
-import sys
 
 
 def get_nsgt_params(
