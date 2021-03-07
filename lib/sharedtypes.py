@@ -1,4 +1,4 @@
-from typing import Callable, TypedDict
+from typing import Callable, List, Tuple, TypedDict
 import numpy as np
 
 
@@ -8,3 +8,5 @@ class NoteInfo(TypedDict):
 
 
 ExtractorFunctionType = Callable[[np.ndarray], np.ndarray]
+
+DTWPathType = List[Tuple[int, int]]
