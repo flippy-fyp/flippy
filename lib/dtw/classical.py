@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from lib.sharedtypes import DTWPathType
 import numpy as np
 
 
@@ -24,12 +24,12 @@ class ClassicalDTW:
 
         pass
 
-    def dtw(self) -> np.ndarray:
+    def dtw(self) -> DTWPathType:
         """
         Perform dtw.
         Returns the path (shape: (len(S), 2)) from (0, 0) to (len(S), len(P))
         """
-        path = np.empty((0, 2), dtype=int)
+        path: DTWPathType = []
 
         r, c = self.D_shape
         r -= 1
@@ -37,7 +37,7 @@ class ClassicalDTW:
         self._dtw_helper(r, c)
 
         while r >= 0 and c >= 0:
-            path = np.vstack([path, [r, c]])
+            path.append((r, c))
             r_pos = r > 0
             c_pos = c > 0
             diag_cost = np.inf
@@ -62,8 +62,8 @@ class ClassicalDTW:
             else:
                 c -= 1
 
-        # Flip array vertically.
-        path = np.flipud(path)
+        # Reverse path.
+        path = list(reversed(path))
 
         return path
 

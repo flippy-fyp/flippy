@@ -1,5 +1,6 @@
+from lib.sharedtypes import DTWPathType
 import multiprocessing as mp
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional, Tuple
 import numpy as np
 from enum import Enum
 
@@ -15,7 +16,7 @@ class OLTW:
         self,
         P_queue: mp.Queue[Optional[np.ndarray]],
         S: np.ndarray,
-        output_queue: mp.Queue[Optional[List[Tuple[int, int]]]],
+        output_queue: mp.Queue[Optional[DTWPathType]],
         max_run_count: int,
         search_window: int,  # c
     ):
