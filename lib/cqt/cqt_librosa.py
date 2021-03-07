@@ -3,6 +3,7 @@ from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
 from lib.sharedtypes import ExtractorFunctionType
+from lib.constants import DEFAULT_SAMPLE_RATE
 
 
 def get_librosa_params(
@@ -28,7 +29,7 @@ def full_cqt_helper(
     audio: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     hop: int = 2048,
 ) -> np.ndarray:
 
@@ -56,7 +57,7 @@ def extract_features_librosa_cqt(
     audio: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     hop: int = 2048,
 ) -> np.ndarray:
     """
@@ -76,7 +77,7 @@ def extract_features_librosa_pseudo_cqt(
     audio: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     hop: int = 2048,
 ) -> np.ndarray:
     """
@@ -96,7 +97,7 @@ def extract_features_librosa_hybrid_cqt(
     audio: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     hop: int = 2048,
 ) -> np.ndarray:
     """
@@ -117,7 +118,7 @@ def slice_cqt_helper(
     audio_slice: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
 ) -> np.ndarray:
     cqt = cqt_func(
         audio_slice, sr=fs, hop_length=audio_slice.size, fmin=fmin, n_bins=n_bins
@@ -137,7 +138,7 @@ def extract_slice_features_librosa_pseudo_cqt(
     audio_slice: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
 ) -> np.ndarray:
     """
     Extract features for an audio slice via librosa pseudo CQT.
@@ -155,7 +156,7 @@ def extract_slice_features_librosa_hybrid_cqt(
     audio_slice: np.ndarray,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
 ) -> np.ndarray:
     """
     Extract features for an audio slice via librosa hybrid CQT.
@@ -174,7 +175,7 @@ def extract_slice_features_librosa_hybrid_cqt(
 #     audio_slice: np.ndarray,
 #     fmin: float,
 #     n_bins: int,
-#     fs: int = 44100,
+#     fs: int = DEFAULT_SAMPLE_RATE,
 # ) -> np.ndarray:
 #     """
 #     Extract features for an audio slice via librosa CQT.
@@ -192,7 +193,7 @@ def get_extract_slice_features_wrapper(
     cqt: str,
     fmin: float,
     n_bins: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
 ) -> ExtractorFunctionType:
     f_map = {
         "librosa_pseudo": extract_slice_features_librosa_pseudo_cqt,
@@ -214,7 +215,7 @@ def get_extract_features_wrapper(
     fmin: float,
     n_bins: int,
     hop: int,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
 ) -> ExtractorFunctionType:
     f_map = {
         "librosa": extract_features_librosa_cqt,

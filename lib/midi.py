@@ -5,9 +5,10 @@ from pretty_midi.pretty_midi import PrettyMIDI  # type: ignore
 import numpy as np
 import mido  # type: ignore
 from itertools import chain
+from lib.constants import DEFAULT_SAMPLE_RATE
 
 
-def midi_to_audio(midi_path, fs=44100) -> np.ndarray:
+def midi_to_audio(midi_path, fs=DEFAULT_SAMPLE_RATE) -> np.ndarray:
     midi_object: PrettyMIDI = pretty_midi.PrettyMIDI(midi_path)
     audio: np.ndarray = midi_object.fluidsynth(fs=fs)
     return audio

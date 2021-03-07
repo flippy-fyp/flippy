@@ -1,3 +1,4 @@
+from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.midi import midi_to_audio
 from lib.cqt.cqt_librosa import (
     extract_features_librosa_cqt,
@@ -20,11 +21,11 @@ librosa.set_fftlib(pyfftw.interfaces.numpy_fft)
 
 
 def conv_to_wav():
-    audio = midi_to_audio("./tmp/wtk1-prelude1.mid", 44100)
-    sf.write("./tmp/wtk-prelude1.wav", audio, samplerate=44100)
+    audio = midi_to_audio("./tmp/wtk1-prelude1.mid", DEFAULT_SAMPLE_RATE)
+    sf.write("./tmp/wtk-prelude1.wav", audio, samplerate=DEFAULT_SAMPLE_RATE)
 
 
-def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = 44100):
+def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = DEFAULT_SAMPLE_RATE):
     fig, ax = plt.subplots()
 
     img = librosa.display.specshow(
@@ -44,7 +45,7 @@ def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = 441
 
 
 def plot_librosa_features(extractor=extract_features_librosa_cqt):
-    audio, _ = librosa.load("./tmp/wtk-prelude1.wav", sr=44100, duration=10, mono=True)
+    audio, _ = librosa.load("./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True)
 
     fmin, n_bins = get_librosa_params()
     cqt = extractor(audio, fmin, n_bins)
@@ -70,7 +71,7 @@ def plot_librosa_features_stream(extractor=extract_slice_features_librosa_pseudo
 
     start_time = time.time()
     for audio_slice in audio_stream:
-        cqt_slice = extractor(audio_slice, fmin, n_bins, 44100)
+        cqt_slice = extractor(audio_slice, fmin, n_bins, DEFAULT_SAMPLE_RATE)
         # save for tmp
         tmp_slice = cqt_slice
         # get diff
