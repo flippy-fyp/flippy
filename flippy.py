@@ -7,7 +7,7 @@ from os import path
 class ArgumentParser(Tap):
     mode: str = "online"  # Mode: `offline` or `online`.
     dtw: str = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
-    cqt: str = "slicq"  # CQT Algo: `slicq` or `librosa`. `librosa` is only available for the `offline` mode.
+    cqt: str = "slicq"  # CQT Algo: `slicq` or `librosa`. `librosa` refers to pseudo_cqt in librosa.
     max_run_count: int = 3  # `MaxRunCount` for `online` mode with `oltw` DTW.
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
