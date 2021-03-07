@@ -77,7 +77,9 @@ def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
         eprint_and_exit(f"Score MIDI file ({args.score_midi_path}) does not exist")
 
     if args.slice_len % 100 != 0 and args.mode == "offline" and args.cqt == "nsgt":
-        eprint_and_exit(f"slice_len ({args.slice_len}) for offline nsgt must be a multiple of 100")
+        eprint_and_exit(
+            f"slice_len ({args.slice_len}) for offline nsgt must be a multiple of 100"
+        )
 
     # ---- MUTATIVE ----
 
@@ -91,7 +93,6 @@ def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
     args.fmax = fmax
 
     return args
-
 
 
 if __name__ == "__main__":
