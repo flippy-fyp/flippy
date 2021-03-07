@@ -22,7 +22,7 @@ class ArgumentParser(Tap):
     score_midi_path: str  # Path to score MIDI.
 
 
-def sanitize_arguments(args: ArgumentParser):
+def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
     def eprint_and_exit(msg: str):
         eprint(f"Argument Error: {msg}.")
         eprint("Use the `--help` flag to show the help message.")
@@ -76,11 +76,23 @@ def sanitize_arguments(args: ArgumentParser):
     if not path.isfile(args.score_midi_path):
         eprint_and_exit(f"Score MIDI file ({args.score_midi_path}) does not exist")
 
+    if args.slice_len % 100 != 0 and args.mode == "offline" and args.cqt == "nsgt":
+        eprint_and_exit(f"slice_len ({args.slice_len}) for offline nsgt must be a multiple of 100")
+
+    # ---- MUTATIVE ----
+
     # quantize fmin and fmax
-    args.fmin = quantise_hz_midi(args.fmin)
-    args.fmax = quantise_hz_midi(args.fmax)
+    fmin = quantise_hz_midi(args.fmin)
+    eprint(f"fmin quantised from {args.fmin} to {fmin}")
+    args.fmin = fmin
+
+    fmax = quantise_hz_midi(args.fmax)
+    eprint(f"fmax quantised from {args.fmax} to {fmax}")
+    args.fmax = fmax
+
+
 
 
 if __name__ == "__main__":
     args = ArgumentParser().parse_args()
-    sanitize_arguments(args)
+    args = sanitize_arguments(args)
