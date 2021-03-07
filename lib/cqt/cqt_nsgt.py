@@ -1,9 +1,10 @@
 from lib.sharedtypes import ExtractorFunctionType
 from lib.utils import quantise_hz_midi
 from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
-from typing import Callable, Tuple
+from typing import Tuple
 import librosa  # type: ignore
 import numpy as np  # type: ignore
+from lib.constants import DEFAULT_SAMPLE_RATE
 
 
 def get_nsgt_params(
@@ -21,7 +22,7 @@ def extract_features_nsgt_cqt(
     fmin: float,
     fmax: float,
     hop_length: int = 2048,  # artificial
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     multithreading: bool = False,
 ) -> np.ndarray:
     nsgt = CQ_NSGT(
@@ -76,7 +77,7 @@ def nsgt_extractor(
     fmin: float,
     fmax: float,
     hop_length: int = 2048,  # artificial
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     multithreading: bool = False,
 ) -> ExtractorFunctionType:
     def w(audio: np.ndarray) -> np.ndarray:
@@ -92,7 +93,7 @@ def get_slicq_engine(
     sl_tr_ratio: int,
     fmin: float = 130.8,
     fmax: float = 4186.0,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     multithreading: bool = False,
 ) -> CQ_NSGT_sliced:
     """
@@ -151,7 +152,7 @@ def nsgt_slicq_extractor(
     sl_tr_ratio: int,
     fmin: float = 130.8,
     fmax: float = 4186.0,
-    fs: int = 44100,
+    fs: int = DEFAULT_SAMPLE_RATE,
     multithreading: bool = False,
 ) -> ExtractorFunctionType:
     slicq = get_slicq_engine(sl_len, sl_tr_ratio, fmin, fmax, fs, multithreading)

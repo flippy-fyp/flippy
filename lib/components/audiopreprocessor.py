@@ -1,5 +1,5 @@
 from lib.cqt.cqt_nsgt import nsgt_extractor, nsgt_slicq_extractor
-from typing import Optional, Union
+from typing import Optional
 from lib.cqt.cqt_librosa import (
     get_extract_features_wrapper,
     get_extract_slice_features_wrapper,
@@ -8,6 +8,7 @@ from lib.cqt.cqt_librosa import (
 import multiprocessing as mp
 import numpy as np
 import librosa  # type: ignore
+from lib.constants import DEFAULT_SAMPLE_RATE
 
 
 class Slicer:
@@ -108,7 +109,7 @@ class AudioPreprocessor:
             slicer = Slicer(wave_path, hop_length, frame_length, self.slice_queue)
             online_slicer_proc = mp.Process(target=slicer.start)
         elif mode == "offline":
-            audio, _ = librosa.load(wave_path, sr=44100, mono=True)
+            audio, _ = librosa.load(wave_path, sr=DEFAULT_SAMPLE_RATE, mono=True)
             self.slice_queue.put(audio)
             self.slice_queue.put(None)  # end
         else:
