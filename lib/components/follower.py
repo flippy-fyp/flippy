@@ -21,5 +21,9 @@ class Follower:
 
         if mode == "online":
             raise NotImplementedError("Online mode not yet implemented!")
+        elif mode == "offline":
+            pass
+        else:
+            raise ValueError(f"Unknown mode {mode}")
         pass
 
