@@ -22,7 +22,7 @@ def extract_features_nsgt_cqt(
     fmax: float,
     hop_length: int = 2048, # artificial
     fs: int = 44100,
-    multithreading: bool = True,
+    multithreading: bool = False,
 ) -> np.ndarray:
     nsgt = CQ_NSGT(
         fmin,
@@ -33,6 +33,7 @@ def extract_features_nsgt_cqt(
         reducedform=2,
         multithreading=multithreading,
         matrixform=True,
+        real=True
     )
     # Forward transform
     cqt = nsgt.forward(audio)
@@ -42,7 +43,7 @@ def extract_features_nsgt_cqt(
     cqt = cqt.T
     # Take abs value
     cqt = np.abs(cqt)
-
+    
     # The "hop length" of CQ_NSGT is 100, so to simulate the provided hop_length, approximately split 
     # and average the obtained results--this means that the time is approximate!
     averaged_cqt = np.empty((0, cqt.shape[1]), dtype=np.float32)
@@ -71,22 +72,60 @@ def extract_features_nsgt_cqt(
     return cqt
 
 
-def extract_features_nsgt_slicq(
-    audio_slice: np.ndarray,
+def get_slicq_engine(
+    sl_len: int,
+    sl_tr_ratio: int,
     fmin: float = 130.8,
     fmax: float = 4186.0,
-    n_bins: int = 12,
-) -> np.ndarray:
+    fs: int = 44100,
+    multithreading: bool = False,
+) -> CQ_NSGT_sliced:
     """
-    Extract features for an audio slice, which is 4x the transition (hop) length.
+    Get slicq engine. 
     """
-    sl_len = len(audio_slice)
-    tr_len = sl_len // 4
-    slicq = CQ_NSGT_sliced(
+    tr_len = sl_len // sl_tr_ratio
+    return CQ_NSGT_sliced(
         fmin,
         fmax,
-        n_bins,
+        12,
         sl_len,
         tr_len,
-        matrixform=-True,
+        fs,
+        matrixform=True,
+        reducedform=2,
+        multithreading=multithreading,
+        real=True
     )
+
+
+def extract_features_nsgt_slicq(
+    slicq: CQ_NSGT_sliced,
+    sl_tr_ratio: int,
+    audio_slice: np.ndarray,
+) -> np.ndarray:
+    """
+    Extract features for an audio slice.
+
+    Based on https://github.com/sevagh/Music-Separation-TF/blob/master/algorithms/HPSS_CQNSGT_realtime.py
+    """
+    signal = (audio_slice,)
+    # Forward transform
+    cqt = slicq.forward(signal)
+    # Convert to ndarray 
+    cqt = np.asarray(list(cqt))
+    # Take abs value
+    cqt = np.abs(cqt)
+    # Average along the 3-element first axis
+    cqt = np.average(cqt, axis=0)
+    # Transpose so that each row is for a time slice's spectra
+    cqt = cqt.T
+    # Take only the slice region of the time slices 
+    cqt = cqt[:len(cqt) // sl_tr_ratio]
+    # Average over the time slices
+    cqt = np.average(cqt, axis=0)
+    # Reshape
+    cqt = np.reshape(cqt, (1, len(cqt)))
+    # L1 normalize
+    cqt = librosa.util.normalize(cqt, norm=1, axis=1)
+
+    return cqt

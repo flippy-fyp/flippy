@@ -1,7 +1,14 @@
 from experiments.librosa_experiments import plot_cqt
-from lib.cqt.cqt_nsgt import extract_features_nsgt_cqt, get_nsgt_params
+from lib.cqt.cqt_nsgt import (
+    extract_features_nsgt_cqt,
+    get_nsgt_params,
+    extract_features_nsgt_slicq,
+    get_slicq_engine,
+)
 import librosa  # type: ignore
 import librosa.display  # type: ignore
+import numpy as np
+import time
 
 
 def plot_nsgt_features():
@@ -12,43 +19,45 @@ def plot_nsgt_features():
 
     # print(len(cqt[0]))
 
-    plot_cqt(cqt, fmin, hop_length = 2048 // 100)
+    plot_cqt(cqt, fmin, hop_length=2048 // 100)  # 100 is the default hop len in nsgt
 
 
-# if __name__ == "__main__":
-#     print("HELLO")
+def plot_nsgt_features_slice():
+    sl_tr_ratio = 4
+    hop_length = 2048
+    frame_length = hop_length * sl_tr_ratio
 
-#     sf = PySndfile("./prelude-short.wav")
-#     fs = sf.samplerate()
-#     samples = sf.frames()
+    audio_stream = librosa.stream(
+        "./tmp/wtk-prelude1.wav",
+        1,
+        frame_length,
+        hop_length,
+        mono=True,
+        fill_value=0,
+        duration=10,
+    )
 
-#     s = sf.read_frames(samples)
+    fmin, fmax = get_nsgt_params()
+    slicq = get_slicq_engine(frame_length, sl_tr_ratio, fmin, fmax)
 
-#     if s.ndim > 1:
-#         s = np.mean(s, axis=1)
+    n_bins = 59  # Based on the defaults
+    prev_slice: np.ndarray = np.zeros((1, n_bins))
+    cqt = np.empty((0, n_bins), dtype=np.float32)
 
-#     # piano
-#     scl = OctScale(27.5, 4186, 12)
-#     slicq = NSGT_sliced(scl, 2 ** 12, 1024, fs)
+    start_time = time.time()
+    for audio_slice in audio_stream:
+        cqt_slice = extract_features_nsgt_slicq(slicq, sl_tr_ratio, audio_slice)
+        # save for tmp
+        tmp_slice = cqt_slice
+        # get diff
+        cqt_slice = cqt_slice - prev_slice
+        # clip
+        cqt_slice = cqt_slice.clip(0)  # type: ignore
+        # update in cqt
+        cqt = np.append(cqt, cqt_slice, axis=0)
+        # update prev
+        prev_slice = tmp_slice
 
-#     # c = []
-
-#     # slicelen = 2 ** 11
-
-#     # for i in range(0, len(s) + 1, slicelen):
-#     #     next_c = slicq.forward((s[i : i + slicelen],))
-#     #     next_c = list(next_c)
-#     #     c += next_c
-
-#     c = slicq.forward((s,))
-
-#     # print(c[0])
-#     print("Plotting t*f space")
-
-#     tr = np.array([[np.mean(np.abs(cj)) for cj in ci] for ci in c])
-#     plt.imshow(
-#         (np.flipud(tr.T)),
-#         aspect=float(tr.shape[0]) / tr.shape[1] * 0.5,
-#         interpolation="nearest",
-#     )
-#     plt.savefig("./test3.pdf")
+    end_time = time.time()
+    print(f"Time taken: {end_time - start_time}")
+    plot_cqt(cqt, fmin, hop_length=hop_length)

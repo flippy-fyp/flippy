@@ -66,7 +66,7 @@ def plot_librosa_features_stream(extractor=extract_slice_features_librosa_pseudo
 
     fmin, n_bins = get_librosa_params()
     prev_slice: np.ndarray = np.zeros((1, n_bins))
-    cqt: np.ndarray = np.empty((0, n_bins), dtype=np.float32)
+    cqt = np.empty((0, n_bins), dtype=np.float32)
 
     start_time = time.time()
     for audio_slice in audio_stream:
