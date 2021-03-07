@@ -1,4 +1,4 @@
-  
+
 name: CI
 
 on:
@@ -22,7 +22,7 @@ jobs:
           python-version: '3.8.x'
       - uses: actions/cache@v2
         with:
-          path: ${{ env.pythonLocation }} 
+          path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install dependencies
         run: |
