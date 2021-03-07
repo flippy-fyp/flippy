@@ -13,7 +13,7 @@ class ArgumentParser(Tap):
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
     slice_len: int = 2048  # Slice length for `slicq` cqt.
-    transition_len: int = 0  # Transition length for `slicq` cqt.
+    transition_slice_ratio: int = 4  # Transition to slice length ratio for `slicq` cqt.
     hop: int = 2048  # Hop length for `librosa` cqt.
 
     perf_wave_path: str  # Path to performance WAVE file.
@@ -53,8 +53,8 @@ def sanitize_arguments(args: ArgumentParser):
     if args.slice_len < 0:
         eprint_and_exit(f"slice_len must be positive")
 
-    if args.transition_len < 0:
-        eprint_and_exit(f"transition_len must be positive")
+    if args.transition_slice_ratio < 0:
+        eprint_and_exit(f"transition_slice_ratio must be positive")
 
     if args.hop < 0:
         eprint_and_exit(f"hop must be positive")
