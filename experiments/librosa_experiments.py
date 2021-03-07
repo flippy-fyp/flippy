@@ -25,7 +25,9 @@ def conv_to_wav():
     sf.write("./tmp/wtk-prelude1.wav", audio, samplerate=DEFAULT_SAMPLE_RATE)
 
 
-def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = DEFAULT_SAMPLE_RATE):
+def plot_cqt(
+    cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = DEFAULT_SAMPLE_RATE
+):
     fig, ax = plt.subplots()
 
     img = librosa.display.specshow(
@@ -45,7 +47,9 @@ def plot_cqt(cqt: np.ndarray, fmin: float, hop_length: int = 2048, fs: int = DEF
 
 
 def plot_librosa_features(extractor=extract_features_librosa_cqt):
-    audio, _ = librosa.load("./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True)
+    audio, _ = librosa.load(
+        "./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True
+    )
 
     fmin, n_bins = get_librosa_params()
     cqt = extractor(audio, fmin, n_bins)

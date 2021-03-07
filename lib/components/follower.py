@@ -26,4 +26,3 @@ class Follower:
         else:
             raise ValueError(f"Unknown mode {mode}")
         pass
-

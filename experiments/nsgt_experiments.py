@@ -13,7 +13,9 @@ import time
 
 
 def plot_nsgt_features():
-    audio, _ = librosa.load("./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True)
+    audio, _ = librosa.load(
+        "./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True
+    )
 
     fmin, fmax = get_nsgt_params()
     cqt = extract_features_nsgt_cqt(audio, fmin, fmax)
