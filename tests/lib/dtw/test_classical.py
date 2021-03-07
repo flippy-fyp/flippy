@@ -34,43 +34,19 @@ class TestClassicalDTW(unittest.TestCase):
                 cdtw = ClassicalDTW(P, S)
                 cdtw.dtw()
             self.assertTrue(excp_str in str(context.exception), excp_str)
-                        
+
     def test_classical(self):
         testcases: List[str, Tuple[np.ndarray, np.ndarray, np.ndarray]] = [
-            (
-                "Simple case",
-                np.array([[1]]),
-                np.array([[2]]),
-                np.array([[0, 0]])
-            ),
+            ("Simple case", np.array([[1]]), np.array([[2]]), np.array([[0, 0]])),
             (
                 "Report example",
-                np.array([
-                    [1, 2],
-                    [3, 3],
-                    [2, 2],
-                    [2, 3],
-                    [6, 6]
-                ]),
-                np.array([
-                    [1, 2],
-                    [3, 3],
-                    [2, 2],
-                    [4, 3],
-                    [2, 2]
-                ]),
-                np.array([
-                    [0, 0],
-                    [1, 1],
-                    [2, 2],
-                    [3, 3],
-                    [4, 3],
-                    [4, 4]
-                ])
-            )
+                np.array([[1, 2], [3, 3], [2, 2], [2, 3], [6, 6]]),
+                np.array([[1, 2], [3, 3], [2, 2], [4, 3], [2, 2]]),
+                np.array([[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]]),
+            ),
         ]
 
         for name, P, S, want in testcases:
             cdtw = ClassicalDTW(P, S)
-            got = cdtw.dtw()   
+            got = cdtw.dtw()
             np.testing.assert_array_equal(want, got, err_msg=name)
