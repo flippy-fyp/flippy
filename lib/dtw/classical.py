@@ -1,4 +1,3 @@
-from lib.dtw.shared import Direction
 from typing import Dict, Tuple
 import numpy as np
 
@@ -18,9 +17,10 @@ class ClassicalDTW:
         self.P = P  # performance (column)
 
         self.D_shape = (S.shape[0], P.shape[0])
-        self.D: Dict[
-            int, Dict[int, Tuple[float, Direction]]
-        ] = {}  # (r, c) to (cost, backward direction)
+        self.D_calc = np.zeros(
+            self.D_shape, dtype=bool
+        )  # whether the entry in self.D is calculated
+        self.D = np.zeros(self.D_shape, dtype=np.float32)
 
         pass
 
@@ -38,12 +38,26 @@ class ClassicalDTW:
 
         while r >= 0 and c >= 0:
             path = np.vstack([path, [r, c]])
-            _, direction = self.D[r][c]
+            r_pos = r > 0
+            c_pos = c > 0
+            diag_cost = np.inf
+            left_cost = np.inf
+            down_cost = np.inf
 
-            if direction == Direction.DIAG:
+            if r_pos and c_pos:
+                diag_cost = self.D[r - 1][c - 1]
+            if r_pos:
+                left_cost = self.D[r - 1][c]
+            if c_pos:
+                down_cost = self.D[r][c - 1]
+
+            min_cost = min(diag_cost, left_cost, down_cost)
+
+            if min_cost == diag_cost:
+                # prefer diag if tie
                 r -= 1
                 c -= 1
-            elif direction == Direction.DOWN:
+            elif min_cost == left_cost:
                 r -= 1
             else:
                 c -= 1
@@ -53,7 +67,7 @@ class ClassicalDTW:
 
         return path
 
-    def _dtw_helper(self, r: int, c: int) -> Tuple[float, Direction]:
+    def _dtw_helper(self, r: int, c: int) -> float:
         """
         Helper function. For an entry (r, c) in the distance matrix return the current cumulative cost
         and the immediate backward direction of the optimal path.
@@ -63,32 +77,24 @@ class ClassicalDTW:
                 f"Out of range: want ({r}, {c}) from distance matrix of shape {self.D_shape}"
             )
         if r < 0 or c < 0:
-            return np.inf, Direction.DIAG
+            return np.inf
 
-        if r not in self.D:
-            self.D[r] = {}
-        if c not in self.D[r]:
+        if not self.D_calc[r][c]:
+            self.D_calc[r][c] = True
             s = self.S[r]
             p = self.P[c]
             d = np.sum(np.abs(s - p))
 
             if (r, c) == (0, 0):
-                self.D[r][c] = (d, Direction.DIAG)
+                self.D[r][c] = d
             else:
-                half_diag_cost, _ = self._dtw_helper(r - 1, c - 1)
+                half_diag_cost = self._dtw_helper(r - 1, c - 1)
                 diag_cost = half_diag_cost * 2
-                down_cost, _ = self._dtw_helper(r - 1, c)
-                left_cost, _ = self._dtw_helper(r, c - 1)
+                down_cost = self._dtw_helper(r - 1, c)
+                left_cost = self._dtw_helper(r, c - 1)
 
                 min_cost = min(diag_cost, down_cost, left_cost)
                 curr_cost = d + min_cost
-
-                if min_cost == diag_cost:
-                    # prefer diag when tie
-                    self.D[r][c] = (curr_cost, Direction.DIAG)
-                elif min_cost == down_cost:
-                    self.D[r][c] = (curr_cost, Direction.DOWN)
-                else:
-                    self.D[r][c] = (curr_cost, Direction.LEFT)
+                self.D[r][c] = curr_cost
 
         return self.D[r][c]
