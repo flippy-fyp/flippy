@@ -1,5 +1,7 @@
 import sys
-from typing import Any, Tuple
+from typing import Any, Callable, Tuple
+
+from librosa.core import audio
 from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
@@ -186,3 +188,47 @@ def extract_slice_features_librosa_hybrid_cqt(
 #         n_bins,
 #         fs=fs,
 #     )
+
+
+def get_extract_slice_features_wrapper(
+    cqt: str,
+    fmin: float,
+    n_bins: int,
+    fs: int = 44100,
+) -> ExtractorFunctionType:
+    f_map = {
+        "librosa_pseudo": extract_slice_features_librosa_pseudo_cqt,
+        "librosa_hybrid": extract_slice_features_librosa_hybrid_cqt,
+    }
+    if cqt not in f_map:
+        raise ValueError(f"Unknown cqt algo: {cqt}")
+
+    cqt_f = f_map[cqt]
+
+    def w(audio_slice: np.ndarray) -> np.ndarray:
+        return cqt_f(audio_slice, fmin, n_bins, fs)
+
+    return w
+
+
+def get_extract_features_wrapper(
+    cqt: str,
+    fmin: float,
+    n_bins: int,
+    hop: int,
+    fs: int = 44100,
+) -> ExtractorFunctionType:
+    f_map = {
+        "librosa": extract_features_librosa_cqt,
+        "librosa_pseudo": extract_features_librosa_pseudo_cqt,
+        "librosa_hybrid": extract_features_librosa_hybrid_cqt,
+    }
+    if cqt not in f_map:
+        raise ValueError(f"Unknown cqt algo: {cqt}")
+
+    cqt_f = f_map[cqt]
+
+    def w(audio: np.ndarray) -> np.ndarray:
+        return cqt_f(audio, fmin, n_bins, fs, hop)
+
+    return w
