@@ -1,3 +1,4 @@
+import sys
 from typing import Any, Tuple
 from lib.utils import quantise_hz_midi
 import librosa  # type: ignore

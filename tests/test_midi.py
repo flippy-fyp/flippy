@@ -1,7 +1,7 @@
 import unittest
 from os import path
-from utils.midi import process_midi_to_note_info
-from utils.sharedtypes import NoteInfo
+from lib.midi import process_midi_to_note_info
+from lib.sharedtypes import NoteInfo
 from typing import List
 
 
