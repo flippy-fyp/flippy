@@ -6,14 +6,14 @@ from hypothesis import given, settings, strategies as st
 
 
 class TestMPUtils(unittest.TestCase):
-    @given(st.lists(st.integers(), min_size=20))
+    @given(st.lists(st.integers()))
     @settings(max_examples=20)
     def test_produce_consume_queues(self, l: List[int]):
         q = produce_queue(l)
         ll = consume_queue(q)
         self.assertEqual(l, ll)
 
-    @given(st.lists(st.integers(), min_size=20))
+    @given(st.lists(st.integers()))
     @settings(max_examples=20)
     def test_multiproc_queues(self, l: List[int]):
         q: "mp.Queue[int]" = mp.Queue()
