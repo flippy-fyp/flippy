@@ -1,4 +1,4 @@
-from lib.sharedtypes import DTWPathType
+from lib.sharedtypes import DTWPathElemType
 from lib.dtw.classical import ClassicalDTW
 from typing import List, Tuple
 import numpy as np
@@ -37,7 +37,7 @@ class TestClassicalDTW(unittest.TestCase):
             self.assertTrue(excp_str in str(context.exception), excp_str)
 
     def test_classical(self):
-        testcases: List[str, Tuple[np.ndarray, np.ndarray, DTWPathType]] = [
+        testcases: List[str, Tuple[np.ndarray, np.ndarray, List[DTWPathElemType]]] = [
             (
                 "Simple case",
                 np.array([[1]], dtype=np.float32),

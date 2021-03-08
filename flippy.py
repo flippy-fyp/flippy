@@ -21,6 +21,8 @@ class ArgumentParser(Tap):
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: str  # Path to score MIDI.
 
+    backend: str = "alignment"  # Alignment result type: `alignment` or `timestamp`.
+
 
 def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
     def eprint_and_exit(msg: str):
@@ -61,11 +63,7 @@ def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
     if args.mode == "online":
         if args.dtw != "oltw":
             eprint_and_exit("For `online` mode only `oltw` dtw is accepted")
-        if (
-            args.cqt != "nsgt"
-            or args.cqt == "librosa_pseudo"
-            or args.cqt == "librosa_hybrid"
-        ):
+        if args.cqt not in ("nsgt", "librosa_pseudo", "librosa_hybrid"):
             eprint_and_exit(
                 "For `online` mode only `nsgt`, `librosa_pseudo` or `librosa_hybrid` cqt is accepted"
             )
@@ -80,6 +78,9 @@ def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:
         eprint_and_exit(
             f"slice_len ({args.slice_len}) for offline nsgt must be a multiple of 100"
         )
+
+    if args.backend not in ("alignment", "timestamp"):
+        eprint_and_exit("backend must be one of `alignment` or `timestamp`")
 
     # ---- MUTATIVE ----
 

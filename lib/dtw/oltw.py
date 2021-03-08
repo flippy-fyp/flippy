@@ -1,5 +1,5 @@
 from lib.dtw.shared import cost
-from lib.sharedtypes import DTWPathType
+from lib.sharedtypes import DTWPathElemType
 import multiprocessing as mp
 from typing import Optional, Set, Tuple
 import numpy as np
@@ -21,7 +21,7 @@ class OLTW:
         self,
         P_queue: "mp.Queue[Optional[np.ndarray]]",
         S: np.ndarray,
-        output_queue: "mp.Queue[Optional[DTWPathType]]",
+        output_queue: "mp.Queue[Optional[DTWPathElemType]]",
         max_run_count: int,
         search_window: int,  # c
     ):
@@ -30,7 +30,7 @@ class OLTW:
         if len(S) == 0:
             raise ValueError(f"Empty S")
 
-        self.S = S  # score (rows)
+        self.S = S  # score
         self.P_queue = P_queue
         self.output_queue = output_queue
         self.MAX_RUN_COUNT = max_run_count

@@ -1,4 +1,4 @@
-from typing import Callable, List, Tuple
+from typing import Callable, Tuple
 import numpy as np
 from dataclasses import dataclass
 
@@ -11,4 +11,4 @@ class NoteInfo:
 
 ExtractorFunctionType = Callable[[np.ndarray], np.ndarray]
 
-DTWPathType = List[Tuple[int, int]]
+DTWPathElemType = Tuple[int, int]
