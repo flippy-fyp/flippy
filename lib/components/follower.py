@@ -9,8 +9,8 @@ class Follower:
         dtw: str,
         max_run_count: int,
         search_window: int,
-        p_queue: mp.Queue[np.ndarray],
-        s_queue: mp.Queue[np.ndarray],
+        p_queue: "mp.Queue[np.ndarray]",
+        s_queue: "mp.Queue[np.ndarray]",
     ):
         self.mode = mode
         self.dtw = dtw
