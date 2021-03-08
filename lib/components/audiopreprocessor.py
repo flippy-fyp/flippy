@@ -17,7 +17,7 @@ class Slicer:
         wave_path: str,
         hop_length: int,
         frame_length: int,
-        slice_queue: mp.Queue[Optional[np.ndarray]],
+        slice_queue: "mp.Queue[Optional[np.ndarray]]",
     ):
         self.wave_path = wave_path
         self.hop_length = hop_length
@@ -42,8 +42,8 @@ class Slicer:
 class FeatureExtractor:
     def __init__(
         self,
-        slice_queue: mp.Queue[Optional[np.ndarray]],
-        output_queue: mp.Queue[Optional[np.ndarray]],
+        slice_queue: "mp.Queue[Optional[np.ndarray]]",
+        output_queue: "mp.Queue[Optional[np.ndarray]]",
         mode: str,
         cqt: str,
         fmin: float,
@@ -99,9 +99,9 @@ class AudioPreprocessor:
         slice_len: int,
         transition_slice_ratio: int,
         # output features
-        output_queue: mp.Queue[Optional[np.ndarray]],
+        output_queue: "mp.Queue[Optional[np.ndarray]]",
     ):
-        self.slice_queue: mp.Queue[Optional[np.ndarray]] = mp.Queue()
+        self.slice_queue: "mp.Queue[Optional[np.ndarray]]" = mp.Queue()
 
         online_slicer_proc: Optional[mp.Process] = None
 

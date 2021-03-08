@@ -1,6 +1,6 @@
 from lib.sharedtypes import DTWPathType
 import multiprocessing as mp
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 import numpy as np
 from enum import Enum
 
@@ -14,9 +14,9 @@ class Directions(Enum):
 class OLTW:
     def __init__(
         self,
-        P_queue: mp.Queue[Optional[np.ndarray]],
+        P_queue: "mp.Queue[Optional[np.ndarray]]",
         S: np.ndarray,
-        output_queue: mp.Queue[Optional[DTWPathType]],
+        output_queue: "mp.Queue[Optional[DTWPathType]]",
         max_run_count: int,
         search_window: int,  # c
     ):
@@ -29,7 +29,7 @@ class OLTW:
         self.P_queue = P_queue
         self.output_queue = output_queue
         self.MAX_RUN_COUNT = max_run_count
-        self.run_count = 1
+        self.run_count: int = 1
         self.C = search_window
         self.D = np.ones((0, self.S.shape[0]), dtype=np.float32) * np.inf
         self.P = np.zeros((0, self.S.shape[1]), dtype=np.float32)
