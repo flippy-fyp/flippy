@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit, float32
+from numba import njit, float32  # type: ignore
 
 
 @njit(float32(float32[:], float32[:]), cache=True)

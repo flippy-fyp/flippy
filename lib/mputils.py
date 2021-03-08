@@ -23,7 +23,7 @@ def produce_queue(l: List[Any]) -> "mp.Queue[Optional[Any]]":
 
     The inner type cannot be `Optional`.
     """
-    q = mp.Queue()
+    q: "mp.Queue[Optional[Any]]" = mp.Queue()
     write_list_to_queue(l, q)
     return q
 

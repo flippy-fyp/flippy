@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from lib.mputils import consume_queue, produce_queue, write_list_to_queue
 import unittest
 import multiprocessing as mp
@@ -16,7 +16,7 @@ class TestMPUtils(unittest.TestCase):
     @given(st.lists(st.integers()))
     @settings(max_examples=20)
     def test_multiproc_queues(self, l: List[int]):
-        q: "mp.Queue[int]" = mp.Queue()
+        q: "mp.Queue[Optional[int]]" = mp.Queue()
         producer_proc = mp.Process(
             target=write_list_to_queue,
             args=(
