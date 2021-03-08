@@ -1,5 +1,5 @@
 from typing import List, Optional
-from lib.sharedtypes import DTWPathElemType, NoteInfo
+from lib.sharedtypes import DTWPathElemType, NoteInfo, BackendType
 import multiprocessing as mp
 from lib.constants import DEFAULT_SAMPLE_RATE
 
@@ -11,15 +11,13 @@ class Backend:
 
     def __init__(
         self,
-        backend: str,
+        backend: BackendType,
         follower_output_queue: "mp.Queue[Optional[DTWPathElemType]]",
-        performance_stream_start_conn: mp.connection.Connection,
+        performance_stream_start_conn: "mp.connection.Connection",
         note_onsets: List[NoteInfo],
         slice_len: int,
         sample_rate: int = DEFAULT_SAMPLE_RATE,
     ):
-        if backend not in ("alignment", "timestamp"):
-            raise ValueError(f"Unknown backend {backend}")
         self.backend = backend
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
@@ -41,9 +39,9 @@ class Backend:
 
             if s != prev_s:
                 if self.backend == "timestamp":
-                    timestamp_ms = self.slice_len * s * 1000 // self.sample_rate
-                    print(timestamp_ms)
+                    timestamp_s = self.slice_len * s // self.sample_rate
+                    print(timestamp_s)
                 elif self.backend == "alignment":
-                    raise NotImplementedError("alignment mode not yet implemented")
+                    raise NotImplementedError("alignment mode not y implemented")
 
                 prev_s = s
