@@ -32,7 +32,7 @@ def process_MidiFile(mid: mido.MidiFile) -> List[NoteInfo]:
     # flatten
     ret: List[NoteInfo] = list(chain.from_iterable(track_midi_note_info_ticks))
     # sort
-    ret.sort(key=lambda x: x["note_start"])
+    ret.sort(key=lambda x: x.note_start)
     return ret
 
 
@@ -53,10 +53,9 @@ def process_track(
         if hasattr(msg, "velocity"):
             if msg.velocity > 0 and msg.type == "note_on":
                 ret.append(
-                    {
-                        "note_start": mido.tick2second(curr_tick, ticks_per_beat, tempo)
-                        * 1000,
-                        "midi_note_num": msg.note,
-                    }
+                    NoteInfo(
+                        msg.note,
+                        mido.tick2second(curr_tick, ticks_per_beat, tempo) * 1000,
+                    )
                 )
     return ret

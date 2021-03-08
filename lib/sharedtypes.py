@@ -1,10 +1,12 @@
-from typing import Callable, List, Tuple, TypedDict
+from typing import Callable, List, Tuple
 import numpy as np
+from dataclasses import dataclass
 
 
-class NoteInfo(TypedDict):
-    note_start: float  # note start time (ms)
+@dataclass
+class NoteInfo:
     midi_note_num: int  # MIDI note number
+    note_start: float  # note start time (ms)
 
 
 ExtractorFunctionType = Callable[[np.ndarray], np.ndarray]
