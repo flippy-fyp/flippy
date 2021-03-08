@@ -108,6 +108,7 @@ class AudioPreprocessor:
         if mode == "online":
             slicer = Slicer(wave_path, hop_length, frame_length, self.slice_queue)
             online_slicer_proc = mp.Process(target=slicer.start)
+            online_slicer_proc.start()
         elif mode == "offline":
             audio, _ = librosa.load(wave_path, sr=DEFAULT_SAMPLE_RATE, mono=True)
             self.slice_queue.put(audio)
@@ -126,6 +127,7 @@ class AudioPreprocessor:
             transition_slice_ratio,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)
+        feature_extractor_proc.start()
 
         if online_slicer_proc:
             online_slicer_proc.join()
