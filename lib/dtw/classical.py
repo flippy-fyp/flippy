@@ -34,7 +34,7 @@ class ClassicalDTW:
         r, c = self.D_shape
         r -= 1
         c -= 1
-        self._dtw_helper(r, c)
+        self.__dtw_helper(r, c)
 
         while r >= 0 and c >= 0:
             path.append((r, c))
@@ -67,7 +67,7 @@ class ClassicalDTW:
 
         return path
 
-    def _dtw_helper(self, r: int, c: int) -> float:
+    def __dtw_helper(self, r: int, c: int) -> float:
         """
         Helper function. For an entry (r, c) in the distance matrix return the current cumulative cost
         and the immediate backward direction of the optimal path.
@@ -88,10 +88,10 @@ class ClassicalDTW:
             if (r, c) == (0, 0):
                 self.D[r][c] = d
             else:
-                half_diag_cost = self._dtw_helper(r - 1, c - 1)
+                half_diag_cost = self.__dtw_helper(r - 1, c - 1)
                 diag_cost = half_diag_cost * 2
-                down_cost = self._dtw_helper(r - 1, c)
-                left_cost = self._dtw_helper(r, c - 1)
+                down_cost = self.__dtw_helper(r - 1, c)
+                left_cost = self.__dtw_helper(r, c - 1)
 
                 min_cost = min(diag_cost, down_cost, left_cost)
                 curr_cost = d + min_cost

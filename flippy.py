@@ -1,3 +1,4 @@
+from lib.sharedtypes import ModeType, DTWType, CQTType, BackendType
 from lib.utils import quantise_hz_midi
 from tap import Tap  # type: ignore
 from lib.eprint import eprint
@@ -6,9 +7,9 @@ from os import path
 
 
 class ArgumentParser(Tap):
-    mode: str = "online"  # Mode: `offline` or `online`.
-    dtw: str = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
-    cqt: str = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`. `librosa` is only available for the `offline` mode.
+    mode: ModeType = "online"  # Mode: `offline` or `online`.
+    dtw: DTWType = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
+    cqt: CQTType = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`. `librosa` is only available for the `offline` mode.
     max_run_count: int = 3  # `MaxRunCount` for `online` mode with `oltw` DTW.
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
@@ -21,7 +22,9 @@ class ArgumentParser(Tap):
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: str  # Path to score MIDI.
 
-    backend: str = "alignment"  # Alignment result type: `alignment` or `timestamp`.
+    backend: BackendType = (
+        "alignment"  # Alignment result type: `alignment` or `timestamp`.
+    )
 
 
 def sanitize_arguments(args: ArgumentParser) -> ArgumentParser:

@@ -65,7 +65,7 @@ class OLTW:
 
         ### Step 3
         d = cost(p_i, s_j)
-        self._D_set(i, j, d)
+        self.__D_set(i, j, d)
         # print(np.flipud(self.D.T))
 
         while True:
@@ -75,7 +75,7 @@ class OLTW:
                 return
 
             ### Step 4
-            current = self._get_next_direction(i, j, i_prime, j_prime, previous)
+            current = self.__get_next_direction(i, j, i_prime, j_prime, previous)
 
             ### Step 5
             if Direction.I in current:
@@ -91,7 +91,7 @@ class OLTW:
                 for J in range(max(0, j - self.C + 1), j + 1):
                     s_J = self.S[J]
                     d = cost(p_i, s_J)
-                    self._D_set(i, J, d)
+                    self.__D_set(i, J, d)
 
             if Direction.J in current:
                 # increment j
@@ -101,7 +101,7 @@ class OLTW:
                 for I in range(max(0, i - self.C + 1), i + 1):
                     p_I = self.P[I]
                     d = cost(p_I, s_j)
-                    self._D_set(I, j, d)
+                    self.__D_set(I, j, d)
 
             ### Step 6
             if current == previous and previous != DIR_IJ:
@@ -111,11 +111,11 @@ class OLTW:
             previous = current
 
             ### update i_prime and j_prime and write to output_queue
-            i_prime, j_prime = self._get_i_j_prime(i, j)
+            i_prime, j_prime = self.__get_i_j_prime(i, j)
             # print(np.flipud(self.D.T))
             self.output_queue.put((i_prime, j_prime))
 
-    def _get_i_j_prime(self, i: int, j: int) -> Tuple[int, int]:
+    def __get_i_j_prime(self, i: int, j: int) -> Tuple[int, int]:
         i_prime, j_prime = (i, j)
         min_D = np.inf
         curr_i = i
@@ -133,7 +133,7 @@ class OLTW:
             curr_j -= 1
         return i_prime, j_prime
 
-    def _get_next_direction(
+    def __get_next_direction(
         self, i: int, j: int, i_prime: int, j_prime: int, previous: Set[Direction]
     ) -> Set[Direction]:
         if i < self.C:
@@ -149,7 +149,7 @@ class OLTW:
             return DIR_I
         return DIR_IJ
 
-    def _D_set(self, i: int, j: int, d: np.float32):
+    def __D_set(self, i: int, j: int, d: np.float32):
         """
         at (i, j) and cost d assign to self.D
         """
@@ -160,12 +160,12 @@ class OLTW:
             self.D[i][j] = d
         else:
             self.D[i][j] = d + min(
-                2 * self._D_get(i - 1, j - 1),
-                self._D_get(i - 1, j),
-                self._D_get(i, j - 1),
+                2 * self.__D_get(i - 1, j - 1),
+                self.__D_get(i - 1, j),
+                self.__D_get(i, j - 1),
             )
 
-    def _D_get(self, i: int, j: int) -> np.float32:
+    def __D_get(self, i: int, j: int) -> np.float32:
         if i >= self.D.shape[0] or j >= self.D.shape[1]:
             raise ValueError(
                 f"Out of range: want ({i}, {j}) from distance matrix of shape {self.D.shape}"
