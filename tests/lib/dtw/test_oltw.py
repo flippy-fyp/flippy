@@ -1,5 +1,5 @@
 from lib.dtw.oltw import OLTW
-from lib.sharedtypes import DTWPathType
+from lib.sharedtypes import DTWPathElemType
 from lib.mputils import consume_queue, produce_queue
 from typing import List, Tuple
 import unittest
@@ -28,7 +28,7 @@ class TestOLTW(unittest.TestCase):
             self.assertTrue(excp_str in str(context.exception), excp_str)
 
     def test_oltw(self):
-        testcases: List[str, Tuple[np.ndarray, np.ndarray, DTWPathType]] = [
+        testcases: List[str, Tuple[np.ndarray, np.ndarray, List[DTWPathElemType]]] = [
             (
                 "Simple case",
                 np.array([[1]], dtype=np.float32),

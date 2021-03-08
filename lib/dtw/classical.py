@@ -1,5 +1,6 @@
+from typing import List
 from lib.dtw.shared import cost
-from lib.sharedtypes import DTWPathType
+from lib.sharedtypes import DTWPathElemType
 import numpy as np
 
 
@@ -14,21 +15,21 @@ class ClassicalDTW:
         if len(S) == 0:
             raise ValueError(f"Empty S")
 
-        self.S = S  # score (rows)
-        self.P = P  # performance (column)
+        self.P = P  # performance
+        self.S = S  # score
 
-        self.D_shape = (S.shape[0], P.shape[0])
+        self.D_shape = (P.shape[0], S.shape[0])
         self.D_calc = np.zeros(
             self.D_shape, dtype=bool
         )  # whether the entry in self.D is calculated
         self.D = np.zeros(self.D_shape, dtype=np.float32)
 
-    def dtw(self) -> DTWPathType:
+    def dtw(self) -> List[DTWPathElemType]:
         """
         Perform dtw.
         Returns the path (shape: (len(S), 2)) from (0, 0) to (len(S), len(P))
         """
-        path: DTWPathType = []
+        path: List[DTWPathElemType] = []
 
         r, c = self.D_shape
         r -= 1
