@@ -38,11 +38,16 @@ class TestClassicalDTW(unittest.TestCase):
 
     def test_classical(self):
         testcases: List[str, Tuple[np.ndarray, np.ndarray, DTWPathType]] = [
-            ("Simple case", np.array([[1]]), np.array([[2]]), [(0, 0)]),
+            (
+                "Simple case",
+                np.array([[1]], dtype=np.float32),
+                np.array([[2]], dtype=np.float32),
+                [(0, 0)],
+            ),
             (
                 "Report example",
-                np.array([[1, 2], [3, 3], [2, 2], [2, 3], [6, 6]]),
-                np.array([[1, 2], [3, 3], [2, 2], [4, 3], [2, 2]]),
+                np.array([[1, 2], [3, 3], [2, 2], [2, 3], [6, 6]], dtype=np.float32),
+                np.array([[1, 2], [3, 3], [2, 2], [4, 3], [2, 2]], dtype=np.float32),
                 [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)],
             ),
         ]

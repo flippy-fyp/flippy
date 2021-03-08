@@ -1,14 +1,19 @@
+from lib.dtw.shared import cost
 from lib.sharedtypes import DTWPathType
 import multiprocessing as mp
-from typing import Literal, Optional, Tuple
+from typing import Optional, Set, Tuple
 import numpy as np
 from enum import Enum
 
 
-class Directions(Enum):
+class Direction(Enum):
     I = 1
     J = 2
-    IJ = 3
+
+
+DIR_I = set([Direction.I])
+DIR_J = set([Direction.J])
+DIR_IJ = set([Direction.I, Direction.J])
 
 
 class OLTW:
@@ -42,8 +47,8 @@ class OLTW:
         ### Step 1
         i = 0
         j = 0
-        current: Optional[Directions] = None
-        previous: Optional[Directions] = None
+        current: Set[Direction] = set()
+        previous: Set[Direction] = set()
 
         i_prime = 0
         j_prime = 0
@@ -55,15 +60,17 @@ class OLTW:
         if p_i is None:
             self.output_queue.put(None)
             return
+        self.P = np.vstack([self.P, p_i])
         s_j = self.S[j]
 
         ### Step 3
-        d = self._d(p_i, s_j)
+        d = cost(p_i, s_j)
         self._D_set(i, j, d)
+        # print(np.flipud(self.D.T))
 
         while True:
             # Abort if last of S reached
-            if j == len(self.S):
+            if j == len(self.S) - 1:
                 self.output_queue.put(None)
                 return
 
@@ -71,7 +78,7 @@ class OLTW:
             current = self._get_next_direction(i, j, i_prime, j_prime, previous)
 
             ### Step 5
-            if current == Directions.I or current == Directions.IJ:
+            if Direction.I in current:
                 # increment i
                 i += 1
                 # obtain p_i
@@ -79,22 +86,25 @@ class OLTW:
                 if p_i is None:
                     self.output_queue.put(None)
                     return
+                self.P = np.vstack([self.P, p_i])
                 # compute required D elements
                 for J in range(max(0, j - self.C + 1), j + 1):
                     s_J = self.S[J]
-                    d = self._d(p_i, s_J)
+                    d = cost(p_i, s_J)
                     self._D_set(i, J, d)
-            elif current == Directions.J or current == Directions.IJ:
+
+            if Direction.J in current:
                 # increment j
                 j += 1
+                s_j = self.S[j]
                 # compute required D elements
                 for I in range(max(0, i - self.C + 1), i + 1):
-                    p_I = self.P[i]
-                    d = self._d(p_I, s_j)
+                    p_I = self.P[I]
+                    d = cost(p_I, s_j)
                     self._D_set(I, j, d)
 
             ### Step 6
-            if current == previous and previous != Directions.IJ:
+            if current == previous and previous != DIR_IJ:
                 self.run_count += 1
             else:
                 self.run_count = 1
@@ -102,6 +112,7 @@ class OLTW:
 
             ### update i_prime and j_prime and write to output_queue
             i_prime, j_prime = self._get_i_j_prime(i, j)
+            # print(np.flipud(self.D.T))
             self.output_queue.put((i_prime, j_prime))
 
     def _get_i_j_prime(self, i: int, j: int) -> Tuple[int, int]:
@@ -122,37 +133,28 @@ class OLTW:
             curr_j -= 1
         return i_prime, j_prime
 
-    def _get_next_P(self) -> Optional[np.ndarray]:
-        p = self.P_queue.get()
-        if p is None:
-            return None
-        self.P = np.vstack([self.P, p])
-        return p
-
     def _get_next_direction(
-        self, i: int, j: int, i_prime: int, j_prime: int, previous: Optional[Directions]
-    ) -> Directions:
+        self, i: int, j: int, i_prime: int, j_prime: int, previous: Set[Direction]
+    ) -> Set[Direction]:
         if i < self.C:
-            return Directions.IJ
+            return DIR_IJ
         elif self.run_count > self.MAX_RUN_COUNT:
-            if previous == Directions.I:
-                return Directions.J
-            return Directions.I
+            if previous == DIR_I:
+                return DIR_J
+            return DIR_I
 
         if i_prime < i:
-            return Directions.J
+            return DIR_J
         elif j_prime < j:
-            return Directions.I
-        return Directions.IJ
-
-    def _d(self, p: np.ndarray, s: np.ndarray) -> np.float32:
-        return np.sum(np.abs(s - p))
+            return DIR_I
+        return DIR_IJ
 
     def _D_set(self, i: int, j: int, d: np.float32):
         """
         at (i, j) and cost d assign to self.D
         """
-        while i < self.D.shape[0]:
+        # print(i, j, d)
+        while i >= self.D.shape[0]:
             self.D = np.vstack([self.D, np.ones(self.S.shape[0]) * np.inf])
         if (i, j) == (0, 0):
             self.D[i][j] = d

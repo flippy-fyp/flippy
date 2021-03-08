@@ -1,3 +1,4 @@
+from lib.dtw.shared import cost
 from lib.sharedtypes import DTWPathType
 import numpy as np
 
@@ -21,8 +22,6 @@ class ClassicalDTW:
             self.D_shape, dtype=bool
         )  # whether the entry in self.D is calculated
         self.D = np.zeros(self.D_shape, dtype=np.float32)
-
-        pass
 
     def dtw(self) -> DTWPathType:
         """
@@ -83,7 +82,7 @@ class ClassicalDTW:
             self.D_calc[r][c] = True
             s = self.S[r]
             p = self.P[c]
-            d = np.sum(np.abs(s - p))
+            d = cost(s, p)
 
             if (r, c) == (0, 0):
                 self.D[r][c] = d
