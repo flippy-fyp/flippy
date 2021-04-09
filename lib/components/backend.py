@@ -1,7 +1,5 @@
 from lib.eprint import eprint
 from typing import Iterator, List, Optional
-
-from numpy import minimum
 from lib.sharedtypes import DTWPathElemType, NoteInfo, BackendType
 import multiprocessing as mp
 from lib.constants import DEFAULT_SAMPLE_RATE
@@ -31,9 +29,9 @@ class Backend:
         self.slice_len = slice_len
         self.sample_rate = sample_rate
 
-        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = {
-            x.note_start: x for x in self.note_onsets
-        }  # note_start is ms
+        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
+            {x.note_start: x for x in self.note_onsets}
+        )  # note_start is ms
 
     def start(self):
         if self.backend == "timestamp":
@@ -92,7 +90,7 @@ class Backend:
 
 
 def get_closest_note(
-    sorted_note_onsets: SortedDict[float, NoteInfo], timestamp_ms: float
+    sorted_note_onsets: "SortedDict[float, NoteInfo]", timestamp_ms: float
 ) -> Optional[NoteInfo]:
     closest_note_after_generator: Iterator[float] = sorted_note_onsets.irange(
         minimum=timestamp_ms
@@ -104,9 +102,10 @@ def get_closest_note(
         else closest_note_after_timestamp_ms - timestamp_ms
     )
 
-    closest_note_before_generator: Iterator[float] = reversed(
-        sorted_note_onsets.irange(maximum=timestamp_ms)
+    closest_note_before_generator: Iterator[float] = sorted_note_onsets.irange(
+        maximum=timestamp_ms, reverse=True
     )
+
     closest_note_before_timestamp_ms = next(closest_note_before_generator, None)
     gap_to_closest_note_before = (
         math.inf
@@ -119,6 +118,6 @@ def get_closest_note(
         return None
 
     if gap_to_closest_note_before <= gap_to_closest_note_after:
-        return sorted_note_onsets[closest_note_after_timestamp_ms]
-    else:
         return sorted_note_onsets[closest_note_before_timestamp_ms]
+    else:
+        return sorted_note_onsets[closest_note_after_timestamp_ms]
