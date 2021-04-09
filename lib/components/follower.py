@@ -18,6 +18,9 @@ class Follower:
         # OLTW settings
         max_run_count: int,
         search_window: int,
+        # other settings
+        slice_len: int,
+        sample_rate: int,
         # Performance and Score info
         P_queue: "mp.Queue[np.ndarray]",
         S: np.ndarray,
@@ -30,6 +33,9 @@ class Follower:
         self.search_window = search_window
         self.P_queue = P_queue
         self.S = S
+        self.note_onsets = note_onsets
+        self.slice_len = slice_len
+        self.sample_rate = sample_rate
 
     def start(self):
         if self.mode == "online":
@@ -55,6 +61,8 @@ class Follower:
                     output_queue,
                     performance_stream_start_conn,
                     self.note_onsets,
+                    self.slice_len,
+                    self.sample_rate,
                 )
                 # Start
                 backend.start()
