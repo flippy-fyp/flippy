@@ -1,3 +1,4 @@
+from lib.sharedtypes import CQTType, ModeType
 from lib.cqt.cqt_nsgt import nsgt_extractor, nsgt_slicq_extractor
 from typing import Optional
 from lib.cqt.cqt_librosa import (
@@ -8,7 +9,7 @@ from lib.cqt.cqt_librosa import (
 import multiprocessing as mp
 import numpy as np
 import librosa  # type: ignore
-from lib.constants import DEFAULT_SAMPLE_RATE
+import time
 
 
 class Slicer:
@@ -17,12 +18,16 @@ class Slicer:
         wave_path: str,
         hop_length: int,
         frame_length: int,
+        sample_rate: int,
         slice_queue: "mp.Queue[Optional[np.ndarray]]",
+        simulate_performance: bool = True,
     ):
         self.wave_path = wave_path
         self.hop_length = hop_length
         self.frame_length = frame_length
+        self.sample_rate = sample_rate
         self.slice_queue = slice_queue
+        self.simulate_performance = simulate_performance
 
     def start(self):
         audio_stream = librosa.stream(
@@ -34,9 +39,20 @@ class Slicer:
             fill_value=0,
         )
 
+        # before starting, sleep for frame_length if performance
+        self.__sleep_if_performance(self.frame_length)
+
         for s in audio_stream:
             self.slice_queue.put(s)
+            # sleep for hop length if performance
+            self.__sleep_if_performance(self.hop_length)
+
         self.slice_queue.put(None)  # end
+
+    def __sleep_if_performance(self, samples: int):
+        if self.simulate_performance:
+            sleep_time = float(samples) / self.sample_rate
+            time.sleep(sleep_time)
 
 
 class FeatureExtractor:
@@ -44,8 +60,8 @@ class FeatureExtractor:
         self,
         slice_queue: "mp.Queue[Optional[np.ndarray]]",
         output_queue: "mp.Queue[Optional[np.ndarray]]",
-        mode: str,
-        cqt: str,
+        mode: ModeType,
+        cqt: CQTType,
         fmin: float,
         fmax: float,
         slice_len: int,
@@ -87,13 +103,15 @@ class FeatureExtractor:
 class AudioPreprocessor:
     def __init__(
         self,
+        sample_rate: int,
         # slicer
         wave_path: str,
         hop_length: int,
         frame_length: int,
+        simulate_performance: bool,
         # extractor
-        mode: str,
-        cqt: str,
+        mode: ModeType,
+        cqt: CQTType,
         fmin: float,
         fmax: float,
         slice_len: int,
@@ -101,30 +119,53 @@ class AudioPreprocessor:
         # output features
         output_queue: "mp.Queue[Optional[np.ndarray]]",
     ):
-        self.slice_queue: "mp.Queue[Optional[np.ndarray]]" = mp.Queue()
+        self.sample_rate = sample_rate
+        self.wave_path = wave_path
+        self.hop_length = hop_length
+        self.frame_length = frame_length
+        self.simulate_performance = simulate_performance
+
+        self.mode = mode
+        self.cqt = cqt
+        self.fmin = fmin
+        self.fmax = fmax
+        self.slice_len = slice_len
+        self.transition_slice_ratio = transition_slice_ratio
+
+        self.output_queue = output_queue
+
+    def start(self):
+        slice_queue: "mp.Queue[Optional[np.ndarray]]" = mp.Queue()
 
         online_slicer_proc: Optional[mp.Process] = None
 
-        if mode == "online":
-            slicer = Slicer(wave_path, hop_length, frame_length, self.slice_queue)
+        if self.mode == "online":
+            slicer = Slicer(
+                self.wave_path,
+                self.hop_length,
+                self.frame_length,
+                self.sample_rate,
+                self.slice_queue,
+                self.simulate_performance,
+            )
             online_slicer_proc = mp.Process(target=slicer.start)
             online_slicer_proc.start()
-        elif mode == "offline":
-            audio, _ = librosa.load(wave_path, sr=DEFAULT_SAMPLE_RATE, mono=True)
-            self.slice_queue.put(audio)
-            self.slice_queue.put(None)  # end
+        elif self.mode == "offline":
+            audio, _ = librosa.load(self.wave_path, sr=self.sample_rate, mono=True)
+            slice_queue.put(audio)
+            slice_queue.put(None)  # end
         else:
-            raise ValueError(f"Unknown mode: {mode}")
+            raise ValueError(f"Unknown mode: {self.mode}")
 
         feature_extractor = FeatureExtractor(
-            self.slice_queue,
-            output_queue,
-            mode,
-            cqt,
-            fmin,
-            fmax,
-            slice_len,
-            transition_slice_ratio,
+            slice_queue,
+            self.output_queue,
+            self.mode,
+            self.cqt,
+            self.fmin,
+            self.fmax,
+            self.slice_len,
+            self.transition_slice_ratio,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)
         feature_extractor_proc.start()
