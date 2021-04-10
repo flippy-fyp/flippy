@@ -1,3 +1,4 @@
+from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.sharedtypes import ModeType, DTWType, CQTType, BackendType
 from lib.utils import quantise_hz_midi
 from tap import Tap  # type: ignore
@@ -6,7 +7,7 @@ from sys import exit
 from os import path
 
 
-class ArgumentParser(Tap):
+class Arguments(Tap):
     mode: ModeType = "online"  # Mode: `offline` or `online`.
     dtw: DTWType = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
     cqt: CQTType = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`. `librosa` is only available for the `offline` mode.
@@ -29,6 +30,8 @@ class ArgumentParser(Tap):
     simulate_performance: bool = (
         False  # Whether to stream performance "live" into the system.
     )
+
+    sample_rate: int = DEFAULT_SAMPLE_RATE  # Sample rate to synthesise score and load performance wave file.
 
     def __log_and_exit(self, msg: str):
         self.__log(f"Argument Error: {msg}.")
@@ -104,4 +107,4 @@ class ArgumentParser(Tap):
         self.fmax = fmax
 
     def __log(self, msg: str):
-        self.__log(f"[{self.__class__.__name__}] {msg}")
+        eprint(f"[{self.__class__.__name__}] {msg}")

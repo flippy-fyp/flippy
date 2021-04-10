@@ -1,7 +1,11 @@
 from lib.eprint import eprint
-from typing import Callable, Iterator, List, Optional
-from lib.sharedtypes import DTWPathElemType, NoteInfo, BackendType
-import multiprocessing as mp
+from typing import Callable, Iterator, List, Optional, Dict
+from lib.sharedtypes import (
+    FollowerOutputQueue,
+    NoteInfo,
+    BackendType,
+    MultiprocessingConnection,
+)
 import time
 from sortedcontainers import SortedDict  # type: ignore
 
@@ -14,30 +18,35 @@ class Backend:
     def __init__(
         self,
         backend: BackendType,
-        follower_output_queue: "mp.Queue[Optional[DTWPathElemType]]",
-        performance_stream_start_conn: "mp.connection.Connection",
-        note_onsets: List[NoteInfo],
+        follower_output_queue: FollowerOutputQueue,
+        performance_stream_start_conn: MultiprocessingConnection,
+        score_note_onsets: List[NoteInfo],
         slice_len: int,
         sample_rate: int,
         output_func: Callable[[str], None],
     ):
-        self.backend = backend
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
-        self.note_onsets = note_onsets
         self.slice_len = slice_len
         self.sample_rate = sample_rate
-
-        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
-            {x.note_start: x for x in self.note_onsets}
-        )  # note_start is ms
         self.output_func = output_func
 
+        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
+            {x.note_start: x for x in score_note_onsets}
+        )  # note_start is ms
+
+        backend_start_map: Dict[BackendType, Callable[[], None]] = {
+            "timestamp": self.__start_timestamp,
+            "alignment": self.__start_alignment,
+        }
+        self.__start = backend_start_map.get(backend)
+        if self.__start is None:
+            raise ValueError(f"Unknown backend mode: {backend}")
+        self.__log("Initialised successfully")
+
     def start(self):
-        if self.backend == "timestamp":
-            self.__start_timestamp()
-        elif self.backend == "alignment":
-            self.__start_alignment()
+        self.__log("Starting...")
+        self.__start()
 
     def __start_timestamp(self):
         prev_s = -1
