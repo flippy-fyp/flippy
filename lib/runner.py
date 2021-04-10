@@ -1,6 +1,6 @@
 from lib.components.follower import Follower
 from lib.components.backend import Backend
-from lib.mputils import consume_queue
+from lib.mputils import consume_queue, consume_queue_into_conn
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.components.synthesiser import Synthesiser
 from lib.args import Arguments
@@ -31,9 +31,10 @@ class Runner:
         self.__log(f"STARTING")
 
         follower_output_queue: FollowerOutputQueue = mp.Queue()
-        performance_stream_start_conn: MultiprocessingConnection = (
-            mp.connection.Connection()
-        )
+        (
+            parent_performance_stream_start_conn,
+            child_performance_stream_start_conn,
+        ) = mp.Pipe()
         P_queue: ExtractedFeatureQueue = mp.Queue()
 
         self.__log(f"Begin: preprocess score")
@@ -50,7 +51,9 @@ class Runner:
 
         self.__log(f"Begin: initialise backend")
         backend = self.__init_backend(
-            follower_output_queue, performance_stream_start_conn, score_note_onsets
+            follower_output_queue,
+            parent_performance_stream_start_conn,
+            score_note_onsets,
         )
         self.__log(f"End: initialise backend")
 
@@ -66,7 +69,7 @@ class Runner:
 
         perf_start_time = time.perf_counter()
         self.__log(f"Starting: performance at {perf_start_time}")
-        performance_stream_start_conn.send(perf_start_time)
+        child_performance_stream_start_conn.send(perf_start_time)
         perf_ap_proc.start()
 
         perf_ap_proc.join()
@@ -105,6 +108,10 @@ class Runner:
         score_note_onsets: List[NoteInfo],
     ) -> Backend:
         args = self.args
+
+        def output_func(s: str):
+            print(s, flush=True)
+
         return Backend(
             args.backend,
             follower_output_queue,
@@ -112,7 +119,7 @@ class Runner:
             score_note_onsets,
             args.slice_len,
             args.sample_rate,
-            print,
+            output_func,
         )
 
     def __init_follower(
@@ -132,7 +139,7 @@ class Runner:
             np.array(S),
         )
 
-    def __preprocess_score(self) -> Tuple[List[NoteInfo], List[ExtractedFeature]]:
+    def __preprocess_score(self) -> Tuple[List[NoteInfo], np.ndarray]:
         """
         Return note_onsets and features extracted
         """
@@ -146,6 +153,14 @@ class Runner:
         self.__log(f"Score midi synthesised to {score_wave_path}")
 
         S_queue: ExtractedFeatureQueue = ExtractedFeatureQueue(mp.Queue())
+        # need to consume into a connection--queues are likely to fill up and reach their
+        # limit then cause the program to hang!
+        parent_S_conn, child_S_conn = mp.Pipe()
+        consume_S_queue_proc = mp.Process(
+            target=consume_queue_into_conn, args=(S_queue, child_S_conn)
+        )
+        consume_S_queue_proc.start()
+
         audio_preprocessor = AudioPreprocessor(
             args.sample_rate,
             score_wave_path,
@@ -162,8 +177,8 @@ class Runner:
         )
         audio_preprocessor.start()
 
-        S = consume_queue(S_queue)
-
+        S = np.array(parent_S_conn.recv())
+        consume_S_queue_proc.join()
         return (note_onsets, S)
 
     def __get_frame_length(self) -> int:

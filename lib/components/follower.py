@@ -57,12 +57,13 @@ class Follower:
     def start(self):
         self.__log("Starting...")
         self.__start()
+        self.__log("Finished")
 
     def __start_oltw(self):
         oltw = OLTW(
             self.P_queue,
             self.S,
-            self.output_queue,
+            self.follower_output_queue,
             self.max_run_count,
             self.search_window,
         )

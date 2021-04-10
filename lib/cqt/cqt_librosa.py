@@ -2,7 +2,7 @@ from typing import Any, Tuple
 from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
-from lib.sharedtypes import ExtractorFunctionType
+from lib.sharedtypes import ExtractorFunctionType, LibrosaCQTs
 from lib.constants import DEFAULT_SAMPLE_RATE
 
 
@@ -190,7 +190,7 @@ def extract_slice_features_librosa_hybrid_cqt(
 
 
 def get_extract_slice_features_wrapper(
-    cqt: str,
+    cqt: LibrosaCQTs,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
@@ -211,7 +211,7 @@ def get_extract_slice_features_wrapper(
 
 
 def get_extract_features_wrapper(
-    cqt: str,
+    cqt: LibrosaCQTs,
     fmin: float,
     n_bins: int,
     hop: int,

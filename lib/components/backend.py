@@ -47,6 +47,7 @@ class Backend:
     def start(self):
         self.__log("Starting...")
         self.__start()
+        self.__log("Finished")
 
     def __start_timestamp(self):
         prev_s = -1

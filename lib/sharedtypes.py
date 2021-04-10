@@ -27,7 +27,15 @@ ExtractedFeatureQueue = NewType(
 
 ExtractorFunctionType = Callable[[ExtractedFeature], ExtractedFeature]
 
+LibrosaCQT = Literal["librosa"]
+LibrosaPseudoCQT = Literal["librosa_pseudo"]
+LibrosaHybridCQT = Literal["librosa_hybrid"]
+LibrosaCQTs = Literal[LibrosaCQT, LibrosaPseudoCQT, LibrosaHybridCQT]
+NSGTCQT = Literal["nsgt"]
+
 ModeType = Literal["online", "offline"]
 DTWType = Literal["classical", "oltw"]
-CQTType = Literal["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]
+CQTType = Literal[
+    "librosa", "librosa_pseudo", "librosa_hybrid", "nsgt"
+]  # due to limitation of TAP
 BackendType = Literal["alignment", "timestamp"]

@@ -50,6 +50,7 @@ class Slicer:
             self.__sleep_if_performance(self.hop_length)
 
         self.slice_queue.put(None)  # end
+        self.__log("Finished")
 
     def __sleep_if_performance(self, samples: int):
         if self.simulate_performance:
@@ -71,6 +72,7 @@ class FeatureExtractor:
         fmax: float,
         slice_len: int,
         transition_slice_ratio: int,
+        sample_rate: int,
     ):
         self.slice_queue = slice_queue
         self.output_queue = output_queue
@@ -80,21 +82,26 @@ class FeatureExtractor:
             ModeType, Dict[CQTType, Callable[[ExtractedFeature], ExtractedFeature]]
         ] = {
             "offline": {
-                "librosa": get_extract_features_wrapper(cqt, fmin, slice_len, n_bins),
+                "librosa": get_extract_features_wrapper(
+                    "librosa", fmin, slice_len, n_bins, sample_rate
+                ),
                 "librosa_hybrid": get_extract_features_wrapper(
-                    cqt, fmin, slice_len, n_bins
+                    "librosa_hybrid", fmin, slice_len, n_bins, sample_rate
                 ),
                 "librosa_pseudo": get_extract_features_wrapper(
-                    cqt, fmin, slice_len, n_bins
+                    "librosa_pseudo", fmin, slice_len, n_bins, sample_rate
                 ),
-                "nsgt": nsgt_extractor(fmin, fmax, slice_len),
+                "nsgt": nsgt_extractor(fmin, fmax, slice_len, sample_rate),
             },
             "online": {
-                "librosa": get_extract_slice_features_wrapper(cqt, fmin, n_bins),
-                "librosa_hybrid": get_extract_slice_features_wrapper(cqt, fmin, n_bins),
-                "librosa_pseudo": get_extract_slice_features_wrapper(cqt, fmin, n_bins),
+                "librosa_hybrid": get_extract_slice_features_wrapper(
+                    "librosa_hybrid", fmin, n_bins
+                ),
+                "librosa_pseudo": get_extract_slice_features_wrapper(
+                    "librosa_pseudo", fmin, n_bins
+                ),
                 "nsgt": nsgt_slicq_extractor(
-                    slice_len, transition_slice_ratio, fmin, fmax
+                    slice_len, transition_slice_ratio, fmin, fmax, sample_rate
                 ),
             },
         }
@@ -103,19 +110,22 @@ class FeatureExtractor:
             raise ValueError(f"Unknown mode: {mode}")
         self.__extractor = mode_map.get(cqt)
         if self.__extractor is None:
-            raise ValueError(f"Unknown CQT type: {cqt}")
+            raise ValueError(
+                f"Invalid or unknown combination of mode {mode} and cqt type {cqt}"
+            )
 
         self.__log("Initialised successfully")
 
     def start(self):
         self.__log("Starting...")
-        while 1:
+        while True:
             sl = self.slice_queue.get()
             if sl is None:
                 break
             o = self.__extractor(sl)
             self.output_queue.put(o)
         self.output_queue.put(None)  # end
+        self.__log("Finished")
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
@@ -169,7 +179,7 @@ class AudioPreprocessor:
                 self.hop_length,
                 self.frame_length,
                 self.sample_rate,
-                self.slice_queue,
+                slice_queue,
                 self.simulate_performance,
             )
             online_slicer_proc = mp.Process(target=slicer.start)
@@ -198,6 +208,7 @@ class AudioPreprocessor:
             online_slicer_proc.join()
 
         feature_extractor_proc.join()
+        self.__log("Finished")
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")

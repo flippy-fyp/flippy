@@ -5,6 +5,7 @@ from tap import Tap  # type: ignore
 from lib.eprint import eprint
 from sys import exit
 from os import path
+from typing import List
 
 
 class Arguments(Tap):
@@ -28,7 +29,7 @@ class Arguments(Tap):
     )
 
     simulate_performance: bool = (
-        False  # Whether to stream performance "live" into the system.
+        True  # Whether to stream performance "live" into the system.
     )
 
     sample_rate: int = DEFAULT_SAMPLE_RATE  # Sample rate to synthesise score and load performance wave file.
@@ -108,3 +109,8 @@ class Arguments(Tap):
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
+
+    def __str__(self) -> str:
+        self_dict = self.as_dict()
+        del self_dict["sanitize"]
+        return "\n".join([f"--{arg} {val}" for (arg, val) in self_dict.items()])
