@@ -1,7 +1,8 @@
 from lib.runner import Runner
-from lib.args import ArgumentParser
+from lib.args import Arguments
 
 if __name__ == "__main__":
-    args = ArgumentParser().parse_args()
+    args = Arguments().parse_args()
     args.sanitize()
     runner = Runner(args)
+    runner.start()

@@ -1,7 +1,6 @@
 from lib.dtw.shared import cost
-from lib.sharedtypes import DTWPathElemType
-import multiprocessing as mp
-from typing import Optional, Set, Tuple
+from lib.sharedtypes import ExtractedFeatureQueue, FollowerOutputQueue
+from typing import Set, Tuple
 import numpy as np
 from enum import Enum
 
@@ -19,9 +18,9 @@ DIR_IJ = set([Direction.I, Direction.J])
 class OLTW:
     def __init__(
         self,
-        P_queue: "mp.Queue[Optional[np.ndarray]]",
+        P_queue: ExtractedFeatureQueue,
         S: np.ndarray,
-        output_queue: "mp.Queue[Optional[DTWPathElemType]]",
+        follower_output_queue: FollowerOutputQueue,
         max_run_count: int,
         search_window: int,  # c
     ):
@@ -32,7 +31,7 @@ class OLTW:
 
         self.S = S  # score
         self.P_queue = P_queue
-        self.output_queue = output_queue
+        self.follower_output_queue = follower_output_queue
         self.MAX_RUN_COUNT = max_run_count
         self.run_count: int = 1
         self.C = search_window
@@ -42,7 +41,7 @@ class OLTW:
     def dtw(self):
         """
         Performs oltw
-        Writes to self.output_queue
+        Writes to self.follower_output_queue
         """
         ### Step 1
         i = 0
@@ -53,12 +52,12 @@ class OLTW:
         i_prime = 0
         j_prime = 0
         # write to output queue
-        self.output_queue.put((i_prime, j_prime))
+        self.follower_output_queue.put((i_prime, j_prime))
 
         ### Step 2
         p_i = self.P_queue.get()
         if p_i is None:
-            self.output_queue.put(None)
+            self.follower_output_queue.put(None)
             return
         self.P = np.vstack([self.P, p_i])
         s_j = self.S[j]
@@ -71,7 +70,7 @@ class OLTW:
         while True:
             # Abort if last of S reached
             if j == len(self.S) - 1:
-                self.output_queue.put(None)
+                self.follower_output_queue.put(None)
                 return
 
             ### Step 4
@@ -84,7 +83,7 @@ class OLTW:
                 # obtain p_i
                 p_i = self.P_queue.get()
                 if p_i is None:
-                    self.output_queue.put(None)
+                    self.follower_output_queue.put(None)
                     return
                 self.P = np.vstack([self.P, p_i])
                 # compute required D elements
@@ -110,10 +109,10 @@ class OLTW:
                 self.run_count = 1
             previous = current
 
-            ### update i_prime and j_prime and write to output_queue
+            ### update i_prime and j_prime and write to follower_output_queue
             i_prime, j_prime = self.__get_i_j_prime(i, j)
             # print(np.flipud(self.D.T))
-            self.output_queue.put((i_prime, j_prime))
+            self.follower_output_queue.put((i_prime, j_prime))
 
     def __get_i_j_prime(self, i: int, j: int) -> Tuple[int, int]:
         i_prime, j_prime = (i, j)
