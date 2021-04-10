@@ -1,5 +1,5 @@
 from lib.components.backend import get_closest_note_before
-from typing import Iterator, List, Optional, Tuple
+from typing import List, Optional, Tuple
 from lib.sharedtypes import NoteInfo
 from sortedcontainers import SortedDict  # type: ignore
 
