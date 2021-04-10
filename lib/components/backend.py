@@ -2,9 +2,7 @@ from lib.eprint import eprint
 from typing import Callable, Iterator, List, Optional
 from lib.sharedtypes import DTWPathElemType, NoteInfo, BackendType
 import multiprocessing as mp
-from lib.constants import DEFAULT_SAMPLE_RATE
 import time
-import math
 from sortedcontainers import SortedDict  # type: ignore
 
 
@@ -85,7 +83,8 @@ class Backend:
                     self.output_func(
                         f"{timestamp_p_ms} {det_time} {closest_note.note_start} {closest_note.midi_note_num}"
                     )
-                prev_note_info = closest_note
+                    prev_note_info = closest_note
+                prev_s = s
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
