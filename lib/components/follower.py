@@ -5,7 +5,7 @@ from lib.eprint import eprint
 import multiprocessing as mp
 import numpy as np
 import time
-from typing import Optional, List
+from typing import Callable, Optional, List
 
 
 class Follower:
@@ -37,14 +37,26 @@ class Follower:
         self.slice_len = slice_len
         self.sample_rate = sample_rate
 
+        self.__start = self.__get_start_func()
+
+    def __get_start_func(self) -> Callable[[], None]:
+        """
+        get the starter function
+        """
+
+        def a():
+            return None
+
+        return a
+
     def start(self):
         if self.mode == "online":
             if self.dtw == "classical":
                 raise ValueError("classical dtw cannot be used in online mode")
             elif self.dtw == "oltw":
-                eprint("online oltw mode")
+                self.__log("online oltw mode")
 
-                output_queue: "np.Queue[Optional[np.ndarray]]" = mp.Queue()
+                output_queue: "mp.Queue[Optional[np.ndarray]]" = mp.Queue()
                 oltw = OLTW(
                     self.P_queue,
                     self.S,
@@ -63,6 +75,7 @@ class Follower:
                     self.note_onsets,
                     self.slice_len,
                     self.sample_rate,
+                    print,
                 )
                 # Start
                 backend.start()
@@ -73,7 +86,10 @@ class Follower:
                 raise ValueError(f"Unknown dtw: {self.mode}")
         elif self.mode == "offline":
             if self.dtw == "classical":
-                raise ValueError("classical dtw cannot be used in online mode")
+                self.__log("offline classical mode")
+
+                output_queue: "mp.Queue[Optional[np.ndarray]]" = mp.Queue()
+
             elif self.dtw == "oltw":
                 pass
             else:
@@ -81,3 +97,6 @@ class Follower:
         else:
             raise ValueError(f"Unknown mode: {self.mode}")
         pass
+
+    def __log(self, msg: str):
+        eprint(f"[{self.__class__.__name__}] {msg}")
