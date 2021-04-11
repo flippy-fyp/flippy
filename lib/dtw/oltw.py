@@ -1,6 +1,7 @@
+from lib.eprint import eprint
 from lib.dtw.shared import cost
-from lib.sharedtypes import ExtractedFeatureQueue, FollowerOutputQueue
-from typing import Set, Tuple
+from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue, FollowerOutputQueue
+from typing import Set, Tuple, List
 import numpy as np
 from enum import Enum
 
@@ -19,15 +20,17 @@ class OLTW:
     def __init__(
         self,
         P_queue: ExtractedFeatureQueue,
-        S: np.ndarray,
+        S: List[ExtractedFeature],
         follower_output_queue: FollowerOutputQueue,
         max_run_count: int,
         search_window: int,  # c
     ):
-        if len(S.shape) != 2:
-            raise ValueError(f"S must be a 2D ndarray, got shape: {S.shape}")
         if len(S) == 0:
             raise ValueError(f"Empty S")
+        if len(S[0].shape) != 1:
+            raise ValueError(
+                f"S must be a list of 1D ndarrays, got a list of {S[0].shape} ndarrays"
+            )
 
         self.S = S  # score
         self.P_queue = P_queue
@@ -35,8 +38,10 @@ class OLTW:
         self.MAX_RUN_COUNT = max_run_count
         self.run_count: int = 1
         self.C = search_window
-        self.D = np.ones((0, self.S.shape[0]), dtype=np.float32) * np.inf
-        self.P = np.zeros((0, self.S.shape[1]), dtype=np.float32)
+        self.D = np.ones((0, len(self.S)), dtype=np.float32) * np.inf
+        self.P = np.zeros((0, self.S[0].shape[0]), dtype=np.float32)
+
+        self.__log("Initialised successfully")
 
     def dtw(self):
         """
@@ -154,7 +159,7 @@ class OLTW:
         """
         # print(i, j, d)
         while i >= self.D.shape[0]:
-            self.D = np.vstack([self.D, np.ones(self.S.shape[0]) * np.inf])
+            self.D = np.vstack([self.D, np.ones(len(self.S)) * np.inf])
         if (i, j) == (0, 0):
             self.D[i][j] = d
         else:
@@ -173,3 +178,6 @@ class OLTW:
             return np.float32(np.inf)
 
         return self.D[i][j]
+
+    def __log(self, msg: str):
+        eprint(f"[{self.__class__.__name__}] {msg}")

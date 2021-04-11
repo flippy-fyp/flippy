@@ -1,5 +1,5 @@
 from lib.eprint import eprint
-from typing import Callable, Iterator, List, Optional, Dict
+from typing import Callable, Iterator, List, Optional, Dict, Set
 from lib.sharedtypes import (
     FollowerOutputQueue,
     NoteInfo,
@@ -47,6 +47,7 @@ class Backend:
     def start(self):
         self.__log("Starting...")
         self.__start()
+        self.__log("Finished")
 
     def __start_timestamp(self):
         prev_s = -1
@@ -64,17 +65,16 @@ class Backend:
         # wait for the performance stream to start
         performance_start_time: float = self.performance_stream_start_conn.recv()
         prev_s = -1
-        prev_note_info: Optional[NoteInfo] = None
+        seen_notes: Set[NoteInfo] = set()
 
         while True:
             e = self.follower_output_queue.get()
             if e is None:
                 return
-            s = e[1]
-            p = e[2]
+            s, p = e
             if s != prev_s:
                 curr_time = time.perf_counter()
-                det_time = curr_time - performance_start_time
+                det_time_ms = (curr_time - performance_start_time) * 1000
                 # use ms because NoteInfo are ms and the follower output for quantitative
                 # testbench is ms
                 timestamp_s_s = float(self.slice_len * s) / self.sample_rate
@@ -87,12 +87,12 @@ class Backend:
                 )
                 if closest_note is None:
                     self.__log("Ignoring unfound closest note!")
-                if closest_note != prev_note_info:
+                if closest_note not in seen_notes:
                     # MIREX format
                     self.output_func(
-                        f"{timestamp_p_ms} {det_time} {closest_note.note_start} {closest_note.midi_note_num}"
+                        f"{int(timestamp_p_ms)} {int(det_time_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
                     )
-                    prev_note_info = closest_note
+                    seen_notes.add(closest_note)
                 prev_s = s
 
     def __log(self, msg: str):

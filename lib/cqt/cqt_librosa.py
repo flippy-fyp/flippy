@@ -1,8 +1,9 @@
-from typing import Any, Tuple
+from lib.cqt.base import BaseCQT
+from typing import Any, Callable, Dict, Tuple
 from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
-from lib.sharedtypes import ExtractorFunctionType
+from lib.sharedtypes import ExtractedFeature, ExtractorFunctionType, LibrosaCQTs
 from lib.constants import DEFAULT_SAMPLE_RATE
 
 
@@ -127,10 +128,13 @@ def slice_cqt_helper(
     cqt = cqt.T
     # Ignore the second element
     cqt = cqt[:1]
+    # Reshape so that it is 1D
+    cqt = cqt.reshape(cqt.shape[1])
     # Take abs value
     cqt = np.abs(cqt)
     # L1 normalize
-    cqt = librosa.util.normalize(cqt, norm=1, axis=1)
+    cqt = librosa.util.normalize(cqt, norm=1)
+
     return cqt
 
 
@@ -189,45 +193,52 @@ def extract_slice_features_librosa_hybrid_cqt(
 #     )
 
 
-def get_extract_slice_features_wrapper(
-    cqt: str,
-    fmin: float,
-    n_bins: int,
-    fs: int = DEFAULT_SAMPLE_RATE,
-) -> ExtractorFunctionType:
-    f_map = {
-        "librosa_pseudo": extract_slice_features_librosa_pseudo_cqt,
-        "librosa_hybrid": extract_slice_features_librosa_hybrid_cqt,
-    }
-    if cqt not in f_map:
-        raise ValueError(f"Unknown cqt algo: {cqt}")
+class LibrosaSliceCQT(BaseCQT):
+    def __init__(
+        self, cqt: LibrosaCQTs, fmin: float, n_bins: int, fs: int = DEFAULT_SAMPLE_RATE
+    ):
+        self.fmin = fmin
+        self.n_bins = n_bins
+        self.fs = fs
 
-    cqt_f = f_map[cqt]
+        f_map: Dict[
+            LibrosaCQTs, Callable[[np.ndarray, float, int, int], ExtractedFeature]
+        ] = {
+            "librosa_pseudo": extract_slice_features_librosa_pseudo_cqt,
+            "librosa_hybrid": extract_slice_features_librosa_hybrid_cqt,
+        }
+        self.__f = f_map.get(cqt)
+        if self.__f is None:
+            raise ValueError(f"Unknown or unsupported cqt algo: {cqt}")
 
-    def w(audio_slice: np.ndarray) -> np.ndarray:
-        return cqt_f(audio_slice, fmin, n_bins, fs)
-
-    return w
+    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
+        return self.__f(audio_slice, self.fmin, self.n_bins, self.fs)  # type: ignore
 
 
-def get_extract_features_wrapper(
-    cqt: str,
-    fmin: float,
-    n_bins: int,
-    hop: int,
-    fs: int = DEFAULT_SAMPLE_RATE,
-) -> ExtractorFunctionType:
-    f_map = {
-        "librosa": extract_features_librosa_cqt,
-        "librosa_pseudo": extract_features_librosa_pseudo_cqt,
-        "librosa_hybrid": extract_features_librosa_hybrid_cqt,
-    }
-    if cqt not in f_map:
-        raise ValueError(f"Unknown cqt algo: {cqt}")
+class LibrosaFullCQT(BaseCQT):
+    def __init__(
+        self,
+        cqt: LibrosaCQTs,
+        fmin: float,
+        n_bins: int,
+        hop: int,
+        fs: int = DEFAULT_SAMPLE_RATE,
+    ):
+        self.fmin = fmin
+        self.n_bins = n_bins
+        self.hop = hop
+        self.fs = fs
 
-    cqt_f = f_map[cqt]
+        f_map: Dict[
+            LibrosaCQTs, Callable[[np.ndarray, float, int, int, int], ExtractedFeature]
+        ] = {
+            "librosa": extract_features_librosa_cqt,
+            "librosa_pseudo": extract_features_librosa_pseudo_cqt,
+            "librosa_hybrid": extract_features_librosa_hybrid_cqt,
+        }
+        self.__f = f_map.get(cqt)
+        if self.__f is None:
+            raise ValueError(f"Unknown or unsupported cqt algo: {cqt}")
 
-    def w(audio: np.ndarray) -> np.ndarray:
-        return cqt_f(audio, fmin, n_bins, fs, hop)
-
-    return w
+    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
+        return self.__f(audio_slice, self.fmin, self.n_bins, self.fs, self.hop)  # type: ignore

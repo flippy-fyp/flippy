@@ -5,6 +5,7 @@ from tap import Tap  # type: ignore
 from lib.eprint import eprint
 from sys import exit
 from os import path
+from typing import List
 
 
 class Arguments(Tap):
@@ -33,21 +34,14 @@ class Arguments(Tap):
 
     sample_rate: int = DEFAULT_SAMPLE_RATE  # Sample rate to synthesise score and load performance wave file.
 
+    play_performance_audio: bool = False  # Whether to play the performance audio file when started. Requires `simulate_performance` to be set to True.
+
     def __log_and_exit(self, msg: str):
         self.__log(f"Argument Error: {msg}.")
         self.__log("Use the `--help` flag to show the help message.")
         exit(1)
 
     def sanitize(self):
-        if self.mode not in ["online", "offline"]:
-            self.__log_and_exit(f"Unknown mode: `{self.mode}`")
-
-        if self.dtw not in ["oltw", "classical"]:
-            self.__log_and_exit(f"Unknown dtw: `{self.dtw}`")
-
-        if self.cqt not in ["nsgt", "librosa"]:
-            self.__log_and_exit(f"Unknown cqt: `{self.cqt}`")
-
         if self.max_run_count < 0:
             self.__log_and_exit(f"max_run_count must be positive")
 
@@ -95,6 +89,11 @@ class Arguments(Tap):
         if self.backend not in ("alignment", "timestamp"):
             self.__log_and_exit("backend must be one of `alignment` or `timestamp`")
 
+        if self.play_performance_audio and not self.simulate_performance:
+            self.__log_and_exit(
+                "`simulate_performance` must be set to True to enable `play_performance_audio`"
+            )
+
         # ---- MUTATIVE ----
 
         # quantize fmin and fmax
@@ -108,3 +107,8 @@ class Arguments(Tap):
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
+
+    def __str__(self) -> str:
+        self_dict = self.as_dict()
+        del self_dict["sanitize"]
+        return "\n".join([f"--{arg} {val}" for (arg, val) in self_dict.items()])

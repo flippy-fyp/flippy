@@ -1,5 +1,5 @@
 from lib.dtw.oltw import OLTW
-from lib.sharedtypes import DTWPathElemType
+from lib.sharedtypes import DTWPathElemType, ExtractedFeature
 from lib.mputils import consume_queue, produce_queue
 from typing import List, Tuple
 import unittest
@@ -10,14 +10,14 @@ import numpy as np
 class TestOLTW(unittest.TestCase):
     def test_oltw_constructor(self):
         # S, partial exception string
-        testcases: List[Tuple[np.ndarray, str]] = [
+        testcases: List[Tuple[List[ExtractedFeature], str]] = [
             (
-                np.empty((0, 0)),
+                [],
                 "Empty S",
             ),
             (
-                np.empty(3),
-                "S must be a 2D ndarray",
+                [np.empty((3, 3))],
+                "S must be a list of 1D ndarrays",
             ),
         ]
 
@@ -28,17 +28,34 @@ class TestOLTW(unittest.TestCase):
             self.assertTrue(excp_str in str(context.exception), excp_str)
 
     def test_oltw(self):
-        testcases: List[str, Tuple[np.ndarray, np.ndarray, List[DTWPathElemType]]] = [
+        testcases: List[
+            str,
+            Tuple[
+                List[ExtractedFeature], List[ExtractedFeature], List[DTWPathElemType]
+            ],
+        ] = [
             (
                 "Simple case",
-                np.array([[1]], dtype=np.float32),
-                np.array([[2]], dtype=np.float32),
+                [np.array([1], dtype=np.float64)],
+                [np.array([2], dtype=np.float64)],
                 [(0, 0)],
             ),
             (
                 "Report example",
-                np.array([[1, 2], [3, 3], [2, 2], [2, 3], [6, 6]], dtype=np.float32),
-                np.array([[1, 2], [3, 3], [2, 2], [4, 3], [2, 2]], dtype=np.float32),
+                [
+                    np.array([1, 2], dtype=np.float64),
+                    np.array([3, 3], dtype=np.float64),
+                    np.array([2, 2], dtype=np.float64),
+                    np.array([2, 3], dtype=np.float64),
+                    np.array([6, 6], dtype=np.float64),
+                ],
+                [
+                    np.array([1, 2], dtype=np.float64),
+                    np.array([3, 3], dtype=np.float64),
+                    np.array([2, 2], dtype=np.float64),
+                    np.array([4, 3], dtype=np.float64),
+                    np.array([2, 2], dtype=np.float64),
+                ],
                 [(0, 0), (1, 1), (2, 2), (3, 2), (3, 3), (3, 4)],
             ),
         ]

@@ -1,6 +1,7 @@
+from lib.components.player import Player
 from lib.components.follower import Follower
 from lib.components.backend import Backend
-from lib.mputils import consume_queue
+from lib.mputils import consume_queue_into_conn
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.components.synthesiser import Synthesiser
 from lib.args import Arguments
@@ -12,7 +13,7 @@ from lib.sharedtypes import (
     MultiprocessingConnection,
     NoteInfo,
 )
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 from lib.eprint import eprint
 import multiprocessing as mp
 import time
@@ -28,12 +29,14 @@ class Runner:
         self.__log(f"Initiated with arguments:\n{args}")
 
     def start(self):
+        args = self.args
         self.__log(f"STARTING")
 
         follower_output_queue: FollowerOutputQueue = mp.Queue()
-        performance_stream_start_conn: MultiprocessingConnection = (
-            mp.connection.Connection()
-        )
+        (
+            parent_performance_stream_start_conn,
+            child_performance_stream_start_conn,
+        ) = mp.Pipe()
         P_queue: ExtractedFeatureQueue = mp.Queue()
 
         self.__log(f"Begin: preprocess score")
@@ -50,7 +53,9 @@ class Runner:
 
         self.__log(f"Begin: initialise backend")
         backend = self.__init_backend(
-            follower_output_queue, performance_stream_start_conn, score_note_onsets
+            follower_output_queue,
+            parent_performance_stream_start_conn,
+            score_note_onsets,
         )
         self.__log(f"End: initialise backend")
 
@@ -64,11 +69,19 @@ class Runner:
         self.__log(f"Starting: follower")
         follower_proc.start()
 
+        player_proc = self.__init_player_if_required()
+        if player_proc:
+            self.__(f"Starting: player")
+            player_proc.start()
+
         perf_start_time = time.perf_counter()
         self.__log(f"Starting: performance at {perf_start_time}")
-        performance_stream_start_conn.send(perf_start_time)
+        child_performance_stream_start_conn.send(perf_start_time)
         perf_ap_proc.start()
 
+        if player_proc:
+            player_proc.join
+            self.__log("Joined: player")
         perf_ap_proc.join()
         self.__log("Joined: performance")
         follower_proc.join()
@@ -98,6 +111,9 @@ class Runner:
 
         return ap
 
+    def __output_func(self, s: str):
+        print(s, flush=True)
+
     def __init_backend(
         self,
         follower_output_queue: FollowerOutputQueue,
@@ -105,6 +121,7 @@ class Runner:
         score_note_onsets: List[NoteInfo],
     ) -> Backend:
         args = self.args
+
         return Backend(
             args.backend,
             follower_output_queue,
@@ -112,7 +129,7 @@ class Runner:
             score_note_onsets,
             args.slice_len,
             args.sample_rate,
-            print,
+            self.__output_func,
         )
 
     def __init_follower(
@@ -129,7 +146,7 @@ class Runner:
             args.search_window,
             follower_output_queue,
             P_queue,
-            np.array(S),
+            S,
         )
 
     def __preprocess_score(self) -> Tuple[List[NoteInfo], List[ExtractedFeature]]:
@@ -146,6 +163,14 @@ class Runner:
         self.__log(f"Score midi synthesised to {score_wave_path}")
 
         S_queue: ExtractedFeatureQueue = ExtractedFeatureQueue(mp.Queue())
+        # need to consume into a connection--queues are likely to fill up and reach their
+        # limit then cause the program to hang!
+        parent_S_conn, child_S_conn = mp.Pipe()
+        consume_S_queue_proc = mp.Process(
+            target=consume_queue_into_conn, args=(S_queue, child_S_conn)
+        )
+        consume_S_queue_proc.start()
+
         audio_preprocessor = AudioPreprocessor(
             args.sample_rate,
             score_wave_path,
@@ -162,8 +187,9 @@ class Runner:
         )
         audio_preprocessor.start()
 
-        S = consume_queue(S_queue)
+        S = parent_S_conn.recv()
 
+        consume_S_queue_proc.join()
         return (note_onsets, S)
 
     def __get_frame_length(self) -> int:
@@ -171,6 +197,18 @@ class Runner:
         if args.cqt == "nsgt":
             return args.transition_slice_ratio * args.slice_len
         return args.slice_len
+
+    def __init_player_if_required(self) -> Optional[mp.Process]:
+        args = self.args
+        if args.play_performance_audio:
+            if not args.simulate_performance:
+                raise ValueError(
+                    "Can only play performance audio when simulate_performance is set to True"
+                )
+            player = Player(args.perf_wave_path)
+            player_proc = mp.Process(target=player.play)
+            return player_proc
+        return None
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")

@@ -70,8 +70,8 @@ def plot_librosa_features_stream(extractor=extract_slice_features_librosa_pseudo
     )
 
     fmin, n_bins = get_librosa_params()
-    prev_slice: np.ndarray = np.zeros((1, n_bins))
-    cqt = np.empty((0, n_bins), dtype=np.float32)
+    prev_slice: np.ndarray = np.zeros(n_bins)
+    cqt = []
 
     start_time = time.time()
     for audio_slice in audio_stream:
@@ -83,9 +83,11 @@ def plot_librosa_features_stream(extractor=extract_slice_features_librosa_pseudo
         # clip
         cqt_slice = cqt_slice.clip(0)  # type: ignore
         # update in cqt
-        cqt = np.append(cqt, cqt_slice, axis=0)
+        cqt.append(cqt_slice)
         # update prev
         prev_slice = tmp_slice
+    # convert to ndarray
+    cqt = np.array(cqt)
 
     end_time = time.time()
     print(f"Time taken: {end_time - start_time}")

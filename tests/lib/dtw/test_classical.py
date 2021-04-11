@@ -40,14 +40,14 @@ class TestClassicalDTW(unittest.TestCase):
         testcases: List[str, Tuple[np.ndarray, np.ndarray, List[DTWPathElemType]]] = [
             (
                 "Simple case",
-                np.array([[1]], dtype=np.float32),
-                np.array([[2]], dtype=np.float32),
+                np.array([[1]], dtype=np.float64),
+                np.array([[2]], dtype=np.float64),
                 [(0, 0)],
             ),
             (
                 "Report example",
-                np.array([[1, 2], [3, 3], [2, 2], [2, 3], [6, 6]], dtype=np.float32),
-                np.array([[1, 2], [3, 3], [2, 2], [4, 3], [2, 2]], dtype=np.float32),
+                np.array([[1, 2], [3, 3], [2, 2], [2, 3], [6, 6]], dtype=np.float64),
+                np.array([[1, 2], [3, 3], [2, 2], [4, 3], [2, 2]], dtype=np.float64),
                 [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)],
             ),
         ]
