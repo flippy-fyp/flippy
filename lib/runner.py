@@ -1,6 +1,6 @@
 from lib.components.follower import Follower
 from lib.components.backend import Backend
-from lib.mputils import consume_queue, consume_queue_into_conn
+from lib.mputils import consume_queue_into_conn
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.components.synthesiser import Synthesiser
 from lib.args import Arguments
@@ -136,10 +136,10 @@ class Runner:
             args.search_window,
             follower_output_queue,
             P_queue,
-            np.array(S),
+            S,
         )
 
-    def __preprocess_score(self) -> Tuple[List[NoteInfo], np.ndarray]:
+    def __preprocess_score(self) -> Tuple[List[NoteInfo], List[ExtractedFeature]]:
         """
         Return note_onsets and features extracted
         """
@@ -177,7 +177,8 @@ class Runner:
         )
         audio_preprocessor.start()
 
-        S = np.array(parent_S_conn.recv())
+        S = parent_S_conn.recv()
+
         consume_S_queue_proc.join()
         return (note_onsets, S)
 

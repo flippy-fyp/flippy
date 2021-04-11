@@ -139,10 +139,8 @@ def extract_features_nsgt_slicq(
     cqt = cqt[: len(cqt) // sl_tr_ratio]
     # Average over the time slices
     cqt = np.average(cqt, axis=0)
-    # Reshape
-    cqt = np.reshape(cqt, (1, len(cqt)))
     # L1 normalize
-    cqt = librosa.util.normalize(cqt, norm=1, axis=1)
+    cqt = librosa.util.normalize(cqt, norm=1)
 
     return cqt
 

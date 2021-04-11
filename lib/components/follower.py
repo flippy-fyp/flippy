@@ -2,14 +2,14 @@ from lib.dtw.classical import ClassicalDTW
 from lib.mputils import consume_queue, write_list_to_queue
 from lib.sharedtypes import (
     DTWType,
+    ExtractedFeature,
     ExtractedFeatureQueue,
     FollowerOutputQueue,
     ModeType,
 )
 from lib.dtw.oltw import OLTW
 from lib.eprint import eprint
-import numpy as np
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 
 class Follower:
@@ -25,7 +25,7 @@ class Follower:
         follower_output_queue: FollowerOutputQueue,
         # Performance and Score info
         P_queue: ExtractedFeatureQueue,
-        S: np.ndarray,
+        S: List[ExtractedFeature],
     ):
         self.mode = mode
         self.dtw = dtw

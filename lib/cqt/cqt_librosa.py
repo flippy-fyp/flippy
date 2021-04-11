@@ -127,10 +127,13 @@ def slice_cqt_helper(
     cqt = cqt.T
     # Ignore the second element
     cqt = cqt[:1]
+    # Reshape so that it is 1D
+    cqt = cqt.reshape(cqt.shape[1])
     # Take abs value
     cqt = np.abs(cqt)
     # L1 normalize
-    cqt = librosa.util.normalize(cqt, norm=1, axis=1)
+    cqt = librosa.util.normalize(cqt, norm=1)
+
     return cqt
 
 

@@ -40,15 +40,6 @@ class Arguments(Tap):
         exit(1)
 
     def sanitize(self):
-        if self.mode not in ["online", "offline"]:
-            self.__log_and_exit(f"Unknown mode: `{self.mode}`")
-
-        if self.dtw not in ["oltw", "classical"]:
-            self.__log_and_exit(f"Unknown dtw: `{self.dtw}`")
-
-        if self.cqt not in ["nsgt", "librosa"]:
-            self.__log_and_exit(f"Unknown cqt: `{self.cqt}`")
-
         if self.max_run_count < 0:
             self.__log_and_exit(f"max_run_count must be positive")
 

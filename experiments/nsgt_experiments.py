@@ -44,8 +44,8 @@ def plot_nsgt_features_slice():
     slicq = get_slicq_engine(frame_length, sl_tr_ratio, fmin, fmax)
 
     n_bins = 59  # Based on the defaults
-    prev_slice: np.ndarray = np.zeros((1, n_bins))
-    cqt = np.empty((0, n_bins), dtype=np.float32)
+    prev_slice: np.ndarray = np.zeros(n_bins)
+    cqt = []
 
     start_time = time.time()
     for audio_slice in audio_stream:
@@ -57,9 +57,11 @@ def plot_nsgt_features_slice():
         # clip
         cqt_slice = cqt_slice.clip(0)  # type: ignore
         # update in cqt
-        cqt = np.append(cqt, cqt_slice, axis=0)
+        cqt.append(cqt_slice)
         # update prev
         prev_slice = tmp_slice
+    # convert to ndarray
+    cqt = np.array(cqt)
 
     end_time = time.time()
     print(f"Time taken: {end_time - start_time}")

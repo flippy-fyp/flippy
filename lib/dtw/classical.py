@@ -1,3 +1,4 @@
+from lib.eprint import eprint
 from typing import List
 from lib.dtw.shared import cost
 from lib.sharedtypes import DTWPathElemType
@@ -23,6 +24,8 @@ class ClassicalDTW:
             self.D_shape, dtype=bool
         )  # whether the entry in self.D is calculated
         self.D = np.zeros(self.D_shape, dtype=np.float32)
+
+        self.__log("Initialised successfully")
 
     def dtw(self) -> List[DTWPathElemType]:
         """
@@ -98,3 +101,6 @@ class ClassicalDTW:
                 self.D[r][c] = curr_cost
 
         return self.D[r][c]
+
+    def __log(self, msg: str):
+        eprint(f"[{self.__class__.__name__}] {msg}")

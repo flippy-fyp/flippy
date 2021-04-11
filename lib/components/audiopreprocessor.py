@@ -10,6 +10,7 @@ from lib.cqt.cqt_librosa import (
 import multiprocessing as mp
 import librosa  # type: ignore
 import time
+import numpy as np
 
 
 class Slicer:
@@ -118,12 +119,15 @@ class FeatureExtractor:
 
     def start(self):
         self.__log("Starting...")
+        prev_slice: Optional[np.ndarray] = None
         while True:
             sl = self.slice_queue.get()
             if sl is None:
                 break
             o = self.__extractor(sl)
-            self.output_queue.put(o)
+            cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
+            prev_slice = cqt_slice
+            self.output_queue.put(cqt_slice)
         self.output_queue.put(None)  # end
         self.__log("Finished")
 
@@ -200,6 +204,7 @@ class AudioPreprocessor:
             self.fmax,
             self.slice_len,
             self.transition_slice_ratio,
+            self.sample_rate,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)
         feature_extractor_proc.start()
