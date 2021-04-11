@@ -1,6 +1,6 @@
 from lib.eprint import eprint
-from pydub import AudioSegment
-from pydub.playback import play
+from pydub import AudioSegment  # type: ignore
+from pydub.playback import play  # type: ignore
 
 
 class Player:
