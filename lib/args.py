@@ -29,10 +29,12 @@ class Arguments(Tap):
     )
 
     simulate_performance: bool = (
-        True  # Whether to stream performance "live" into the system.
+        False  # Whether to stream performance "live" into the system.
     )
 
     sample_rate: int = DEFAULT_SAMPLE_RATE  # Sample rate to synthesise score and load performance wave file.
+
+    play_performance_audio: bool = False  # Whether to play the performance audio file when started. Requires `simulate_performance` to be set to True.
 
     def __log_and_exit(self, msg: str):
         self.__log(f"Argument Error: {msg}.")
@@ -86,6 +88,11 @@ class Arguments(Tap):
 
         if self.backend not in ("alignment", "timestamp"):
             self.__log_and_exit("backend must be one of `alignment` or `timestamp`")
+
+        if self.play_performance_audio and not self.simulate_performance:
+            self.__log_and_exit(
+                "`simulate_performance` must be set to True to enable `play_performance_audio`"
+            )
 
         # ---- MUTATIVE ----
 

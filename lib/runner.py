@@ -1,3 +1,4 @@
+from lib.components.player import Player
 from lib.components.follower import Follower
 from lib.components.backend import Backend
 from lib.mputils import consume_queue_into_conn
@@ -12,7 +13,7 @@ from lib.sharedtypes import (
     MultiprocessingConnection,
     NoteInfo,
 )
-from typing import Tuple, List
+from typing import Optional, Tuple, List
 from lib.eprint import eprint
 import multiprocessing as mp
 import time
@@ -28,6 +29,7 @@ class Runner:
         self.__log(f"Initiated with arguments:\n{args}")
 
     def start(self):
+        args = self.args
         self.__log(f"STARTING")
 
         follower_output_queue: FollowerOutputQueue = mp.Queue()
@@ -67,11 +69,19 @@ class Runner:
         self.__log(f"Starting: follower")
         follower_proc.start()
 
+        player_proc = self.__init_player_if_required()
+        if player_proc:
+            self.__(f"Starting: player")
+            player_proc.start()
+
         perf_start_time = time.perf_counter()
         self.__log(f"Starting: performance at {perf_start_time}")
         child_performance_stream_start_conn.send(perf_start_time)
         perf_ap_proc.start()
 
+        if player_proc:
+            player_proc.join
+            self.__log("Joined: player")
         perf_ap_proc.join()
         self.__log("Joined: performance")
         follower_proc.join()
@@ -187,6 +197,18 @@ class Runner:
         if args.cqt == "nsgt":
             return args.transition_slice_ratio * args.slice_len
         return args.slice_len
+
+    def __init_player_if_required(self) -> Optional[mp.Process]:
+        args = self.args
+        if args.play_performance_audio:
+            if not args.simulate_performance:
+                raise ValueError(
+                    "Can only play performance audio when simulate_performance is set to True"
+                )
+            player = Player(args.perf_wave_path)
+            player_proc = mp.Process(target=player.play)
+            return player_proc
+        return None
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")

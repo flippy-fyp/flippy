@@ -19,7 +19,7 @@ class TestMPUtils(unittest.TestCase):
         self.assertEqual(l, ll)
 
     @given(st.lists(st.integers()))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_multiproc_queues(self, l: List[int]):
         q: AnyOptionalQueue = AnyOptionalQueue(mp.Queue())
         producer_proc = mp.Process(

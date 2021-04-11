@@ -1,3 +1,4 @@
+from lib.eprint import eprint
 from lib.midi import midi_to_audio
 import tempfile
 import os
@@ -13,6 +14,7 @@ class Synthesiser:
     def __init__(self, score_midi_path: str, sample_rate: int = DEFAULT_SAMPLE_RATE):
         self.score_midi_path = score_midi_path
         self.sample_rate = sample_rate
+        self.__log("Initialised successfully")
 
     def synthesise(self) -> str:
         """
@@ -26,3 +28,6 @@ class Synthesiser:
         sf.write(tmppath, audio, samplerate=self.sample_rate)
 
         return tmppath
+
+    def __log(self, msg: str):
+        eprint(f"[{self.__class__.__name__}] {msg}")
