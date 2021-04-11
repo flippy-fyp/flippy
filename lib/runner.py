@@ -111,6 +111,9 @@ class Runner:
 
         return ap
 
+    def __output_func(self, s: str):
+        print(s, flush=True)
+
     def __init_backend(
         self,
         follower_output_queue: FollowerOutputQueue,
@@ -119,9 +122,6 @@ class Runner:
     ) -> Backend:
         args = self.args
 
-        def output_func(s: str):
-            print(s, flush=True)
-
         return Backend(
             args.backend,
             follower_output_queue,
@@ -129,7 +129,7 @@ class Runner:
             score_note_onsets,
             args.slice_len,
             args.sample_rate,
-            output_func,
+            self.__output_func,
         )
 
     def __init_follower(

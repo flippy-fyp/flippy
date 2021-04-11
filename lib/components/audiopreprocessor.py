@@ -1,10 +1,11 @@
+from lib.cqt.base import BaseCQT
 from lib.eprint import eprint
-from lib.sharedtypes import CQTType, ExtractedFeatureQueue, ModeType, ExtractedFeature
-from lib.cqt.cqt_nsgt import nsgt_extractor, nsgt_slicq_extractor
+from lib.sharedtypes import CQTType, ExtractedFeatureQueue, LibrosaCQT, ModeType
+from lib.cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
 from typing import Callable, Optional, Dict
 from lib.cqt.cqt_librosa import (
-    get_extract_features_wrapper,
-    get_extract_slice_features_wrapper,
+    LibrosaFullCQT,
+    LibrosaSliceCQT,
     get_librosa_params,
 )
 import multiprocessing as mp
@@ -79,29 +80,27 @@ class FeatureExtractor:
         self.output_queue = output_queue
         fmin, n_bins = get_librosa_params(fmin, fmax)
 
-        extractor_map: Dict[
-            ModeType, Dict[CQTType, Callable[[ExtractedFeature], ExtractedFeature]]
-        ] = {
+        extractor_map: Dict[ModeType, Dict[CQTType, BaseCQT]] = {
             "offline": {
-                "librosa": get_extract_features_wrapper(
+                "librosa": LibrosaFullCQT(
                     "librosa", fmin, slice_len, n_bins, sample_rate
                 ),
-                "librosa_hybrid": get_extract_features_wrapper(
+                "librosa_hybrid": LibrosaFullCQT(
                     "librosa_hybrid", fmin, slice_len, n_bins, sample_rate
                 ),
-                "librosa_pseudo": get_extract_features_wrapper(
+                "librosa_pseudo": LibrosaFullCQT(
                     "librosa_pseudo", fmin, slice_len, n_bins, sample_rate
                 ),
-                "nsgt": nsgt_extractor(fmin, fmax, slice_len, sample_rate),
+                "nsgt": CQTNSGT(fmin, fmax, slice_len, sample_rate),
             },
             "online": {
-                "librosa_hybrid": get_extract_slice_features_wrapper(
-                    "librosa_hybrid", fmin, n_bins
+                "librosa_hybrid": LibrosaSliceCQT(
+                    "librosa_hybrid", fmin, n_bins, sample_rate
                 ),
-                "librosa_pseudo": get_extract_slice_features_wrapper(
-                    "librosa_pseudo", fmin, n_bins
+                "librosa_pseudo": LibrosaSliceCQT(
+                    "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
-                "nsgt": nsgt_slicq_extractor(
+                "nsgt": CQTNSGTSlicq(
                     slice_len, transition_slice_ratio, fmin, fmax, sample_rate
                 ),
             },
@@ -124,7 +123,7 @@ class FeatureExtractor:
             sl = self.slice_queue.get()
             if sl is None:
                 break
-            o = self.__extractor(sl)
+            o = self.__extractor.extract(sl)
             cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
             prev_slice = cqt_slice
             self.output_queue.put(cqt_slice)

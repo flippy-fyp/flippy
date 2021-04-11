@@ -1,4 +1,5 @@
-from lib.sharedtypes import ExtractorFunctionType
+from lib.cqt.base import BaseCQT
+from lib.sharedtypes import ExtractedFeature, ExtractorFunctionType
 from lib.utils import quantise_hz_midi
 from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
 from typing import Tuple
@@ -73,19 +74,30 @@ def extract_features_nsgt_cqt(
     return cqt
 
 
-def nsgt_extractor(
-    fmin: float,
-    fmax: float,
-    hop_length: int = 2048,  # artificial
-    fs: int = DEFAULT_SAMPLE_RATE,
-    multithreading: bool = False,
-) -> ExtractorFunctionType:
-    def w(audio: np.ndarray) -> np.ndarray:
-        return extract_features_nsgt_cqt(
-            audio, fmin, fmax, hop_length, fs, multithreading
-        )
+class CQTNSGT(BaseCQT):
+    def __init__(
+        self,
+        fmin: float,
+        fmax: float,
+        hop_length: int = 2048,  # artificial
+        fs: int = DEFAULT_SAMPLE_RATE,
+        multithreading: bool = False,
+    ):
+        self.fmin = fmin
+        self.fmax = fmax
+        self.hop_length = hop_length
+        self.fs = fs
+        self.multithreading = multithreading
 
-    return w
+    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
+        return extract_features_nsgt_cqt(
+            audio_slice,
+            self.fmin,
+            self.fmax,
+            self.hop_length,
+            self.fs,
+            self.multithreading,
+        )
 
 
 def get_slicq_engine(
@@ -145,17 +157,20 @@ def extract_features_nsgt_slicq(
     return cqt
 
 
-def nsgt_slicq_extractor(
-    sl_len: int,
-    sl_tr_ratio: int,
-    fmin: float = 130.8,
-    fmax: float = 4186.0,
-    fs: int = DEFAULT_SAMPLE_RATE,
-    multithreading: bool = False,
-) -> ExtractorFunctionType:
-    slicq = get_slicq_engine(sl_len, sl_tr_ratio, fmin, fmax, fs, multithreading)
+class CQTNSGTSlicq(BaseCQT):
+    def __init__(
+        self,
+        sl_len: int,
+        sl_tr_ratio: int,
+        fmin: float = 130.8,
+        fmax: float = 4186.0,
+        fs: int = DEFAULT_SAMPLE_RATE,
+        multithreading: bool = False,
+    ):
+        self.slicq = get_slicq_engine(
+            sl_len, sl_tr_ratio, fmin, fmax, fs, multithreading
+        )
+        self.sl_tr_ratio = sl_tr_ratio
 
-    def w(audio_slice: np.ndarray) -> np.ndarray:
-        return extract_features_nsgt_slicq(slicq, sl_tr_ratio, audio_slice)
-
-    return w
+    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
+        return extract_features_nsgt_slicq(self.slicq, self.sl_tr_ratio, audio_slice)
