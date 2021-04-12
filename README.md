@@ -11,6 +11,9 @@ Score-follower.
 ## Development
 - Initialise pre-commit: `pre-commit install`
 
+### WSL2 Note
+- For audio playback, PulseAudio is required. See [here](https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html) for a guide.
+
 ## Usage
 ```bash
 python flippy.py
