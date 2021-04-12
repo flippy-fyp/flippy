@@ -8,6 +8,8 @@ Score-follower.
 - Requirements: `pip install -r requirements.txt`
 - Install `nsgt` separately: `pip install nsgt`
 - [Optional] Install [`fftw`](http://fftw.org/download.html)
+- [Optional] Audio playback: `ffmpeg`
+
 ## Development
 - Initialise pre-commit: `pre-commit install`
 

@@ -1,3 +1,4 @@
+from typing import Optional
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.sharedtypes import ModeType, DTWType, CQTType, BackendType
 from lib.utils import quantise_hz_midi
@@ -5,7 +6,6 @@ from tap import Tap  # type: ignore
 from lib.eprint import eprint
 from sys import exit
 from os import path
-from typing import List
 
 
 class Arguments(Tap):
@@ -22,7 +22,9 @@ class Arguments(Tap):
     transition_slice_ratio: int = 4  # Transition to slice length ratio for `nsgt` cqt.
 
     perf_wave_path: str  # Path to performance WAVE file.
-    score_midi_path: str  # Path to score MIDI.
+    score_midi_path: Optional[str] = None  # Path to score MIDI.
+
+    score_pickle_path: Optional[str] = None  # Path to pickled score features.
 
     backend: BackendType = (
         "alignment"  # Alignment result type: `alignment` or `timestamp`.
@@ -79,6 +81,11 @@ class Arguments(Tap):
         if not path.isfile(self.score_midi_path):
             self.__log_and_exit(
                 f"Score MIDI file ({self.score_midi_path}) does not exist"
+            )
+
+        if self.score_pickle_path and not path.isfile(self.score_pickle_path):
+            self.__log_and_exit(
+                f"Score Pickle file ({self.score_pickle_path}) does not exist"
             )
 
         if self.slice_len % 100 != 0 and self.mode == "offline" and self.cqt == "nsgt":
