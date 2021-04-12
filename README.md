@@ -7,7 +7,9 @@ Score-follower.
 - [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
 - Install `nsgt` separately: `pip install nsgt`
-- [Optional] Initialise pre-commit: `pre-commit install`
+- [Optional] Install [`fftw`](http://fftw.org/download.html)
+## Development
+- Initialise pre-commit: `pre-commit install`
 
 ## Usage
 ```bash
