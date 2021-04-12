@@ -3,14 +3,11 @@
 Score-follower.
 
 ## Requirements
-- Python 3
+- Python 3 (Tested on Python 3.8, Ubuntu 20.04)
 - [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
 - Install `nsgt` separately: `pip install nsgt`
 - [Optional] Initialise pre-commit: `pre-commit install`
-
-### Windows
-- To play performance audio, install simpleaudio: `pip install simpleaudio`
 
 ## Usage
 ```bash
