@@ -1,3 +1,4 @@
+from lib.scorepickle import ScorePickle
 from lib.components.player import Player
 from lib.components.follower import Follower
 from lib.components.backend import Backend
@@ -17,7 +18,6 @@ from typing import Optional, Tuple, List
 from lib.eprint import eprint
 import multiprocessing as mp
 import time
-import numpy as np
 
 
 class Runner:
@@ -29,7 +29,6 @@ class Runner:
         self.__log(f"Initiated with arguments:\n{args}")
 
     def start(self):
-        args = self.args
         self.__log(f"STARTING")
 
         follower_output_queue: FollowerOutputQueue = mp.Queue()
@@ -71,7 +70,7 @@ class Runner:
 
         player_proc = self.__init_player_if_required()
         if player_proc:
-            self.__(f"Starting: player")
+            self.__log(f"Starting: player")
             player_proc.start()
 
         perf_start_time = time.perf_counter()
@@ -111,9 +110,6 @@ class Runner:
 
         return ap
 
-    def __output_func(self, s: str):
-        print(s, flush=True)
-
     def __init_backend(
         self,
         follower_output_queue: FollowerOutputQueue,
@@ -123,13 +119,14 @@ class Runner:
         args = self.args
 
         return Backend(
+            args.mode,
             args.backend,
             follower_output_queue,
             performance_stream_start_conn,
             score_note_onsets,
             args.slice_len,
             args.sample_rate,
-            self.__output_func,
+            args.backend_output,
         )
 
     def __init_follower(
@@ -155,42 +152,59 @@ class Runner:
         """
         args = self.args
 
-        note_onsets = process_midi_to_note_info(args.score_midi_path)
-        self.__log("Finished getting note onsets from score midi")
+        if args.score_pickle_path:
+            self.__log(f"Trying to load score features from {args.score_pickle_path}")
+            score_pickle = ScorePickle.load(args.score_pickle_path)
+            self.__log("Loaded score features successfully")
+            return (score_pickle.note_onsets, score_pickle.S)
+        elif args.score_midi_path:
+            self.__log(f"Score pickle file not supplied, extracting score features")
 
-        synthesiser = Synthesiser(args.score_midi_path, args.sample_rate)
-        score_wave_path = synthesiser.synthesise()
-        self.__log(f"Score midi synthesised to {score_wave_path}")
+            note_onsets = process_midi_to_note_info(args.score_midi_path)
+            self.__log("Finished getting note onsets from score midi")
 
-        S_queue: ExtractedFeatureQueue = ExtractedFeatureQueue(mp.Queue())
-        # need to consume into a connection--queues are likely to fill up and reach their
-        # limit then cause the program to hang!
-        parent_S_conn, child_S_conn = mp.Pipe()
-        consume_S_queue_proc = mp.Process(
-            target=consume_queue_into_conn, args=(S_queue, child_S_conn)
-        )
-        consume_S_queue_proc.start()
+            synthesiser = Synthesiser(args.score_midi_path, args.sample_rate)
+            score_wave_path = synthesiser.synthesise()
+            self.__log(f"Score midi synthesised to {score_wave_path}")
 
-        audio_preprocessor = AudioPreprocessor(
-            args.sample_rate,
-            score_wave_path,
-            args.slice_len,
-            self.__get_frame_length(),
-            False,
-            args.mode,
-            args.cqt,
-            args.fmin,
-            args.fmax,
-            args.slice_len,
-            args.transition_slice_ratio,
-            S_queue,
-        )
-        audio_preprocessor.start()
+            S_queue: ExtractedFeatureQueue = ExtractedFeatureQueue(mp.Queue())
+            # need to consume into a connection--queues are likely to fill up and reach their
+            # limit then cause the program to hang!
+            parent_S_conn, child_S_conn = mp.Pipe()
+            consume_S_queue_proc = mp.Process(
+                target=consume_queue_into_conn, args=(S_queue, child_S_conn)
+            )
+            consume_S_queue_proc.start()
 
-        S = parent_S_conn.recv()
+            audio_preprocessor = AudioPreprocessor(
+                args.sample_rate,
+                score_wave_path,
+                args.slice_len,
+                self.__get_frame_length(),
+                False,
+                args.mode,
+                args.cqt,
+                args.fmin,
+                args.fmax,
+                args.slice_len,
+                args.transition_slice_ratio,
+                S_queue,
+            )
+            audio_preprocessor.start()
 
-        consume_S_queue_proc.join()
-        return (note_onsets, S)
+            S = parent_S_conn.recv()
+
+            consume_S_queue_proc.join()
+
+            score_pickle = ScorePickle(note_onsets, S)
+            self.__log("Dumping score features to pickle")
+            pickle_path = score_pickle.dump(args.score_midi_path)
+            self.__log(f'Score features dumped to "{pickle_path}"')
+            return (note_onsets, S)
+        else:
+            raise ValueError(
+                "Either `score_pickle_path` or `score_midi_path` must be set"
+            )
 
     def __get_frame_length(self) -> int:
         args = self.args

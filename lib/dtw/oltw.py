@@ -38,8 +38,8 @@ class OLTW:
         self.MAX_RUN_COUNT = max_run_count
         self.run_count: int = 1
         self.C = search_window
-        self.D = np.ones((0, len(self.S)), dtype=np.float32) * np.inf
-        self.P = np.zeros((0, self.S[0].shape[0]), dtype=np.float32)
+        self.D = np.ones((0, len(self.S)), dtype=np.float64) * np.inf
+        self.P = np.zeros((0, self.S[0].shape[0]), dtype=np.float64)
 
         self.__log("Initialised successfully")
 
@@ -153,7 +153,7 @@ class OLTW:
             return DIR_I
         return DIR_IJ
 
-    def __D_set(self, i: int, j: int, d: np.float32):
+    def __D_set(self, i: int, j: int, d: np.float64):
         """
         at (i, j) and cost d assign to self.D
         """
@@ -169,13 +169,13 @@ class OLTW:
                 self.__D_get(i, j - 1),
             )
 
-    def __D_get(self, i: int, j: int) -> np.float32:
+    def __D_get(self, i: int, j: int) -> np.float64:
         if i >= self.D.shape[0] or j >= self.D.shape[1]:
             raise ValueError(
                 f"Out of range: want ({i}, {j}) from distance matrix of shape {self.D.shape}"
             )
         if i < 0 or j < 0:
-            return np.float32(np.inf)
+            return np.float64(np.inf)
 
         return self.D[i][j]
 

@@ -1,8 +1,8 @@
 from lib.cqt.base import BaseCQT
 from lib.eprint import eprint
-from lib.sharedtypes import CQTType, ExtractedFeatureQueue, LibrosaCQT, ModeType
+from lib.sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
 from lib.cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
-from typing import Callable, Optional, Dict
+from typing import Optional, Dict, List, Union
 from lib.cqt.cqt_librosa import (
     LibrosaFullCQT,
     LibrosaSliceCQT,
@@ -76,6 +76,7 @@ class FeatureExtractor:
         transition_slice_ratio: int,
         sample_rate: int,
     ):
+        self.mode = mode
         self.slice_queue = slice_queue
         self.output_queue = output_queue
         fmin, n_bins = get_librosa_params(fmin, fmax)
@@ -120,13 +121,28 @@ class FeatureExtractor:
         self.__log("Starting...")
         prev_slice: Optional[np.ndarray] = None
         while True:
-            sl = self.slice_queue.get()
+            sl: Optional[np.ndarray] = self.slice_queue.get()
             if sl is None:
                 break
-            o = self.__extractor.extract(sl)
-            cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
-            prev_slice = cqt_slice
-            self.output_queue.put(cqt_slice)
+            o: Optional[
+                Union[ExtractedFeature, List[ExtractedFeature]]
+            ] = self.__extractor.extract(sl)
+            if self.mode == "online":
+                # o is of type ExtractedFeature
+                cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
+                prev_slice = cqt_slice
+                self.output_queue.put(cqt_slice)
+            elif self.mode == "offline":
+                # slice_queue has the whole audio piece and now we need to iterate and calculate the diffs
+                # o is of type List[ExtractedFeature]
+                for s in o:
+                    cqt_slice = (
+                        (s - prev_slice).clip(0) if prev_slice is not None else s
+                    )
+                    prev_slice = cqt_slice
+                    self.output_queue.put(cqt_slice)
+            else:
+                raise ValueError(f"Unknown mode: {self.mode}")
         self.output_queue.put(None)  # end
         self.__log("Finished")
 

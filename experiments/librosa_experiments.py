@@ -21,8 +21,8 @@ librosa.set_fftlib(pyfftw.interfaces.numpy_fft)
 
 
 def conv_to_wav():
-    audio = midi_to_audio("./tmp/wtk1-prelude1.mid", DEFAULT_SAMPLE_RATE)
-    sf.write("./tmp/wtk-prelude1.wav", audio, samplerate=DEFAULT_SAMPLE_RATE)
+    audio = midi_to_audio("./tmp/clair.mid", DEFAULT_SAMPLE_RATE)
+    sf.write("./tmp/clair.wav", audio, samplerate=DEFAULT_SAMPLE_RATE)
 
 
 def plot_cqt(
@@ -48,7 +48,7 @@ def plot_cqt(
 
 def plot_librosa_features(extractor=extract_features_librosa_cqt):
     audio, _ = librosa.load(
-        "./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True
+        "./tmp/wtk1-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True
     )
 
     fmin, n_bins = get_librosa_params()
@@ -60,7 +60,7 @@ def plot_librosa_features(extractor=extract_features_librosa_cqt):
 def plot_librosa_features_stream(extractor=extract_slice_features_librosa_pseudo_cqt):
     frame_length = 2048
     audio_stream = librosa.stream(
-        "./tmp/wtk-prelude1.wav",
+        "./tmp/wtk1-prelude1.wav",
         1,
         frame_length,
         frame_length,

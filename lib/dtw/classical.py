@@ -1,29 +1,34 @@
 from lib.eprint import eprint
 from typing import List
 from lib.dtw.shared import cost
-from lib.sharedtypes import DTWPathElemType
+from lib.sharedtypes import DTWPathElemType, ExtractedFeature
 import numpy as np
 
 
 class ClassicalDTW:
-    def __init__(self, P: np.ndarray, S: np.ndarray):
-        if len(P.shape) != 2:
-            raise ValueError(f"P must be a 2D ndarray, got shape: {P.shape}")
-        if len(S.shape) != 2:
-            raise ValueError(f"S must be a 2D ndarray, got shape: {S.shape}")
+    def __init__(self, P: List[ExtractedFeature], S: List[ExtractedFeature]):
         if len(P) == 0:
             raise ValueError(f"Empty P")
         if len(S) == 0:
             raise ValueError(f"Empty S")
+        if len(P[0].shape) != 1:
+            raise ValueError(f"P must be 2D")
+        if len(S[0].shape) != 1:
+            raise ValueError(f"S must be 2D")
+
+        import sys
+
+        sys.setrecursionlimit(10 ** 7)
+        self.__log("Set recursion limit to 10**7")
 
         self.P = P  # performance
         self.S = S  # score
 
-        self.D_shape = (P.shape[0], S.shape[0])
+        self.D_shape = (len(P), len(S))
         self.D_calc = np.zeros(
             self.D_shape, dtype=bool
         )  # whether the entry in self.D is calculated
-        self.D = np.zeros(self.D_shape, dtype=np.float32)
+        self.D = np.zeros(self.D_shape, dtype=np.float64)
 
         self.__log("Initialised successfully")
 
@@ -84,8 +89,8 @@ class ClassicalDTW:
 
         if not self.D_calc[r][c]:
             self.D_calc[r][c] = True
-            s = self.S[r]
-            p = self.P[c]
+            p = self.P[r]
+            s = self.S[c]
             d = cost(s, p)
 
             if (r, c) == (0, 0):

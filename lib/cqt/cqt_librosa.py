@@ -1,5 +1,5 @@
 from lib.cqt.base import BaseCQT
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 from lib.utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
@@ -211,8 +211,8 @@ class LibrosaSliceCQT(BaseCQT):
         if self.__f is None:
             raise ValueError(f"Unknown or unsupported cqt algo: {cqt}")
 
-    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
-        return self.__f(audio_slice, self.fmin, self.n_bins, self.fs)  # type: ignore
+    def extract(self, audio: np.ndarray) -> ExtractedFeature:
+        return self.__f(audio, self.fmin, self.n_bins, self.fs)  # type: ignore
 
 
 class LibrosaFullCQT(BaseCQT):
@@ -240,5 +240,5 @@ class LibrosaFullCQT(BaseCQT):
         if self.__f is None:
             raise ValueError(f"Unknown or unsupported cqt algo: {cqt}")
 
-    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
-        return self.__f(audio_slice, self.fmin, self.n_bins, self.fs, self.hop)  # type: ignore
+    def extract(self, audio: np.ndarray) -> List[ExtractedFeature]:
+        return [x for x in self.__f(audio, self.fmin, self.n_bins, self.fs, self.hop)]  # type: ignore

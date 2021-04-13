@@ -2,7 +2,7 @@ from lib.cqt.base import BaseCQT
 from lib.sharedtypes import ExtractedFeature, ExtractorFunctionType
 from lib.utils import quantise_hz_midi
 from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
-from typing import Tuple
+from typing import List, Tuple
 import librosa  # type: ignore
 import numpy as np  # type: ignore
 from lib.constants import DEFAULT_SAMPLE_RATE
@@ -48,7 +48,7 @@ def extract_features_nsgt_cqt(
 
     # The "hop length" of CQ_NSGT is 100, so to simulate the provided hop_length, approximately split
     # and average the obtained results--this means that the time is approximate!
-    averaged_cqt = np.empty((0, cqt.shape[1]), dtype=np.float32)
+    averaged_cqt = np.empty((0, cqt.shape[1]), dtype=np.float64)
     quantized_hop_length = hop_length // 100
     split_n = cqt.shape[0] // quantized_hop_length
     for i in range(split_n):
@@ -89,15 +89,18 @@ class CQTNSGT(BaseCQT):
         self.fs = fs
         self.multithreading = multithreading
 
-    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
-        return extract_features_nsgt_cqt(
-            audio_slice,
-            self.fmin,
-            self.fmax,
-            self.hop_length,
-            self.fs,
-            self.multithreading,
-        )
+    def extract(self, audio_slice: np.ndarray) -> List[ExtractedFeature]:
+        return [
+            x
+            for x in extract_features_nsgt_cqt(
+                audio_slice,
+                self.fmin,
+                self.fmax,
+                self.hop_length,
+                self.fs,
+                self.multithreading,
+            )
+        ]
 
 
 def get_slicq_engine(
