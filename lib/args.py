@@ -30,6 +30,8 @@ class Arguments(Tap):
         "alignment"  # Alignment result type: `alignment` or `timestamp`.
     )
 
+    backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, or `<HOSTNAME>:<PORT>` for UDP sockets.
+
     simulate_performance: bool = (
         False  # Whether to stream performance "live" into the system.
     )
@@ -77,15 +79,28 @@ class Arguments(Tap):
             self.__log_and_exit(
                 f"Performance WAVE file ({self.perf_wave_path}) does not exist"
             )
+        else:
+            self.perf_wave_path = path.abspath(self.perf_wave_path)
 
-        if not path.isfile(self.score_midi_path):
-            self.__log_and_exit(
-                f"Score MIDI file ({self.score_midi_path}) does not exist"
-            )
+        if self.score_midi_path:
+            if not path.isfile(self.score_midi_path):
+                self.__log_and_exit(
+                    f"Score MIDI file ({self.score_midi_path}) does not exist"
+                )
+            else:
+                self.score_midi_path = path.abspath(self.score_midi_path)
 
-        if self.score_pickle_path and not path.isfile(self.score_pickle_path):
+        if self.score_pickle_path:
+            if not path.isfile(self.score_pickle_path):
+                self.__log_and_exit(
+                    f"Score Pickle file ({self.score_pickle_path}) does not exist"
+                )
+            else:
+                self.score_pickle_path = path.abspath(self.score_pickle_path)
+
+        if not self.score_midi_path and not self.score_pickle_path:
             self.__log_and_exit(
-                f"Score Pickle file ({self.score_pickle_path}) does not exist"
+                "Either one of `score_midi_path` or `score_pickle_path` must be set"
             )
 
         if self.slice_len % 100 != 0 and self.mode == "offline" and self.cqt == "nsgt":

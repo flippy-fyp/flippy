@@ -1,4 +1,4 @@
-from typing import Callable, Literal, NewType, Tuple, Optional
+from typing import Callable, Literal, NewType, Tuple, Optional, Union
 import numpy as np
 from dataclasses import dataclass
 import multiprocessing as mp

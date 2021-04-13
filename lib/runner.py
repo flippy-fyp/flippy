@@ -111,9 +111,6 @@ class Runner:
 
         return ap
 
-    def __output_func(self, s: str):
-        print(s, flush=True)
-
     def __init_backend(
         self,
         follower_output_queue: FollowerOutputQueue,
@@ -129,7 +126,7 @@ class Runner:
             score_note_onsets,
             args.slice_len,
             args.sample_rate,
-            self.__output_func,
+            args.backend_output,
         )
 
     def __init_follower(
@@ -160,7 +157,7 @@ class Runner:
             score_pickle = ScorePickle.load(args.score_pickle_path)
             self.__log("Loaded score features successfully")
             return (score_pickle.note_onsets, score_pickle.S)
-        else:
+        elif args.score_midi_path:
             self.__log(f"Score pickle file not supplied, extracting score features")
 
             note_onsets = process_midi_to_note_info(args.score_midi_path)
@@ -204,6 +201,10 @@ class Runner:
             pickle_path = score_pickle.dump(args.score_midi_path)
             self.__log(f'Score features dumped to "{pickle_path}"')
             return (note_onsets, S)
+        else:
+            raise ValueError(
+                "Either `score_pickle_path` or `score_midi_path` must be set"
+            )
 
     def __get_frame_length(self) -> int:
         args = self.args

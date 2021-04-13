@@ -14,7 +14,7 @@ import time
 
 def plot_nsgt_features():
     audio, _ = librosa.load(
-        "./tmp/wtk-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True
+        "./tmp/wtk1-prelude1.wav", sr=DEFAULT_SAMPLE_RATE, duration=10, mono=True
     )
 
     fmin, fmax = get_nsgt_params()
@@ -31,7 +31,7 @@ def plot_nsgt_features_slice():
     frame_length = hop_length * sl_tr_ratio
 
     audio_stream = librosa.stream(
-        "./tmp/wtk-prelude1.wav",
+        "./tmp/wtk1-prelude1.wav",
         1,
         frame_length,
         hop_length,
