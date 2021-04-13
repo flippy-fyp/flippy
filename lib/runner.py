@@ -29,7 +29,6 @@ class Runner:
         self.__log(f"Initiated with arguments:\n{args}")
 
     def start(self):
-        args = self.args
         self.__log(f"STARTING")
 
         follower_output_queue: FollowerOutputQueue = mp.Queue()
@@ -120,6 +119,7 @@ class Runner:
         args = self.args
 
         return Backend(
+            args.mode,
             args.backend,
             follower_output_queue,
             performance_stream_start_conn,

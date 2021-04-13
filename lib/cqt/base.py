@@ -4,4 +4,4 @@ from lib.sharedtypes import ExtractedFeature
 
 class BaseCQT:
     def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
-        raise ValueError("To be overrode")
+        raise NotImplementedError("Override this")

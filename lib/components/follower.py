@@ -70,10 +70,11 @@ class Follower:
         oltw.dtw()
 
     def __start_classical(self):
-        P = consume_queue(self.P_queue)
+        P: List[ExtractedFeature] = consume_queue(self.P_queue)
         classical = ClassicalDTW(P, self.S)
         dtw_elems = classical.dtw()
-        write_list_to_queue(dtw_elems, self.output_queue)
+        print(dtw_elems)
+        # write_list_to_queue(dtw_elems, self.follower_output_queue)
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")

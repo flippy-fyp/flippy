@@ -76,6 +76,7 @@ class FeatureExtractor:
         transition_slice_ratio: int,
         sample_rate: int,
     ):
+        self.mode = mode
         self.slice_queue = slice_queue
         self.output_queue = output_queue
         fmin, n_bins = get_librosa_params(fmin, fmax)
@@ -124,9 +125,20 @@ class FeatureExtractor:
             if sl is None:
                 break
             o = self.__extractor.extract(sl)
-            cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
-            prev_slice = cqt_slice
-            self.output_queue.put(cqt_slice)
+            if self.mode == "online":
+                cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
+                prev_slice = cqt_slice
+                self.output_queue.put(cqt_slice)
+            elif self.mode == "offline":
+                # slice_queue has the whole audio piece and now we need to iterate and calculate the diffs
+                for s in o:
+                    cqt_slice = (
+                        (s - prev_slice).clip(0) if prev_slice is not None else s
+                    )
+                    prev_slice = cqt_slice
+                    self.output_queue.put(cqt_slice)
+            else:
+                raise ValueError(f"Unknown mode: {self.mode}")
         self.output_queue.put(None)  # end
         self.__log("Finished")
 

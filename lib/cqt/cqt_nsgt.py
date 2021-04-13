@@ -48,7 +48,7 @@ def extract_features_nsgt_cqt(
 
     # The "hop length" of CQ_NSGT is 100, so to simulate the provided hop_length, approximately split
     # and average the obtained results--this means that the time is approximate!
-    averaged_cqt = np.empty((0, cqt.shape[1]), dtype=np.float32)
+    averaged_cqt = np.empty((0, cqt.shape[1]), dtype=np.float64)
     quantized_hop_length = hop_length // 100
     split_n = cqt.shape[0] // quantized_hop_length
     for i in range(split_n):

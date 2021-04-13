@@ -2,6 +2,7 @@ from lib.eprint import eprint
 from typing import Callable, Iterator, List, Optional, Dict, Set
 from lib.sharedtypes import (
     FollowerOutputQueue,
+    ModeType,
     NoteInfo,
     BackendType,
     MultiprocessingConnection,
@@ -18,6 +19,7 @@ class Backend:
 
     def __init__(
         self,
+        mode: ModeType,
         backend: BackendType,
         follower_output_queue: FollowerOutputQueue,
         performance_stream_start_conn: MultiprocessingConnection,
@@ -26,6 +28,7 @@ class Backend:
         sample_rate: int,
         backend_output: str,
     ):
+        self.mode = mode
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
         self.slice_len = slice_len
@@ -88,6 +91,7 @@ class Backend:
                 self.__output_func("END")
                 return
             s = e[1]
+            # eprint(e)
             if s != prev_s:
                 timestamp_s = float(self.slice_len * s) / self.sample_rate
                 self.__output_func(timestamp_s)
@@ -103,16 +107,17 @@ class Backend:
             e = self.follower_output_queue.get()
             if e is None:
                 return
-            s, p = e
+            p, s = e
             if s != prev_s:
+                prev_s = s
                 curr_time = time.perf_counter()
                 det_time_ms = (curr_time - performance_start_time) * 1000
                 # use ms because NoteInfo are ms and the follower output for quantitative
                 # testbench is ms
-                timestamp_s_s = float(self.slice_len * s) / self.sample_rate
-                timestamp_s_ms = timestamp_s_s * 1000
                 timestamp_p_s = float(self.slice_len * p) / self.sample_rate
                 timestamp_p_ms = timestamp_p_s * 1000
+                timestamp_s_s = float(self.slice_len * s) / self.sample_rate
+                timestamp_s_ms = timestamp_s_s * 1000
 
                 closest_note = get_closest_note_before(
                     self.__sorted_note_onsets, timestamp_s_ms
@@ -120,12 +125,19 @@ class Backend:
                 if closest_note is None:
                     self.__log("Ignoring unfound closest note!")
                 if closest_note not in seen_notes:
-                    # MIREX format
-                    self.__output_func(
-                        f"{int(timestamp_p_ms)} {int(det_time_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
-                    )
+                    if self.mode == "online":
+                        # MIREX format
+                        self.__output_func(
+                            f"{int(timestamp_p_ms)} {int(det_time_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
+                        )
+                    elif self.mode == "offline":
+                        self.__log(e)
+                        self.__output_func(
+                            f"{int(timestamp_p_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
+                        )
+                    else:
+                        raise ValueError(f"Unknown mode: {self.mode}")
                     seen_notes.add(closest_note)
-                prev_s = s
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
