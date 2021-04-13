@@ -2,7 +2,7 @@ from lib.cqt.base import BaseCQT
 from lib.sharedtypes import ExtractedFeature, ExtractorFunctionType
 from lib.utils import quantise_hz_midi
 from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
-from typing import Tuple
+from typing import List, Tuple
 import librosa  # type: ignore
 import numpy as np  # type: ignore
 from lib.constants import DEFAULT_SAMPLE_RATE
@@ -89,15 +89,18 @@ class CQTNSGT(BaseCQT):
         self.fs = fs
         self.multithreading = multithreading
 
-    def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
-        return extract_features_nsgt_cqt(
-            audio_slice,
-            self.fmin,
-            self.fmax,
-            self.hop_length,
-            self.fs,
-            self.multithreading,
-        )
+    def extract(self, audio_slice: np.ndarray) -> List[ExtractedFeature]:
+        return [
+            x
+            for x in extract_features_nsgt_cqt(
+                audio_slice,
+                self.fmin,
+                self.fmax,
+                self.hop_length,
+                self.fs,
+                self.multithreading,
+            )
+        ]
 
 
 def get_slicq_engine(
