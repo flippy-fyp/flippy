@@ -1,3 +1,4 @@
+from lib.mputils import write_list_to_queue
 from lib.cqt.base import BaseCQT
 from lib.eprint import eprint
 from lib.sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
@@ -119,7 +120,6 @@ class FeatureExtractor:
 
     def start(self):
         self.__log("Starting...")
-        prev_slice: Optional[np.ndarray] = None
         while True:
             sl: Optional[np.ndarray] = self.slice_queue.get()
             if sl is None:
@@ -129,18 +129,11 @@ class FeatureExtractor:
             ] = self.__extractor.extract(sl)
             if self.mode == "online":
                 # o is of type ExtractedFeature
-                cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
-                prev_slice = cqt_slice
-                self.output_queue.put(cqt_slice)
+                self.output_queue.put(o)
             elif self.mode == "offline":
                 # slice_queue has the whole audio piece and now we need to iterate and calculate the diffs
                 # o is of type List[ExtractedFeature]
-                for s in o:
-                    cqt_slice = (
-                        (s - prev_slice).clip(0) if prev_slice is not None else s
-                    )
-                    prev_slice = cqt_slice
-                    self.output_queue.put(cqt_slice)
+                write_list_to_queue(o, self.output_queue)
             else:
                 raise ValueError(f"Unknown mode: {self.mode}")
         self.output_queue.put(None)  # end

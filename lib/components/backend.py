@@ -91,7 +91,6 @@ class Backend:
                 self.__output_func("END")
                 return
             s = e[1]
-            # eprint(e)
             if s != prev_s:
                 timestamp_s = float(self.slice_len * s) / self.sample_rate
                 self.__output_func(timestamp_s)
@@ -131,7 +130,6 @@ class Backend:
                             f"{int(timestamp_p_ms)} {int(det_time_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
                         )
                     elif self.mode == "offline":
-                        self.__log(e)
                         self.__output_func(
                             f"{int(timestamp_p_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
                         )
