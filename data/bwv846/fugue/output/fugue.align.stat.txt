@@ -1,0 +1,4 @@
+Length of alignment: 787
+Total number of gaps in performance: 33
+Total number of gaps in score: 34
+Total number of mismatches: 0
