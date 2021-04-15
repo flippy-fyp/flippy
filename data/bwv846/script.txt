@@ -1,7 +1,0 @@
-python midi.py --input ./data/bwv846/prelude/prelude.r.mid > ./data/bwv846/prelude/output/prelude.rscore.txt
-python midi.py --input ./data/bwv846/prelude/prelude.p.mid > ./data/bwv846/prelude/output/prelude.pscore.txt
-python align.py --pscore ./data/bwv846/prelude/output/prelude.pscore.txt --rscore ./data/bwv846/prelude/output/prelude.rscore.txt --postalignthres 0 > ./data/bwv846/prelude/output/prelude.align.txt
-
-python midi.py --input ./data/bwv846/fugue/fugue.r.mid > ./data/bwv846/fugue/output/fugue.rscore.txt
-python midi.py --input ./data/bwv846/fugue/fugue.p.mid > ./data/bwv846/fugue/output/fugue.pscore.txt
-python align.py --pscore ./data/bwv846/fugue/output/fugue.pscore.txt --rscore ./data/bwv846/fugue/output/fugue.rscore.txt --postalignthres 500 > ./data/bwv846/fugue/output/fugue.align.txt
