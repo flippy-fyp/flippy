@@ -17,9 +17,9 @@ class Arguments(Tap):
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
     slice_len: int = (
-        2048  # Slice length for `nsgt` cqt, or hop_length in `librosa` cqt.
+        8192  # Slice length for `nsgt` cqt, or hop_length in `librosa` cqt.
     )
-    transition_slice_ratio: int = 4  # Transition to slice length ratio for `nsgt` cqt.
+    slice_transition_ratio: int = 4  # Slice to transition length ratio for `nsgt` cqt.
 
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: Optional[str] = None  # Path to score MIDI.
@@ -64,8 +64,8 @@ class Arguments(Tap):
         if self.slice_len < 0:
             self.__log_and_exit(f"slice_len must be positive")
 
-        if self.transition_slice_ratio < 0:
-            self.__log_and_exit(f"transition_slice_ratio must be positive")
+        if self.slice_transition_ratio < 0:
+            self.__log_and_exit(f"slice_transition_ratio must be positive")
 
         if self.mode == "online":
             if self.dtw != "oltw":

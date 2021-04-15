@@ -2,10 +2,7 @@ from lib.constants import DEFAULT_SAMPLE_RATE
 import matplotlib.pyplot as plt  # type: ignore
 import librosa  # type: ignore
 import librosa.display  # type: ignore
-import soundfile as sf  # type: ignore
 import numpy as np
-import time
-import time
 
 
 def plot_cqt_to_file(

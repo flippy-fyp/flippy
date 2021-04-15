@@ -1,14 +1,14 @@
+from lib.cqt.cqt_nsgt import get_nsgt_params
 from lib.plotting import plot_cqt_to_file
-from lib.sharedtypes import ExtractedFeature
+from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue
 from lib.components.synthesiser import Synthesiser
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.eprint import eprint
 from consts import BWV846_PATH, REPRO_RESULTS_PATH
-from lib.utils import quantise_hz_midi
 import os
 import multiprocessing as mp
-from typing import Optional, List
+from typing import List
 import numpy as np
 import sys
 
@@ -16,13 +16,13 @@ import sys
 def bwv846_feature():
     pieces = ["prelude", "fugue"]
     for piece in pieces:
-        fmin = quantise_hz_midi(130.8)
-        fmax = quantise_hz_midi(4186.0)
+        fmin, fmax = get_nsgt_params()
         score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
         score_wave_path = Synthesiser(score_midi_path, DEFAULT_SAMPLE_RATE).synthesise(
             10
         )
-        output_queue: "mp.Queue[Optional[ExtractedFeature]]" = mp.Queue()
+        print(f"Synthesised to: {score_wave_path}")
+        output_queue: ExtractedFeatureQueue = mp.Queue()
         ap = AudioPreprocessor(
             DEFAULT_SAMPLE_RATE,
             score_wave_path,
@@ -33,7 +33,7 @@ def bwv846_feature():
             "nsgt",
             fmin,
             fmax,
-            2048,
+            2048 * 4,
             4,
             output_queue,
         )
@@ -50,7 +50,8 @@ def bwv846_feature():
         # convert to ndarray
         features_ndarray = np.array(features)
         output_plot_dir = os.path.join(REPRO_RESULTS_PATH, "bwv846_feature", piece)
-        os.makedirs(output_plot_dir)
+        if not os.path.exists(output_plot_dir):
+            os.makedirs(output_plot_dir)
         output_plot_path = os.path.join(output_plot_dir, "features.pdf")
         print(f"Plotting features for {piece} to {output_plot_path}")
         plot_cqt_to_file(

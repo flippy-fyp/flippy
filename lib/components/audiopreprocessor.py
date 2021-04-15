@@ -74,7 +74,7 @@ class FeatureExtractor:
         fmin: float,
         fmax: float,
         slice_len: int,
-        transition_slice_ratio: int,
+        slice_transition_ratio: int,
         sample_rate: int,
     ):
         self.mode = mode
@@ -103,7 +103,7 @@ class FeatureExtractor:
                     "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
                 "nsgt": CQTNSGTSlicq(
-                    slice_len, transition_slice_ratio, fmin, fmax, sample_rate
+                    slice_len, slice_transition_ratio, fmin, fmax, sample_rate
                 ),
             },
         }
@@ -158,7 +158,7 @@ class AudioPreprocessor:
         fmin: float,
         fmax: float,
         slice_len: int,
-        transition_slice_ratio: int,
+        slice_transition_ratio: int,
         # output features
         output_queue: ExtractedFeatureQueue,
     ):
@@ -173,7 +173,7 @@ class AudioPreprocessor:
         self.fmin = fmin
         self.fmax = fmax
         self.slice_len = slice_len
-        self.transition_slice_ratio = transition_slice_ratio
+        self.slice_transition_ratio = slice_transition_ratio
 
         self.output_queue = output_queue
 
@@ -211,7 +211,7 @@ class AudioPreprocessor:
             self.fmin,
             self.fmax,
             self.slice_len,
-            self.transition_slice_ratio,
+            self.slice_transition_ratio,
             self.sample_rate,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)

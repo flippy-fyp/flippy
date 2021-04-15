@@ -104,7 +104,7 @@ class Runner:
             args.fmin,
             args.fmax,
             args.slice_len,
-            args.transition_slice_ratio,
+            args.slice_transition_ratio,
             P_queue,
         )
 
@@ -187,7 +187,7 @@ class Runner:
                 args.fmin,
                 args.fmax,
                 args.slice_len,
-                args.transition_slice_ratio,
+                args.slice_transition_ratio,
                 S_queue,
             )
             audio_preprocessor.start()
@@ -209,7 +209,7 @@ class Runner:
     def __get_frame_length(self) -> int:
         args = self.args
         if args.cqt == "nsgt":
-            return args.transition_slice_ratio * args.slice_len
+            return args.slice_transition_ratio * args.slice_len
         return args.slice_len
 
     def __init_player_if_required(self) -> Optional[mp.Process]:
