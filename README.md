@@ -3,6 +3,7 @@
 Score-follower.
 
 ## Requirements
+- Cloned repository with LFS
 - Python 3 (Tested on Python 3.8, Ubuntu 20.04)
 - [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
@@ -20,3 +21,21 @@ Score-follower.
 ```bash
 python flippy.py
 ```
+
+## Results Reproduction
+
+These scripts reproduce results shown in [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf).
+### `bwv846_feature`
+```bash
+python repro.py bwv846_feature
+```
+
+Plots the extracted features from the first 15 seconds of the Prelude and Fugue of Bach's BWV846 to `repro_results/bwv846_feature`.
+
+### `bach10_feature`
+```bash
+python repro.py bach10_feature
+```
+Requires [Bach10 dataset v1.1](http://www2.ece.rochester.edu/projects/air/resource.html) in `data/bach10/Bach10_v1.1`.
+
+Plots the extracted features from the first 15 seconds of all Bach10 pieces to `repro_results/bach10_feature`.

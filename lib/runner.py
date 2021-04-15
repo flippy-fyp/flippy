@@ -92,19 +92,16 @@ class Runner:
         self, P_queue: ExtractedFeatureQueue
     ) -> AudioPreprocessor:
         args = self.args
-
         ap = AudioPreprocessor(
             args.sample_rate,
+            args.hop_len,
+            args.slice_hop_ratio,
             args.perf_wave_path,
-            args.slice_len,
-            self.__get_frame_length(),
             args.simulate_performance,
             args.mode,
             args.cqt,
             args.fmin,
             args.fmax,
-            args.slice_len,
-            args.slice_transition_ratio,
             P_queue,
         )
 
@@ -124,7 +121,7 @@ class Runner:
             follower_output_queue,
             performance_stream_start_conn,
             score_note_onsets,
-            args.slice_len,
+            args.hop_len,
             args.sample_rate,
             args.backend_output,
         )
@@ -178,16 +175,14 @@ class Runner:
 
             audio_preprocessor = AudioPreprocessor(
                 args.sample_rate,
+                args.hop_len,
+                args.slice_hop_ratio,
                 score_wave_path,
-                args.slice_len,
-                self.__get_frame_length(),
-                False,
+                args.simulate_performance,
                 args.mode,
                 args.cqt,
                 args.fmin,
                 args.fmax,
-                args.slice_len,
-                args.slice_transition_ratio,
                 S_queue,
             )
             audio_preprocessor.start()
@@ -205,12 +200,6 @@ class Runner:
             raise ValueError(
                 "Either `score_pickle_path` or `score_midi_path` must be set"
             )
-
-    def __get_frame_length(self) -> int:
-        args = self.args
-        if args.cqt == "nsgt":
-            return args.slice_transition_ratio * args.slice_len
-        return args.slice_len
 
     def __init_player_if_required(self) -> Optional[mp.Process]:
         args = self.args

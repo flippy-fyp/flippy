@@ -24,14 +24,14 @@ class Backend:
         follower_output_queue: FollowerOutputQueue,
         performance_stream_start_conn: MultiprocessingConnection,
         score_note_onsets: List[NoteInfo],
-        slice_len: int,
+        hop_len: int,
         sample_rate: int,
         backend_output: str,
     ):
         self.mode = mode
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
-        self.slice_len = slice_len
+        self.hop_len = hop_len
         self.sample_rate = sample_rate
 
         self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
@@ -92,7 +92,7 @@ class Backend:
                 return
             s = e[1]
             if s != prev_s:
-                timestamp_s = float(self.slice_len * s) / self.sample_rate
+                timestamp_s = float(self.hop_len * s) / self.sample_rate
                 self.__output_func(timestamp_s)
                 prev_s = s
 
@@ -113,9 +113,9 @@ class Backend:
                 det_time_ms = (curr_time - performance_start_time) * 1000
                 # use ms because NoteInfo are ms and the follower output for quantitative
                 # testbench is ms
-                timestamp_p_s = float(self.slice_len * p) / self.sample_rate
+                timestamp_p_s = float(self.hop_len * p) / self.sample_rate
                 timestamp_p_ms = timestamp_p_s * 1000
-                timestamp_s_s = float(self.slice_len * s) / self.sample_rate
+                timestamp_s_s = float(self.hop_len * s) / self.sample_rate
                 timestamp_s_ms = timestamp_s_s * 1000
 
                 closest_note = get_closest_note_before(

@@ -16,10 +16,10 @@ class Arguments(Tap):
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
-    slice_len: int = (
-        8192  # Slice length for `nsgt` cqt, or hop_length in `librosa` cqt.
+    hop_len: int = (
+        2048  # Transition length for `nsgt` cqt, or hop_length in `librosa` cqt.
     )
-    slice_transition_ratio: int = 4  # Slice to transition length ratio for `nsgt` cqt.
+    slice_hop_ratio: int = 4  # Slice to hop length ratio for `nsgt` cqt.
 
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: Optional[str] = None  # Path to score MIDI.
@@ -61,11 +61,11 @@ class Arguments(Tap):
         if self.fmax <= self.fmin:
             self.__log_and_exit(f"fmax > fmin not fulfilled")
 
-        if self.slice_len < 0:
-            self.__log_and_exit(f"slice_len must be positive")
+        if self.hop_len < 0:
+            self.__log_and_exit(f"hop_len must be positive")
 
-        if self.slice_transition_ratio < 0:
-            self.__log_and_exit(f"slice_transition_ratio must be positive")
+        if self.slice_hop_ratio < 0:
+            self.__log_and_exit(f"slice_hop_ratio must be positive")
 
         if self.mode == "online":
             if self.dtw != "oltw":
@@ -103,9 +103,9 @@ class Arguments(Tap):
                 "Either one of `score_midi_path` or `score_pickle_path` must be set"
             )
 
-        if self.slice_len % 100 != 0 and self.mode == "offline" and self.cqt == "nsgt":
+        if self.hop_len % 100 != 0 and self.mode == "offline" and self.cqt == "nsgt":
             self.__log_and_exit(
-                f"slice_len ({self.slice_len}) for offline nsgt must be a multiple of 100"
+                f"hop_len ({self.hop_len}) for offline nsgt must be a multiple of 100"
             )
 
         if self.backend not in ("alignment", "timestamp"):

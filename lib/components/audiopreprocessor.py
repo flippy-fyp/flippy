@@ -73,8 +73,8 @@ class FeatureExtractor:
         cqt: CQTType,
         fmin: float,
         fmax: float,
-        slice_len: int,
-        slice_transition_ratio: int,
+        hop_len: int,
+        slice_hop_ratio: int,
         sample_rate: int,
     ):
         self.mode = mode
@@ -85,15 +85,15 @@ class FeatureExtractor:
         extractor_map: Dict[ModeType, Dict[CQTType, BaseCQT]] = {
             "offline": {
                 "librosa": LibrosaFullCQT(
-                    "librosa", fmin, slice_len, n_bins, sample_rate
+                    "librosa", fmin, hop_len, n_bins, sample_rate
                 ),
                 "librosa_hybrid": LibrosaFullCQT(
-                    "librosa_hybrid", fmin, slice_len, n_bins, sample_rate
+                    "librosa_hybrid", fmin, hop_len, n_bins, sample_rate
                 ),
                 "librosa_pseudo": LibrosaFullCQT(
-                    "librosa_pseudo", fmin, slice_len, n_bins, sample_rate
+                    "librosa_pseudo", fmin, hop_len, n_bins, sample_rate
                 ),
-                "nsgt": CQTNSGT(fmin, fmax, slice_len, sample_rate),
+                "nsgt": CQTNSGT(fmin, fmax, hop_len, sample_rate),
             },
             "online": {
                 "librosa_hybrid": LibrosaSliceCQT(
@@ -103,7 +103,7 @@ class FeatureExtractor:
                     "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
                 "nsgt": CQTNSGTSlicq(
-                    slice_len, slice_transition_ratio, fmin, fmax, sample_rate
+                    hop_len * slice_hop_ratio, slice_hop_ratio, fmin, fmax, sample_rate
                 ),
             },
         }
@@ -147,37 +147,38 @@ class AudioPreprocessor:
     def __init__(
         self,
         sample_rate: int,
+        hop_len: int,
+        slice_hop_ratio: int,
         # slicer
         wave_path: str,
-        hop_length: int,
-        frame_length: int,
         simulate_performance: bool,
         # extractor
         mode: ModeType,
         cqt: CQTType,
         fmin: float,
         fmax: float,
-        slice_len: int,
-        slice_transition_ratio: int,
         # output features
         output_queue: ExtractedFeatureQueue,
     ):
         self.sample_rate = sample_rate
         self.wave_path = wave_path
-        self.hop_length = hop_length
-        self.frame_length = frame_length
+        self.hop_len = hop_len
+        self.slice_hop_ratio = slice_hop_ratio
         self.simulate_performance = simulate_performance
 
         self.mode = mode
         self.cqt = cqt
         self.fmin = fmin
         self.fmax = fmax
-        self.slice_len = slice_len
-        self.slice_transition_ratio = slice_transition_ratio
 
         self.output_queue = output_queue
 
         self.__log("Initialised successfully")
+
+    def __get_frame_len(self) -> int:
+        if self.cqt == "nsgt":
+            return self.slice_hop_ratio * self.hop_len
+        return self.hop_len
 
     def start(self):
         self.__log("Starting...")
@@ -188,8 +189,8 @@ class AudioPreprocessor:
         if self.mode == "online":
             slicer = Slicer(
                 self.wave_path,
-                self.hop_length,
-                self.frame_length,
+                self.hop_len,
+                self.__get_frame_len(),
                 self.sample_rate,
                 slice_queue,
                 self.simulate_performance,
@@ -210,8 +211,8 @@ class AudioPreprocessor:
             self.cqt,
             self.fmin,
             self.fmax,
-            self.slice_len,
-            self.slice_transition_ratio,
+            self.hop_len,
+            self.slice_hop_ratio,
             self.sample_rate,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)

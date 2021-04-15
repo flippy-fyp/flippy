@@ -11,18 +11,17 @@ def plot_cqt_to_file(
     fmin: float,
     hop_length: int = 2048,
     fs: int = DEFAULT_SAMPLE_RATE,
+    figwidth: int = 6,
+    figheight: int = 4,
 ):
-    fig, ax = plt.subplots()
-
+    fig = plt.figure(figsize=(figwidth, figheight))
     img = librosa.display.specshow(
         cqt.T,
         sr=fs,
         x_axis="time",
         y_axis="cqt_note",
-        ax=ax,
         fmin=fmin,
         hop_length=hop_length,
     )
-    fig.colorbar(img, ax=ax)
-
+    fig.colorbar(img)
     plt.savefig(output_path)
