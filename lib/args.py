@@ -33,7 +33,7 @@ class Arguments(Tap):
         "alignment"  # Alignment result type: `alignment` or `timestamp`.
     )
 
-    backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, or `<HOSTNAME>:<PORT>` for UDP sockets.
+    backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, `udp:<HOSTNAME>:<PORT>` for UDP sockets + stderr, or a path to a text file.
 
     backend_backtrack: bool = False  # Whether the backend can "go back in time".
 

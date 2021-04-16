@@ -1,3 +1,4 @@
+from lib.runner import Runner
 from lib.audio import cut_wave
 from lib.cqt.cqt_nsgt import get_nsgt_params
 from lib.plotting import plot_cqt_to_file
@@ -6,6 +7,7 @@ from lib.components.synthesiser import Synthesiser
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.eprint import eprint
+from lib.args import Arguments
 from consts import BACH10_PATH, BWV846_PATH, REPRO_RESULTS_PATH
 import os
 import multiprocessing as mp
@@ -122,6 +124,41 @@ def bwv846_feature():
         print(f"Finished plotting features for {piece} to {output_plot_path}")
 
 
+def bwv846_align():
+    pieces = ["prelude", "fugue"]
+    for piece in pieces:
+        print(f"Starting to align: {piece}")
+        score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
+        perf_wave_path = os.path.join(BWV846_PATH, piece, f"{piece}.mp3")  # mp3 is fine
+
+        output_align_dir = os.path.join(REPRO_RESULTS_PATH, "bwv846_align", piece)
+        if not os.path.exists(output_align_dir):
+            os.makedirs(output_align_dir)
+        output_align_path = os.path.join(output_align_dir, "align.txt")
+
+        args = Arguments().parse_args(
+            [
+                "--mode",
+                "offline",
+                "--score_midi_path",
+                score_midi_path,
+                "--dtw",
+                "classical",
+                "--hop_len",
+                "2000",
+                "--perf_wave_path",
+                perf_wave_path,
+                "--backend_output",
+                output_align_path,
+            ]
+        )
+
+        runner = Runner(args)
+        runner.start()
+
+        print(f"Finished aligning: {piece}")
+
+
 def playground():
     fmin, fmax = get_nsgt_params()
     full_perf_wave_path = os.path.join("./tmp/wtk1-prelude1-performance.wav")
@@ -182,6 +219,8 @@ if __name__ == "__main__":
         bwv846_feature()
     elif repro_arg == "bach10_feature":
         bach10_feature()
+    elif repro_arg == "bwv846_align":
+        bwv846_align()
     elif repro_arg == "playground":
         playground()
     else:

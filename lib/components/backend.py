@@ -64,9 +64,10 @@ class Backend:
                 eprint(x, flush=True)
 
             self.__output_func = p
-        else:
+        elif len(backend_output) > 4 and backend_output[:4] == "udp:":
+            backend_output_without_udp_scheme = backend_output[4:]
             # try to parse UDP IP and port
-            address_port = backend_output.split(":")
+            address_port = backend_output_without_udp_scheme.split(":")
             if len(address_port) != 2:
                 raise ValueError(f"Unknown `backend_output`: {backend_output}")
             addr = str(address_port[0])
@@ -78,6 +79,16 @@ class Backend:
             def p(x: str):
                 eprint(x)
                 self.__socket.sendto(str(x).encode(), (addr, port))
+
+            self.__output_func = p
+        else:
+            # truncate the file first
+            with open(backend_output, "w+"):
+                pass
+
+            def p(x: str):
+                with open(backend_output, "a") as f:
+                    f.write(f"{x}\n")
 
             self.__output_func = p
 
@@ -138,7 +149,7 @@ class Backend:
                 )
                 if closest_note is None:
                     self.__log("Ignoring unfound closest note!")
-                if closest_note not in seen_notes:
+                elif closest_note not in seen_notes:
                     if self.mode == "online":
                         # MIREX format
                         self.__output_func(
