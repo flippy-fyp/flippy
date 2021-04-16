@@ -131,7 +131,7 @@ class FeatureExtractor:
                 # o is of type ExtractedFeature
                 self.output_queue.put(o)
             elif self.mode == "offline":
-                # slice_queue has the whole audio piece and now we need to iterate and calculate the diffs
+                # slice_queue has the whole audio piece
                 # o is of type List[ExtractedFeature]
                 write_list_to_queue(o, self.output_queue)
             else:

@@ -127,11 +127,11 @@ class Backend:
                     if self.mode == "online":
                         # MIREX format
                         self.__output_func(
-                            f"{int(timestamp_p_ms)} {int(det_time_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
+                            f"{round(timestamp_p_ms)} {round(det_time_ms)} {round(closest_note.note_start)} {closest_note.midi_note_num}"
                         )
                     elif self.mode == "offline":
                         self.__output_func(
-                            f"{int(timestamp_p_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
+                            f"{round(timestamp_p_ms)} {round(closest_note.note_start)} {closest_note.midi_note_num}"
                         )
                     else:
                         raise ValueError(f"Unknown mode: {self.mode}")
