@@ -107,6 +107,12 @@ class Runner:
 
         return ap
 
+    def __get_frame_len(self) -> int:
+        args = self.args
+        if args.cqt == "nsgt":
+            return args.slice_hop_ratio * args.hop_len
+        return args.hop_len
+
     def __init_backend(
         self,
         follower_output_queue: FollowerOutputQueue,
@@ -122,6 +128,8 @@ class Runner:
             performance_stream_start_conn,
             score_note_onsets,
             args.hop_len,
+            self.__get_frame_len(),
+            not args.no_backend_compensation,
             args.sample_rate,
             args.backend_output,
             args.backend_backtrack,

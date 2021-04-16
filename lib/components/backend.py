@@ -25,6 +25,8 @@ class Backend:
         performance_stream_start_conn: MultiprocessingConnection,
         score_note_onsets: List[NoteInfo],
         hop_len: int,
+        frame_len: int,
+        backend_compensation: bool,
         sample_rate: int,
         backend_output: str,
         backend_backtrack: bool,
@@ -33,6 +35,8 @@ class Backend:
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
         self.hop_len = hop_len
+        self.frame_len = frame_len
+        self.backend_compensation = backend_compensation
         self.sample_rate = sample_rate
         self.backend_backtrack = backend_backtrack
 
@@ -96,9 +100,14 @@ class Backend:
             if (self.backend_backtrack and s != prev_s) or (
                 not self.backend_backtrack and s > prev_s
             ):
-                timestamp_s = float(self.hop_len * s) / self.sample_rate
+                timestamp_s = self.__get_online_timestamp(s)
                 self.__output_func(timestamp_s)
                 prev_s = s
+
+    def __get_online_timestamp(self, s: int) -> float:
+        if self.backend_compensation:
+            return float(self.frame_len + (s - 1) * self.hop_len) / self.sample_rate
+        return float(self.hop_len * s) / self.sample_rate
 
     def __start_alignment(self):
         # wait for the performance stream to start
