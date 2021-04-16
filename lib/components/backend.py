@@ -27,12 +27,14 @@ class Backend:
         hop_len: int,
         sample_rate: int,
         backend_output: str,
+        backend_backtrack: bool,
     ):
         self.mode = mode
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
         self.hop_len = hop_len
         self.sample_rate = sample_rate
+        self.backend_backtrack = backend_backtrack
 
         self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
             {x.note_start: x for x in score_note_onsets}
@@ -91,7 +93,9 @@ class Backend:
                 self.__output_func("END")
                 return
             s = e[1]
-            if s != prev_s:
+            if (self.backend_backtrack and s != prev_s) or (
+                not self.backend_backtrack and s > prev_s
+            ):
                 timestamp_s = float(self.hop_len * s) / self.sample_rate
                 self.__output_func(timestamp_s)
                 prev_s = s
@@ -107,7 +111,9 @@ class Backend:
             if e is None:
                 return
             p, s = e
-            if s != prev_s:
+            if (self.backend_backtrack and s != prev_s) or (
+                not self.backend_backtrack and s > prev_s
+            ):
                 prev_s = s
                 curr_time = time.perf_counter()
                 det_time_ms = (curr_time - performance_start_time) * 1000

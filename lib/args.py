@@ -32,6 +32,8 @@ class Arguments(Tap):
 
     backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, or `<HOSTNAME>:<PORT>` for UDP sockets.
 
+    backend_backtrack = False  # Whether the backend can "go back in time".
+
     simulate_performance: bool = (
         False  # Whether to stream performance "live" into the system.
     )

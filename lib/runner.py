@@ -72,14 +72,14 @@ class Runner:
         if player_proc:
             self.__log(f"Starting: player")
             player_proc.start()
-
         perf_start_time = time.perf_counter()
+
         self.__log(f"Starting: performance at {perf_start_time}")
         child_performance_stream_start_conn.send(perf_start_time)
         perf_ap_proc.start()
 
         if player_proc:
-            player_proc.join
+            player_proc.join()
             self.__log("Joined: player")
         perf_ap_proc.join()
         self.__log("Joined: performance")
@@ -124,6 +124,7 @@ class Runner:
             args.hop_len,
             args.sample_rate,
             args.backend_output,
+            args.backend_backtrack,
         )
 
     def __init_follower(
@@ -178,7 +179,7 @@ class Runner:
                 args.hop_len,
                 args.slice_hop_ratio,
                 score_wave_path,
-                args.simulate_performance,
+                False,
                 args.mode,
                 args.cqt,
                 args.fmin,

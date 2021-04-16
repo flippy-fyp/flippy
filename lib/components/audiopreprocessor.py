@@ -45,20 +45,21 @@ class Slicer:
         )
 
         # before starting, sleep for frame_length if performance
-        self.__sleep_if_performance(self.frame_length)
+        self.__sleep_if_performance(self.frame_length, time.perf_counter() + 0.2)
 
         for s in audio_stream:
+            pre_sleep_time = time.perf_counter()
             self.slice_queue.put(s)
             # sleep for hop length if performance
-            self.__sleep_if_performance(self.hop_length)
+            self.__sleep_if_performance(self.hop_length, pre_sleep_time)
 
         self.slice_queue.put(None)  # end
         self.__log("Finished")
 
-    def __sleep_if_performance(self, samples: int):
+    def __sleep_if_performance(self, samples: int, pre_sleep_time: float):
         if self.simulate_performance:
             sleep_time = float(samples) / self.sample_rate
-            time.sleep(sleep_time)
+            time.sleep(sleep_time - (time.perf_counter() - pre_sleep_time) - 0.0005)
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
