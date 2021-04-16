@@ -77,6 +77,7 @@ class FeatureExtractor:
         hop_len: int,
         slice_hop_ratio: int,
         sample_rate: int,
+        nsgt_multithreading: bool = False,
     ):
         self.mode = mode
         self.slice_queue = slice_queue
@@ -94,7 +95,7 @@ class FeatureExtractor:
                 "librosa_pseudo": LibrosaFullCQT(
                     "librosa_pseudo", fmin, hop_len, n_bins, sample_rate
                 ),
-                "nsgt": CQTNSGT(fmin, fmax, hop_len, sample_rate),
+                "nsgt": CQTNSGT(fmin, fmax, hop_len, sample_rate, nsgt_multithreading),
             },
             "online": {
                 "librosa_hybrid": LibrosaSliceCQT(
@@ -104,7 +105,12 @@ class FeatureExtractor:
                     "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
                 "nsgt": CQTNSGTSlicq(
-                    hop_len * slice_hop_ratio, slice_hop_ratio, fmin, fmax, sample_rate
+                    hop_len * slice_hop_ratio,
+                    slice_hop_ratio,
+                    fmin,
+                    fmax,
+                    sample_rate,
+                    nsgt_multithreading,
                 ),
             },
         }
@@ -160,6 +166,7 @@ class AudioPreprocessor:
         fmax: float,
         # output features
         output_queue: ExtractedFeatureQueue,
+        nsgt_multithreading: bool = False,
     ):
         self.sample_rate = sample_rate
         self.wave_path = wave_path
@@ -173,6 +180,8 @@ class AudioPreprocessor:
         self.fmax = fmax
 
         self.output_queue = output_queue
+
+        self.nsgt_multithreading = nsgt_multithreading
 
         self.__log("Initialised successfully")
 
@@ -215,6 +224,7 @@ class AudioPreprocessor:
             self.hop_len,
             self.slice_hop_ratio,
             self.sample_rate,
+            self.nsgt_multithreading,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)
         feature_extractor_proc.start()

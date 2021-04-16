@@ -19,7 +19,10 @@ class Arguments(Tap):
     hop_len: int = (
         2048  # Transition length for `nsgt` cqt, or hop_length in `librosa` cqt.
     )
-    slice_hop_ratio: int = 4  # Slice to hop length ratio for `nsgt` cqt (effectively making this a frame_len). For `librosa`, frame_len == hop_len
+    slice_hop_ratio: int = 4  # Slice to hop length ratio for `nsgt` cqt (effectively making this a frame_len). For `librosa`, frame_len == hop_len.
+    nsgt_multithreading: bool = (
+        False  # Whether to use multithreading for `nsgt` multithreading.
+    )
 
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: Optional[str] = None  # Path to score MIDI.
@@ -32,9 +35,9 @@ class Arguments(Tap):
 
     backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, or `<HOSTNAME>:<PORT>` for UDP sockets.
 
-    backend_backtrack = False  # Whether the backend can "go back in time".
+    backend_backtrack: bool = False  # Whether the backend can "go back in time".
 
-    no_backend_compensation = False  # Whether to report timestamps frame_len ahead for compensation due to the nature of the streaming. Only effectual when backend is `timestamp`.
+    no_backend_compensation: bool = False  # Whether to report timestamps frame_len ahead for compensation due to the nature of the streaming. Only effectual when backend is `timestamp`.
 
     simulate_performance: bool = (
         False  # Whether to stream performance "live" into the system.

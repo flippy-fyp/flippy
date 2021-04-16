@@ -103,6 +103,7 @@ class Runner:
             args.fmin,
             args.fmax,
             P_queue,
+            args.nsgt_multithreading,
         )
 
         return ap
@@ -193,6 +194,7 @@ class Runner:
                 args.fmin,
                 args.fmax,
                 S_queue,
+                args.nsgt_multithreading,
             )
             audio_preprocessor.start()
 
