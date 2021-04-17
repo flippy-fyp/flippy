@@ -23,7 +23,7 @@ sudo make
 sudo make install
 make check
 # go back to project root
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" && cd ..
 
 # Install ffmpeg
 sudo apt-get install ffmpeg
