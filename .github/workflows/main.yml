@@ -1,11 +1,7 @@
 
 name: CI
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: push
 
 jobs:
   ci:
@@ -33,8 +29,15 @@ jobs:
           pip install -r requirements.txt
           pip install nsgt
       - name: Run install script
-        run: sudo scripts/install.sh
+        run: scripts/install.sh
       - name: Mypy Check
         run: python -m mypy .
       - name: Unit tests
         run: python -m unittest
+      - name: Run repro
+        run: python repro.py
+      - name: Upload Repro results
+        uses: actions/upload-artifact@v2
+        with:
+          name: repro-results
+          path: repro_results
