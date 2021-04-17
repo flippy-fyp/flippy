@@ -163,6 +163,8 @@ def bwv846_align():
             runner = Runner(args)
             runner.start()
 
+            ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
+
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
