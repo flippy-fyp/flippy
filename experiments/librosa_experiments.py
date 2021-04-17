@@ -1,6 +1,6 @@
-from .constants import DEFAULT_SAMPLE_RATE
-from .midi import midi_to_audio
-from .cqt.cqt_librosa import (
+from lib.constants import DEFAULT_SAMPLE_RATE
+from lib.midi import midi_to_audio
+from lib.cqt.cqt_librosa import (
     extract_features_librosa_cqt,
     extract_features_librosa_pseudo_cqt,
     extract_features_librosa_hybrid_cqt,

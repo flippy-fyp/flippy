@@ -1,6 +1,6 @@
-from .constants import DEFAULT_SAMPLE_RATE
+from lib.constants import DEFAULT_SAMPLE_RATE
 from experiments.librosa_experiments import plot_cqt
-from .cqt.cqt_nsgt import (
+from lib.cqt.cqt_nsgt import (
     extract_features_nsgt_cqt,
     get_nsgt_params,
     extract_features_nsgt_slicq,
