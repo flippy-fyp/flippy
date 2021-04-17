@@ -15,6 +15,7 @@ from typing import List
 import numpy as np
 import sys
 import re
+from flippy_quantitative_testbench.utils.bench import bench
 
 
 def bach10_feature():
@@ -164,6 +165,11 @@ def bwv846_align():
             runner.start()
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
+            align_result = bench(output_align_path, ref_align_path)
+
+            align_result_path = os.path.join(output_align_dir, "result.json")
+            with open(align_result_path, "w+") as f:
+                f.write(align_result)
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
@@ -213,6 +219,13 @@ def bach10_align():
 
             runner = Runner(args)
             runner.start()
+
+            ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
+            align_result = bench(output_align_path, ref_align_path)
+
+            align_result_path = os.path.join(output_align_dir, "result.json")
+            with open(align_result_path, "w+") as f:
+                f.write(align_result)
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
