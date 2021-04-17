@@ -126,37 +126,99 @@ def bwv846_feature():
 
 def bwv846_align():
     pieces = ["prelude", "fugue"]
+    cqts = ["nsgt", "librosa"]
     for piece in pieces:
-        print(f"Starting to align: {piece}")
-        score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
-        perf_wave_path = os.path.join(BWV846_PATH, piece, f"{piece}.mp3")  # mp3 is fine
+        for cqt in cqts:
+            print("=============================================")
+            print(f"Starting to align: {piece} with cqt: {cqt}")
+            print("=============================================")
+            score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
+            perf_wave_path = os.path.join(
+                BWV846_PATH, piece, f"{piece}.mp3"
+            )  # mp3 is fine
 
-        output_align_dir = os.path.join(REPRO_RESULTS_PATH, "bwv846_align", piece)
-        if not os.path.exists(output_align_dir):
-            os.makedirs(output_align_dir)
-        output_align_path = os.path.join(output_align_dir, "align.txt")
+            output_align_dir = os.path.join(
+                REPRO_RESULTS_PATH, "bwv846_align", cqt, piece
+            )
+            if not os.path.exists(output_align_dir):
+                os.makedirs(output_align_dir)
+            output_align_path = os.path.join(output_align_dir, "align.txt")
 
-        args = Arguments().parse_args(
-            [
-                "--mode",
-                "offline",
-                "--score_midi_path",
-                score_midi_path,
-                "--dtw",
-                "classical",
-                "--hop_len",
-                "2000",
-                "--perf_wave_path",
-                perf_wave_path,
-                "--backend_output",
-                output_align_path,
-            ]
-        )
+            args = Arguments().parse_args(
+                [
+                    "--mode",
+                    "offline",
+                    "--score_midi_path",
+                    score_midi_path,
+                    "--dtw",
+                    "classical",
+                    "--cqt",
+                    cqt,
+                    "--hop_len",
+                    "2048",
+                    "--perf_wave_path",
+                    perf_wave_path,
+                    "--backend_output",
+                    output_align_path,
+                ]
+            )
 
-        runner = Runner(args)
-        runner.start()
+            runner = Runner(args)
+            runner.start()
 
-        print(f"Finished aligning: {piece}")
+            print("=============================================")
+            print(f"Finished aligning: {piece} with cqt: {cqt}")
+            print("=============================================")
+
+
+def bach10_align():
+    bach10_piece_paths = [
+        f.path
+        for f in os.scandir(BACH10_PATH)
+        if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
+    ]
+    cqts = ["nsgt", "librosa"]
+    for piece_path in bach10_piece_paths:
+        piece = os.path.basename(piece_path)
+        for cqt in cqts:
+            print("=============================================")
+            print(f"Starting to align: {piece} with cqt: {cqt}")
+            print("=============================================")
+            score_midi_path = os.path.join(piece_path, f"{piece}.mid")
+            perf_wave_path = os.path.join(piece_path, f"{piece}.wav")
+
+            output_align_dir = os.path.join(
+                REPRO_RESULTS_PATH, "bach10_align", cqt, piece
+            )
+            if not os.path.exists(output_align_dir):
+                os.makedirs(output_align_dir)
+            output_align_path = os.path.join(output_align_dir, "align.txt")
+
+            args = Arguments().parse_args(
+                [
+                    "--mode",
+                    "offline",
+                    "--score_midi_path",
+                    score_midi_path,
+                    "--dtw",
+                    "classical",
+                    "--cqt",
+                    cqt,
+                    "--hop_len",
+                    "2048",
+                    "--perf_wave_path",
+                    perf_wave_path,
+                    "--backend_output",
+                    output_align_path,
+                ]
+            )
+
+            runner = Runner(args)
+            runner.start()
+
+            print("=============================================")
+            print(f"Finished aligning: {piece} with cqt: {cqt}")
+            print("=============================================")
 
 
 def playground():

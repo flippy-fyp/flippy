@@ -87,13 +87,13 @@ class FeatureExtractor:
         extractor_map: Dict[ModeType, Dict[CQTType, BaseCQT]] = {
             "offline": {
                 "librosa": LibrosaFullCQT(
-                    "librosa", fmin, hop_len, n_bins, sample_rate
+                    "librosa", fmin, n_bins, hop_len, sample_rate
                 ),
                 "librosa_hybrid": LibrosaFullCQT(
-                    "librosa_hybrid", fmin, hop_len, n_bins, sample_rate
+                    "librosa_hybrid", fmin, n_bins, hop_len, sample_rate
                 ),
                 "librosa_pseudo": LibrosaFullCQT(
-                    "librosa_pseudo", fmin, hop_len, n_bins, sample_rate
+                    "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
                 ),
                 "nsgt": CQTNSGT(fmin, fmax, hop_len, sample_rate, nsgt_multithreading),
             },
