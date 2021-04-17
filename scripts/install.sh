@@ -3,7 +3,7 @@
 set -eo pipefail
 
 # Ensure we're in the project root
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" && cd ..
 
 # Install fluidsynth
 sudo apt-get install fluidsynth
