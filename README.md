@@ -7,7 +7,7 @@ Score-follower.
 - Python 3 (Tested on Python 3.8, Ubuntu 20.04)
 
 ## Setup
-(Run `sudo` [`scripts/install.sh`](./scripts/install.sh) to get these automatically for Ubuntu 20.04)
+(Run [`scripts/install.sh`](./scripts/install.sh) to get these automatically for Ubuntu 20.04)
 - [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
 - Install `nsgt` separately: `pip install nsgt`
