@@ -285,6 +285,7 @@ if __name__ == "__main__":
             print("++++++++++++++++++++++++++++++++++++")
             print(f"Finished: {name}")
             print("++++++++++++++++++++++++++++++++++++")
+        sys.exit(0)
     elif len(repro_args) != 1:
         eprint(f"Unknown repro args: {repro_args}. Please see README.md")
         sys.exit(1)
