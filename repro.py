@@ -283,6 +283,8 @@ if __name__ == "__main__":
         bach10_feature()
     elif repro_arg == "bwv846_align":
         bwv846_align()
+    elif repro_arg == "bach10_align":
+        bach10_align()
     elif repro_arg == "playground":
         playground()
     else:

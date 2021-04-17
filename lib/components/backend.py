@@ -1,5 +1,5 @@
 from lib.eprint import eprint
-from typing import Callable, Iterator, List, Optional, Dict, Set
+from typing import Callable, Iterator, List, Dict, Set
 from lib.sharedtypes import (
     FollowerOutputQueue,
     ModeType,
@@ -40,9 +40,9 @@ class Backend:
         self.sample_rate = sample_rate
         self.backend_backtrack = backend_backtrack
 
-        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
-            {x.note_start: x for x in score_note_onsets}
-        )  # note_start is ms
+        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = get_sorted_note_onsets(
+            score_note_onsets
+        )
 
         backend_start_map: Dict[BackendType, Callable[[], None]] = {
             "timestamp": self.__start_timestamp,
@@ -124,7 +124,7 @@ class Backend:
         # wait for the performance stream to start
         performance_start_time: float = self.performance_stream_start_conn.recv()
         prev_s = -1
-        seen_notes: Set[NoteInfo] = set()
+        seen_closest_notes_time: Set[float] = set()
 
         while True:
             e = self.follower_output_queue.get()
@@ -144,37 +144,51 @@ class Backend:
                 timestamp_s_s = float(self.hop_len * s) / self.sample_rate
                 timestamp_s_ms = timestamp_s_s * 1000
 
-                closest_note = get_closest_note_before(
+                closest_notes = get_closest_notes_before(
                     self.__sorted_note_onsets, timestamp_s_ms
                 )
-                if closest_note is None:
-                    self.__log("Ignoring unfound closest note!")
-                elif closest_note not in seen_notes:
-                    if self.mode == "online":
-                        # MIREX format
-                        self.__output_func(
-                            f"{round(timestamp_p_ms)} {round(det_time_ms)} {round(closest_note.note_start)} {closest_note.midi_note_num}"
-                        )
-                    elif self.mode == "offline":
-                        self.__output_func(
-                            f"{round(timestamp_p_ms)} {round(closest_note.note_start)} {closest_note.midi_note_num}"
-                        )
-                    else:
-                        raise ValueError(f"Unknown mode: {self.mode}")
-                    seen_notes.add(closest_note)
+                if len(closest_notes) == 0:
+                    self.__log(f"Ignoring unfound closest notes at {timestamp_s_ms}")
+                elif closest_notes[0].note_start not in seen_closest_notes_time:
+                    seen_closest_notes_time.add(closest_notes[0].note_start)
+                    for closest_note in closest_notes:
+                        if self.mode == "online":
+                            # MIREX format
+                            self.__output_func(
+                                f"{round(timestamp_p_ms)} {round(det_time_ms)} {round(closest_note.note_start)} {closest_note.midi_note_num}"
+                            )
+                        elif self.mode == "offline":
+                            # put det_time as est_time
+                            self.__output_func(
+                                f"{round(timestamp_p_ms)} {round(timestamp_p_ms)} {round(closest_notes[0].note_start)} {closest_note.midi_note_num}"
+                            )
+                        else:
+                            raise ValueError(f"Unknown mode: {self.mode}")
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
 
 
-def get_closest_note_before(
-    sorted_note_onsets: "SortedDict[float, NoteInfo]", timestamp_ms: float
-) -> Optional[NoteInfo]:
-    closest_note_before_generator: Iterator[float] = sorted_note_onsets.irange(
+def get_sorted_note_onsets(
+    score_note_onsets: List[NoteInfo],
+) -> "SortedDict[float, List[NoteInfo]]":
+    # group by note_start time
+    res: "SortedDict[float, List[NoteInfo]]" = SortedDict()
+
+    for onset in score_note_onsets:
+        if onset.note_start not in res:
+            res[onset.note_start] = []
+        res[onset.note_start].append(onset)
+
+    return res
+
+
+def get_closest_notes_before(
+    sorted_note_onsets: "SortedDict[float, List[NoteInfo]]", timestamp_ms: float
+) -> List[NoteInfo]:
+    closest_note_time_before_generator: Iterator[float] = sorted_note_onsets.irange(
         maximum=timestamp_ms, reverse=True
     )
 
-    closest_note_before_key = next(closest_note_before_generator, None)
-    if closest_note_before_key is None:
-        return None
-    return sorted_note_onsets[closest_note_before_key]
+    closest_notes_before_key = next(closest_note_time_before_generator, None)
+    return sorted_note_onsets.get(closest_notes_before_key, [])
