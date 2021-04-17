@@ -57,8 +57,7 @@ def bach10_feature():
         output_plot_dir = os.path.join(
             REPRO_RESULTS_PATH, "bach10_feature", piece_basename
         )
-        if not os.path.exists(output_plot_dir):
-            os.makedirs(output_plot_dir)
+        os.makedirs(output_plot_dir, exist_ok=True)
         output_plot_path = os.path.join(output_plot_dir, "features.pdf")
         print(f"Plotting features for {piece_basename} to {output_plot_path}")
         plot_cqt_to_file(
@@ -108,8 +107,7 @@ def bwv846_feature():
         # convert to ndarray
         features_ndarray = np.array(features)
         output_plot_dir = os.path.join(REPRO_RESULTS_PATH, "bwv846_feature", piece)
-        if not os.path.exists(output_plot_dir):
-            os.makedirs(output_plot_dir)
+        os.makedirs(output_plot_dir, exist_ok=True)
         output_plot_path = os.path.join(output_plot_dir, "features.pdf")
         print(f"Plotting features for {piece} to {output_plot_path}")
         plot_cqt_to_file(
@@ -140,8 +138,7 @@ def bwv846_align():
             output_align_dir = os.path.join(
                 REPRO_RESULTS_PATH, "bwv846_align", cqt, piece
             )
-            if not os.path.exists(output_align_dir):
-                os.makedirs(output_align_dir)
+            os.makedirs(output_align_dir, exist_ok=True)
             output_align_path = os.path.join(output_align_dir, "align.txt")
 
             args = Arguments().parse_args(
@@ -190,8 +187,7 @@ def bach10_align():
             output_align_dir = os.path.join(
                 REPRO_RESULTS_PATH, "bach10_align", cqt, piece
             )
-            if not os.path.exists(output_align_dir):
-                os.makedirs(output_align_dir)
+            os.makedirs(output_align_dir, exist_ok=True)
             output_align_path = os.path.join(output_align_dir, "align.txt")
 
             args = Arguments().parse_args(
@@ -252,8 +248,7 @@ def playground():
     output_plot_dir = os.path.join(
         REPRO_RESULTS_PATH, "playground", "wtk-prelude1-performance"
     )
-    if not os.path.exists(output_plot_dir):
-        os.makedirs(output_plot_dir)
+    os.makedirs(output_plot_dir, exist_ok=True)
     output_plot_path = os.path.join(output_plot_dir, "features.pdf")
     print(f"Plotting features for wtk-prelude1-performance to {output_plot_path}")
     plot_cqt_to_file(
