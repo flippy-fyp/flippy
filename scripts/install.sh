@@ -19,8 +19,9 @@ tar -xzf fftw-3.3.9.tar.gz
 rm -f fftw-3.3.9.tar.gz
 cd fftw-3.3.9
 ./configure
-make
-make install
+sudo make
+sudo make install
+make check
 # go back to project root
 cd "$(dirname "$0")"
 
