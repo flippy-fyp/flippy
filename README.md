@@ -3,7 +3,7 @@
 Score-follower.
 
 ## Requirements
-- Cloned repository with LFS
+- Cloned repository with LFS and all submodules
 - Python 3 (Tested on Python 3.8, Ubuntu 20.04)
 
 ## Setup
