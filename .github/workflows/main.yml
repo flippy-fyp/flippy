@@ -1,11 +1,7 @@
 
 name: CI
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: push
 
 jobs:
   ci:
@@ -14,6 +10,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           lfs: true
+          submodules: recursive
       - name: Checkout LFS objects
         run: git lfs checkout
       - name: Set up Python
@@ -25,14 +22,23 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install dependencies
         if: steps.cache-requirements.outputs.cache-hit != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install nsgt
+      - name: Run install script
+        run: scripts/install.sh
       - name: Mypy Check
         run: python -m mypy .
       - name: Unit tests
         run: python -m unittest
+      - name: Run repro
+        run: python repro.py
+      - name: Upload Repro results
+        uses: actions/upload-artifact@v2
+        with:
+          name: repro-results
+          path: repro_results

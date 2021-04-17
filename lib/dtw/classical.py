@@ -1,7 +1,7 @@
-from lib.eprint import eprint
+from ..eprint import eprint
 from typing import List
-from lib.dtw.shared import cost
-from lib.sharedtypes import DTWPathElemType, ExtractedFeature
+from ..dtw.shared import cost
+from ..sharedtypes import DTWPathElemType, ExtractedFeature
 import numpy as np
 
 
@@ -96,8 +96,7 @@ class ClassicalDTW:
             if (r, c) == (0, 0):
                 self.D[r][c] = d
             else:
-                half_diag_cost = self.__dtw_helper(r - 1, c - 1)
-                diag_cost = half_diag_cost * 2
+                diag_cost = self.__dtw_helper(r - 1, c - 1)
                 down_cost = self.__dtw_helper(r - 1, c)
                 left_cost = self.__dtw_helper(r, c - 1)
 

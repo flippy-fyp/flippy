@@ -1,13 +1,13 @@
-from lib.scorepickle import ScorePickle
-from lib.components.player import Player
-from lib.components.follower import Follower
-from lib.components.backend import Backend
-from lib.mputils import consume_queue_into_conn
-from lib.components.audiopreprocessor import AudioPreprocessor
-from lib.components.synthesiser import Synthesiser
-from lib.args import Arguments
-from lib.midi import process_midi_to_note_info
-from lib.sharedtypes import (
+from .scorepickle import ScorePickle
+from .components.player import Player
+from .components.follower import Follower
+from .components.backend import Backend
+from .mputils import consume_queue_into_conn
+from .components.audiopreprocessor import AudioPreprocessor
+from .components.synthesiser import Synthesiser
+from .args import Arguments
+from .midi import process_midi_to_note_info
+from .sharedtypes import (
     ExtractedFeature,
     ExtractedFeatureQueue,
     FollowerOutputQueue,
@@ -15,7 +15,7 @@ from lib.sharedtypes import (
     NoteInfo,
 )
 from typing import Optional, Tuple, List
-from lib.eprint import eprint
+from .eprint import eprint
 import multiprocessing as mp
 import time
 
@@ -72,14 +72,14 @@ class Runner:
         if player_proc:
             self.__log(f"Starting: player")
             player_proc.start()
-
         perf_start_time = time.perf_counter()
+
         self.__log(f"Starting: performance at {perf_start_time}")
         child_performance_stream_start_conn.send(perf_start_time)
         perf_ap_proc.start()
 
         if player_proc:
-            player_proc.join
+            player_proc.join()
             self.__log("Joined: player")
         perf_ap_proc.join()
         self.__log("Joined: performance")
@@ -92,23 +92,27 @@ class Runner:
         self, P_queue: ExtractedFeatureQueue
     ) -> AudioPreprocessor:
         args = self.args
-
         ap = AudioPreprocessor(
             args.sample_rate,
+            args.hop_len,
+            args.slice_hop_ratio,
             args.perf_wave_path,
-            args.slice_len,
-            self.__get_frame_length(),
             args.simulate_performance,
             args.mode,
             args.cqt,
             args.fmin,
             args.fmax,
-            args.slice_len,
-            args.transition_slice_ratio,
             P_queue,
+            args.nsgt_multithreading,
         )
 
         return ap
+
+    def __get_frame_len(self) -> int:
+        args = self.args
+        if args.cqt == "nsgt":
+            return args.slice_hop_ratio * args.hop_len
+        return args.hop_len
 
     def __init_backend(
         self,
@@ -124,9 +128,12 @@ class Runner:
             follower_output_queue,
             performance_stream_start_conn,
             score_note_onsets,
-            args.slice_len,
+            args.hop_len,
+            self.__get_frame_len(),
+            not args.no_backend_compensation,
             args.sample_rate,
             args.backend_output,
+            args.backend_backtrack,
         )
 
     def __init_follower(
@@ -178,17 +185,16 @@ class Runner:
 
             audio_preprocessor = AudioPreprocessor(
                 args.sample_rate,
+                args.hop_len,
+                args.slice_hop_ratio,
                 score_wave_path,
-                args.slice_len,
-                self.__get_frame_length(),
                 False,
                 args.mode,
                 args.cqt,
                 args.fmin,
                 args.fmax,
-                args.slice_len,
-                args.transition_slice_ratio,
                 S_queue,
+                args.nsgt_multithreading,
             )
             audio_preprocessor.start()
 
@@ -205,12 +211,6 @@ class Runner:
             raise ValueError(
                 "Either `score_pickle_path` or `score_midi_path` must be set"
             )
-
-    def __get_frame_length(self) -> int:
-        args = self.args
-        if args.cqt == "nsgt":
-            return args.transition_slice_ratio * args.slice_len
-        return args.slice_len
 
     def __init_player_if_required(self) -> Optional[mp.Process]:
         args = self.args

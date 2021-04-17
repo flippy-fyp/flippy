@@ -1,6 +1,6 @@
-from lib.eprint import eprint
-from typing import Callable, Iterator, List, Optional, Dict, Set
-from lib.sharedtypes import (
+from ..eprint import eprint
+from typing import Callable, Iterator, List, Dict, Set
+from ..sharedtypes import (
     FollowerOutputQueue,
     ModeType,
     NoteInfo,
@@ -24,19 +24,25 @@ class Backend:
         follower_output_queue: FollowerOutputQueue,
         performance_stream_start_conn: MultiprocessingConnection,
         score_note_onsets: List[NoteInfo],
-        slice_len: int,
+        hop_len: int,
+        frame_len: int,
+        backend_compensation: bool,
         sample_rate: int,
         backend_output: str,
+        backend_backtrack: bool,
     ):
         self.mode = mode
         self.follower_output_queue = follower_output_queue
         self.performance_stream_start_conn = performance_stream_start_conn
-        self.slice_len = slice_len
+        self.hop_len = hop_len
+        self.frame_len = frame_len
+        self.backend_compensation = backend_compensation
         self.sample_rate = sample_rate
+        self.backend_backtrack = backend_backtrack
 
-        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = SortedDict(
-            {x.note_start: x for x in score_note_onsets}
-        )  # note_start is ms
+        self.__sorted_note_onsets: SortedDict[float, NoteInfo] = get_sorted_note_onsets(
+            score_note_onsets
+        )
 
         backend_start_map: Dict[BackendType, Callable[[], None]] = {
             "timestamp": self.__start_timestamp,
@@ -58,9 +64,10 @@ class Backend:
                 eprint(x, flush=True)
 
             self.__output_func = p
-        else:
+        elif len(backend_output) > 4 and backend_output[:4] == "udp:":
+            backend_output_without_udp_scheme = backend_output[4:]
             # try to parse UDP IP and port
-            address_port = backend_output.split(":")
+            address_port = backend_output_without_udp_scheme.split(":")
             if len(address_port) != 2:
                 raise ValueError(f"Unknown `backend_output`: {backend_output}")
             addr = str(address_port[0])
@@ -72,6 +79,16 @@ class Backend:
             def p(x: str):
                 eprint(x)
                 self.__socket.sendto(str(x).encode(), (addr, port))
+
+            self.__output_func = p
+        else:
+            # truncate the file first
+            with open(backend_output, "w+"):
+                pass
+
+            def p(x: str):
+                with open(backend_output, "a") as f:
+                    f.write(f"{x}\n")
 
             self.__output_func = p
 
@@ -91,66 +108,87 @@ class Backend:
                 self.__output_func("END")
                 return
             s = e[1]
-            # eprint(e)
-            if s != prev_s:
-                timestamp_s = float(self.slice_len * s) / self.sample_rate
+            if (self.backend_backtrack and s != prev_s) or (
+                not self.backend_backtrack and s > prev_s
+            ):
+                timestamp_s = self.__get_online_timestamp(s)
                 self.__output_func(timestamp_s)
                 prev_s = s
+
+    def __get_online_timestamp(self, s: int) -> float:
+        if self.backend_compensation:
+            return float(self.frame_len + (s - 1) * self.hop_len) / self.sample_rate
+        return float(self.hop_len * s) / self.sample_rate
 
     def __start_alignment(self):
         # wait for the performance stream to start
         performance_start_time: float = self.performance_stream_start_conn.recv()
         prev_s = -1
-        seen_notes: Set[NoteInfo] = set()
+        seen_closest_notes_time: Set[float] = set()
 
         while True:
             e = self.follower_output_queue.get()
             if e is None:
                 return
             p, s = e
-            if s != prev_s:
+            if (self.backend_backtrack and s != prev_s) or (
+                not self.backend_backtrack and s > prev_s
+            ):
                 prev_s = s
                 curr_time = time.perf_counter()
                 det_time_ms = (curr_time - performance_start_time) * 1000
                 # use ms because NoteInfo are ms and the follower output for quantitative
                 # testbench is ms
-                timestamp_p_s = float(self.slice_len * p) / self.sample_rate
+                timestamp_p_s = float(self.hop_len * p) / self.sample_rate
                 timestamp_p_ms = timestamp_p_s * 1000
-                timestamp_s_s = float(self.slice_len * s) / self.sample_rate
+                timestamp_s_s = float(self.hop_len * s) / self.sample_rate
                 timestamp_s_ms = timestamp_s_s * 1000
 
-                closest_note = get_closest_note_before(
+                closest_notes = get_closest_notes_before(
                     self.__sorted_note_onsets, timestamp_s_ms
                 )
-                if closest_note is None:
-                    self.__log("Ignoring unfound closest note!")
-                if closest_note not in seen_notes:
-                    if self.mode == "online":
-                        # MIREX format
-                        self.__output_func(
-                            f"{int(timestamp_p_ms)} {int(det_time_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
-                        )
-                    elif self.mode == "offline":
-                        self.__log(e)
-                        self.__output_func(
-                            f"{int(timestamp_p_ms)} {int(closest_note.note_start)} {closest_note.midi_note_num}"
-                        )
-                    else:
-                        raise ValueError(f"Unknown mode: {self.mode}")
-                    seen_notes.add(closest_note)
+                if len(closest_notes) == 0:
+                    self.__log(f"Ignoring unfound closest notes at {timestamp_s_ms}")
+                elif closest_notes[0].note_start not in seen_closest_notes_time:
+                    seen_closest_notes_time.add(closest_notes[0].note_start)
+                    for closest_note in closest_notes:
+                        if self.mode == "online":
+                            # MIREX format
+                            self.__output_func(
+                                f"{round(timestamp_p_ms)} {round(det_time_ms)} {round(closest_note.note_start)} {closest_note.midi_note_num}"
+                            )
+                        elif self.mode == "offline":
+                            # put det_time as est_time
+                            self.__output_func(
+                                f"{round(timestamp_p_ms)} {round(timestamp_p_ms)} {round(closest_notes[0].note_start)} {closest_note.midi_note_num}"
+                            )
+                        else:
+                            raise ValueError(f"Unknown mode: {self.mode}")
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
 
 
-def get_closest_note_before(
-    sorted_note_onsets: "SortedDict[float, NoteInfo]", timestamp_ms: float
-) -> Optional[NoteInfo]:
-    closest_note_before_generator: Iterator[float] = sorted_note_onsets.irange(
+def get_sorted_note_onsets(
+    score_note_onsets: List[NoteInfo],
+) -> "SortedDict[float, List[NoteInfo]]":
+    # group by note_start time
+    res: "SortedDict[float, List[NoteInfo]]" = SortedDict()
+
+    for onset in score_note_onsets:
+        if onset.note_start not in res:
+            res[onset.note_start] = []
+        res[onset.note_start].append(onset)
+
+    return res
+
+
+def get_closest_notes_before(
+    sorted_note_onsets: "SortedDict[float, List[NoteInfo]]", timestamp_ms: float
+) -> List[NoteInfo]:
+    closest_note_time_before_generator: Iterator[float] = sorted_note_onsets.irange(
         maximum=timestamp_ms, reverse=True
     )
 
-    closest_note_before_key = next(closest_note_before_generator, None)
-    if closest_note_before_key is None:
-        return None
-    return sorted_note_onsets[closest_note_before_key]
+    closest_notes_before_key = next(closest_note_time_before_generator, None)
+    return sorted_note_onsets.get(closest_notes_before_key, [])

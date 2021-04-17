@@ -42,24 +42,12 @@ def plot_nsgt_features_slice():
 
     fmin, fmax = get_nsgt_params()
     slicq = get_slicq_engine(frame_length, sl_tr_ratio, fmin, fmax)
-
-    n_bins = 59  # Based on the defaults
-    prev_slice: np.ndarray = np.zeros(n_bins)
     cqt = []
 
     start_time = time.time()
     for audio_slice in audio_stream:
         cqt_slice = extract_features_nsgt_slicq(slicq, sl_tr_ratio, audio_slice)
-        # save for tmp
-        tmp_slice = cqt_slice
-        # get diff
-        cqt_slice = cqt_slice - prev_slice
-        # clip
-        cqt_slice = cqt_slice.clip(0)  # type: ignore
-        # update in cqt
         cqt.append(cqt_slice)
-        # update prev
-        prev_slice = tmp_slice
     # convert to ndarray
     cqt = np.array(cqt)
 

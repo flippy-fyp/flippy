@@ -1,14 +1,14 @@
-from lib.dtw.classical import ClassicalDTW
-from lib.mputils import consume_queue, write_list_to_queue
-from lib.sharedtypes import (
+from ..dtw.classical import ClassicalDTW
+from ..mputils import consume_queue, write_list_to_queue
+from ..sharedtypes import (
     DTWType,
     ExtractedFeature,
     ExtractedFeatureQueue,
     FollowerOutputQueue,
     ModeType,
 )
-from lib.dtw.oltw import OLTW
-from lib.eprint import eprint
+from ..dtw.oltw import OLTW
+from ..eprint import eprint
 from typing import Callable, Dict, List
 
 
@@ -73,8 +73,7 @@ class Follower:
         P: List[ExtractedFeature] = consume_queue(self.P_queue)
         classical = ClassicalDTW(P, self.S)
         dtw_elems = classical.dtw()
-        print(dtw_elems)
-        # write_list_to_queue(dtw_elems, self.follower_output_queue)
+        write_list_to_queue(dtw_elems, self.follower_output_queue)
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")

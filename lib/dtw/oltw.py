@@ -1,6 +1,6 @@
-from lib.eprint import eprint
-from lib.dtw.shared import cost
-from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue, FollowerOutputQueue
+from ..eprint import eprint
+from ..dtw.shared import cost
+from ..sharedtypes import ExtractedFeature, ExtractedFeatureQueue, FollowerOutputQueue
 from typing import Set, Tuple, List
 import numpy as np
 from enum import Enum
@@ -125,15 +125,14 @@ class OLTW:
         curr_i = i
         while curr_i >= 0 and curr_i > (i - self.C):
             if self.D[curr_i][j] < min_D:
-                min_D = self.D[curr_i][j]
-                i_prime = curr_i
+                i_prime, j_prime = (curr_i, j)
+                min_D = self.D[i_prime][j_prime]
             curr_i -= 1
         curr_j = j
         while curr_j >= 0 and curr_j > (j - self.C):
             if self.D[i][curr_j] < min_D:
-                min_D = self.D[i][curr_j]
-                i_prime = i
-                j_prime = curr_j
+                i_prime, j_prime = (i, curr_j)
+                min_D = self.D[i_prime][j_prime]
             curr_j -= 1
         return i_prime, j_prime
 
@@ -164,7 +163,7 @@ class OLTW:
             self.D[i][j] = d
         else:
             self.D[i][j] = d + min(
-                2 * self.__D_get(i - 1, j - 1),
+                self.__D_get(i - 1, j - 1),
                 self.__D_get(i - 1, j),
                 self.__D_get(i, j - 1),
             )

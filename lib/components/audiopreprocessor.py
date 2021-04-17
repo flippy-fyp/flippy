@@ -1,9 +1,10 @@
-from lib.cqt.base import BaseCQT
-from lib.eprint import eprint
-from lib.sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
-from lib.cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
+from ..mputils import write_list_to_queue
+from ..cqt.base import BaseCQT
+from ..eprint import eprint
+from ..sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
+from ..cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
 from typing import Optional, Dict, List, Union
-from lib.cqt.cqt_librosa import (
+from ..cqt.cqt_librosa import (
     LibrosaFullCQT,
     LibrosaSliceCQT,
     get_librosa_params,
@@ -44,20 +45,21 @@ class Slicer:
         )
 
         # before starting, sleep for frame_length if performance
-        self.__sleep_if_performance(self.frame_length)
+        self.__sleep_if_performance(self.frame_length, time.perf_counter() + 0.2)
 
         for s in audio_stream:
+            pre_sleep_time = time.perf_counter()
             self.slice_queue.put(s)
             # sleep for hop length if performance
-            self.__sleep_if_performance(self.hop_length)
+            self.__sleep_if_performance(self.hop_length, pre_sleep_time)
 
         self.slice_queue.put(None)  # end
         self.__log("Finished")
 
-    def __sleep_if_performance(self, samples: int):
+    def __sleep_if_performance(self, samples: int, pre_sleep_time: float):
         if self.simulate_performance:
             sleep_time = float(samples) / self.sample_rate
-            time.sleep(sleep_time)
+            time.sleep(sleep_time - (time.perf_counter() - pre_sleep_time) - 0.0005)
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
@@ -72,9 +74,10 @@ class FeatureExtractor:
         cqt: CQTType,
         fmin: float,
         fmax: float,
-        slice_len: int,
-        transition_slice_ratio: int,
+        hop_len: int,
+        slice_hop_ratio: int,
         sample_rate: int,
+        nsgt_multithreading: bool = False,
     ):
         self.mode = mode
         self.slice_queue = slice_queue
@@ -84,15 +87,15 @@ class FeatureExtractor:
         extractor_map: Dict[ModeType, Dict[CQTType, BaseCQT]] = {
             "offline": {
                 "librosa": LibrosaFullCQT(
-                    "librosa", fmin, slice_len, n_bins, sample_rate
+                    "librosa", fmin, n_bins, hop_len, sample_rate
                 ),
                 "librosa_hybrid": LibrosaFullCQT(
-                    "librosa_hybrid", fmin, slice_len, n_bins, sample_rate
+                    "librosa_hybrid", fmin, n_bins, hop_len, sample_rate
                 ),
                 "librosa_pseudo": LibrosaFullCQT(
-                    "librosa_pseudo", fmin, slice_len, n_bins, sample_rate
+                    "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
                 ),
-                "nsgt": CQTNSGT(fmin, fmax, slice_len, sample_rate),
+                "nsgt": CQTNSGT(fmin, fmax, hop_len, sample_rate, nsgt_multithreading),
             },
             "online": {
                 "librosa_hybrid": LibrosaSliceCQT(
@@ -102,7 +105,12 @@ class FeatureExtractor:
                     "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
                 "nsgt": CQTNSGTSlicq(
-                    slice_len, transition_slice_ratio, fmin, fmax, sample_rate
+                    hop_len * slice_hop_ratio,
+                    slice_hop_ratio,
+                    fmin,
+                    fmax,
+                    sample_rate,
+                    nsgt_multithreading,
                 ),
             },
         }
@@ -119,7 +127,6 @@ class FeatureExtractor:
 
     def start(self):
         self.__log("Starting...")
-        prev_slice: Optional[np.ndarray] = None
         while True:
             sl: Optional[np.ndarray] = self.slice_queue.get()
             if sl is None:
@@ -129,18 +136,11 @@ class FeatureExtractor:
             ] = self.__extractor.extract(sl)
             if self.mode == "online":
                 # o is of type ExtractedFeature
-                cqt_slice = (o - prev_slice).clip(0) if prev_slice is not None else o
-                prev_slice = cqt_slice
-                self.output_queue.put(cqt_slice)
+                self.output_queue.put(o)
             elif self.mode == "offline":
-                # slice_queue has the whole audio piece and now we need to iterate and calculate the diffs
+                # slice_queue has the whole audio piece
                 # o is of type List[ExtractedFeature]
-                for s in o:
-                    cqt_slice = (
-                        (s - prev_slice).clip(0) if prev_slice is not None else s
-                    )
-                    prev_slice = cqt_slice
-                    self.output_queue.put(cqt_slice)
+                write_list_to_queue(o, self.output_queue)
             else:
                 raise ValueError(f"Unknown mode: {self.mode}")
         self.output_queue.put(None)  # end
@@ -154,37 +154,41 @@ class AudioPreprocessor:
     def __init__(
         self,
         sample_rate: int,
+        hop_len: int,
+        slice_hop_ratio: int,
         # slicer
         wave_path: str,
-        hop_length: int,
-        frame_length: int,
         simulate_performance: bool,
         # extractor
         mode: ModeType,
         cqt: CQTType,
         fmin: float,
         fmax: float,
-        slice_len: int,
-        transition_slice_ratio: int,
         # output features
         output_queue: ExtractedFeatureQueue,
+        nsgt_multithreading: bool = False,
     ):
         self.sample_rate = sample_rate
         self.wave_path = wave_path
-        self.hop_length = hop_length
-        self.frame_length = frame_length
+        self.hop_len = hop_len
+        self.slice_hop_ratio = slice_hop_ratio
         self.simulate_performance = simulate_performance
 
         self.mode = mode
         self.cqt = cqt
         self.fmin = fmin
         self.fmax = fmax
-        self.slice_len = slice_len
-        self.transition_slice_ratio = transition_slice_ratio
 
         self.output_queue = output_queue
 
+        self.nsgt_multithreading = nsgt_multithreading
+
         self.__log("Initialised successfully")
+
+    def __get_frame_len(self) -> int:
+        if self.cqt == "nsgt":
+            return self.slice_hop_ratio * self.hop_len
+        return self.hop_len
 
     def start(self):
         self.__log("Starting...")
@@ -195,8 +199,8 @@ class AudioPreprocessor:
         if self.mode == "online":
             slicer = Slicer(
                 self.wave_path,
-                self.hop_length,
-                self.frame_length,
+                self.hop_len,
+                self.__get_frame_len(),
                 self.sample_rate,
                 slice_queue,
                 self.simulate_performance,
@@ -217,9 +221,10 @@ class AudioPreprocessor:
             self.cqt,
             self.fmin,
             self.fmax,
-            self.slice_len,
-            self.transition_slice_ratio,
+            self.hop_len,
+            self.slice_hop_ratio,
             self.sample_rate,
+            self.nsgt_multithreading,
         )
         feature_extractor_proc = mp.Process(target=feature_extractor.start)
         feature_extractor_proc.start()

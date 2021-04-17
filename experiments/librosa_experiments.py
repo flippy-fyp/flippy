@@ -70,22 +70,12 @@ def plot_librosa_features_stream(extractor=extract_slice_features_librosa_pseudo
     )
 
     fmin, n_bins = get_librosa_params()
-    prev_slice: np.ndarray = np.zeros(n_bins)
     cqt = []
 
     start_time = time.time()
     for audio_slice in audio_stream:
         cqt_slice = extractor(audio_slice, fmin, n_bins, DEFAULT_SAMPLE_RATE)
-        # save for tmp
-        tmp_slice = cqt_slice
-        # get diff
-        cqt_slice = cqt_slice - prev_slice
-        # clip
-        cqt_slice = cqt_slice.clip(0)  # type: ignore
-        # update in cqt
         cqt.append(cqt_slice)
-        # update prev
-        prev_slice = tmp_slice
     # convert to ndarray
     cqt = np.array(cqt)
 

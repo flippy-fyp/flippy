@@ -1,11 +1,11 @@
-from lib.cqt.base import BaseCQT
-from lib.sharedtypes import ExtractedFeature, ExtractorFunctionType
-from lib.utils import quantise_hz_midi
+from ..cqt.base import BaseCQT
+from ..sharedtypes import ExtractedFeature, ExtractorFunctionType
+from ..utils import quantise_hz_midi
 from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
 from typing import List, Tuple
 import librosa  # type: ignore
 import numpy as np  # type: ignore
-from lib.constants import DEFAULT_SAMPLE_RATE
+from ..constants import DEFAULT_SAMPLE_RATE
 
 
 def get_nsgt_params(

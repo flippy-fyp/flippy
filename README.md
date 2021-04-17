@@ -3,7 +3,11 @@
 Score-follower.
 
 ## Requirements
+- Cloned repository with LFS and all submodules
 - Python 3 (Tested on Python 3.8, Ubuntu 20.04)
+
+## Setup
+(Run [`scripts/install.sh`](./scripts/install.sh) to get these automatically for Ubuntu 20.04)
 - [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
 - Install `nsgt` separately: `pip install nsgt`
@@ -20,3 +24,40 @@ Score-follower.
 ```bash
 python flippy.py
 ```
+
+## Results Reproduction
+
+These scripts reproduce results shown in [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf).
+
+To run everything:
+```bash
+python repro.py
+```
+
+### `bwv846_feature`
+```bash
+python repro.py bwv846_feature
+```
+
+Plots the extracted features from the first 15 seconds of the Prelude and Fugue of Bach's BWV846 to `repro_results/bwv846_feature`.
+
+### `bach10_feature`
+```bash
+python repro.py bach10_feature
+```
+
+Plots the extracted features from the first 15 seconds of all Bach10 pieces to `repro_results/bach10_feature`.
+
+### `bwv846_align`
+```bash
+python repro.py bwv846_align
+```
+
+Aligns (offline) BWV846 and then runs the testbench to output results in `repro_results/bwv846_align`.
+
+### `bach10_align`
+```bash
+python repro.py bach10_align
+```
+
+Aligns (offline) Bach10 and then runs the testbench to output results in `repro_results/bwv846_align`.

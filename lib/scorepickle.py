@@ -1,5 +1,5 @@
 from typing import List
-from lib.sharedtypes import ExtractedFeature, NoteInfo
+from .sharedtypes import ExtractedFeature, NoteInfo
 import tempfile
 import os
 import pickle

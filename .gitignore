@@ -140,3 +140,8 @@ cython_debug/
 
 flippy_experimental.py
 tmp
+
+# repro
+repro_results
+
+fftw*

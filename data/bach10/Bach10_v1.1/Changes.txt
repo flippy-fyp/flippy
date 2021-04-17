@@ -1,0 +1,2 @@
+v1.1 (November 19, 2018)
+- We spotted some minor errors in the MIDI files (missing one or two notes in some files). These erros would not affect multi-pitch analysis evaluation or audio-score alignment evaluation if such evaluations are conducted using the .mat, .asl, and .txt ground-truth files. These errors, however, may slightly affect score-informed source separation performance. We have corrected all these errors in all the MIDI files.

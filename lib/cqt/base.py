@@ -1,6 +1,6 @@
 from typing import Union, List
 import numpy as np
-from lib.sharedtypes import ExtractedFeature
+from ..sharedtypes import ExtractedFeature
 
 
 class BaseCQT:

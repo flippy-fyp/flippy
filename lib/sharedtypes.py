@@ -32,7 +32,7 @@ FollowerOutputQueue = NewType(
 MultiprocessingConnection = NewType(
     "MultiprocessingConnection", "mp.connection.Connection"
 )
-ExtractedFeature = np.ndarray
+ExtractedFeature = NewType("ExtractedFeature", np.ndarray)  # type: ignore
 ExtractedFeatureQueue = NewType(
     "ExtractedFeatureQueue", "mp.Queue[Optional[ExtractedFeature]]"
 )

@@ -1,9 +1,9 @@
 from typing import Optional
-from lib.constants import DEFAULT_SAMPLE_RATE
-from lib.sharedtypes import ModeType, DTWType, CQTType, BackendType
-from lib.utils import quantise_hz_midi
+from .constants import DEFAULT_SAMPLE_RATE
+from .sharedtypes import ModeType, DTWType, CQTType, BackendType
+from .utils import quantise_hz_midi
 from tap import Tap  # type: ignore
-from lib.eprint import eprint
+from .eprint import eprint
 from sys import exit
 from os import path
 
@@ -16,10 +16,13 @@ class Arguments(Tap):
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
-    slice_len: int = (
-        2048  # Slice length for `nsgt` cqt, or hop_length in `librosa` cqt.
+    hop_len: int = (
+        2048  # Transition length for `nsgt` cqt, or hop_length in `librosa` cqt.
     )
-    transition_slice_ratio: int = 4  # Transition to slice length ratio for `nsgt` cqt.
+    slice_hop_ratio: int = 4  # Slice to hop length ratio for `nsgt` cqt (effectively making this a frame_len). For `librosa`, frame_len == hop_len.
+    nsgt_multithreading: bool = (
+        False  # Whether to use multithreading for `nsgt` multithreading.
+    )
 
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: Optional[str] = None  # Path to score MIDI.
@@ -30,7 +33,11 @@ class Arguments(Tap):
         "alignment"  # Alignment result type: `alignment` or `timestamp`.
     )
 
-    backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, or `<HOSTNAME>:<PORT>` for UDP sockets.
+    backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, `udp:<HOSTNAME>:<PORT>` for UDP sockets + stderr, or a path to a text file.
+
+    backend_backtrack: bool = False  # Whether the backend can "go back in time".
+
+    no_backend_compensation: bool = False  # Whether to report timestamps frame_len ahead for compensation due to the nature of the streaming. Only effectual when backend is `timestamp`.
 
     simulate_performance: bool = (
         False  # Whether to stream performance "live" into the system.
@@ -61,11 +68,11 @@ class Arguments(Tap):
         if self.fmax <= self.fmin:
             self.__log_and_exit(f"fmax > fmin not fulfilled")
 
-        if self.slice_len < 0:
-            self.__log_and_exit(f"slice_len must be positive")
+        if self.hop_len < 0:
+            self.__log_and_exit(f"hop_len must be positive")
 
-        if self.transition_slice_ratio < 0:
-            self.__log_and_exit(f"transition_slice_ratio must be positive")
+        if self.slice_hop_ratio < 0:
+            self.__log_and_exit(f"slice_hop_ratio must be positive")
 
         if self.mode == "online":
             if self.dtw != "oltw":
@@ -103,9 +110,9 @@ class Arguments(Tap):
                 "Either one of `score_midi_path` or `score_pickle_path` must be set"
             )
 
-        if self.slice_len % 100 != 0 and self.mode == "offline" and self.cqt == "nsgt":
+        if self.hop_len % 100 != 0 and self.mode == "offline" and self.cqt == "nsgt":
             self.__log_and_exit(
-                f"slice_len ({self.slice_len}) for offline nsgt must be a multiple of 100"
+                f"hop_len ({self.hop_len}) for offline nsgt must be a multiple of 100"
             )
 
         if self.backend not in ("alignment", "timestamp"):
