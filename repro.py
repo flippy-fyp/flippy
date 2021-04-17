@@ -217,6 +217,7 @@ def bach10_align():
             print("=============================================")
 
 
+"""
 def playground():
     fmin, fmax = get_nsgt_params()
     full_perf_wave_path = os.path.join("./tmp/wtk1-prelude1-performance.wav")
@@ -263,25 +264,33 @@ def playground():
     print(
         f"Finished plotting features for wtk-prelude1-performance to {output_plot_path}"
     )
+"""
 
+func_map = {
+    "bwv846_feature": bwv846_feature,
+    "bach10_feature": bach10_feature,
+    "bwv846_align": bwv846_align,
+    "bach10_align": bach10_align,
+}
 
 if __name__ == "__main__":
     repro_args = sys.argv[1:]
-    if len(repro_args) != 1:
+    if len(repro_args) == 0:
+        eprint("No repro arg given--running everything!")
+        for name, f in func_map.items():
+            print("++++++++++++++++++++++++++++++++++++")
+            print(f"Starting: {name}")
+            print("++++++++++++++++++++++++++++++++++++")
+            f()
+            print("++++++++++++++++++++++++++++++++++++")
+            print(f"Finished: {name}")
+            print("++++++++++++++++++++++++++++++++++++")
+    elif len(repro_args) != 1:
         eprint(f"Unknown repro args: {repro_args}. Please see README.md")
         sys.exit(1)
     repro_arg = repro_args[0]
-
-    if repro_arg == "bwv846_feature":
-        bwv846_feature()
-    elif repro_arg == "bach10_feature":
-        bach10_feature()
-    elif repro_arg == "bwv846_align":
-        bwv846_align()
-    elif repro_arg == "bach10_align":
-        bach10_align()
-    elif repro_arg == "playground":
-        playground()
+    if repro_arg in func_map:
+        func_map[repro_arg]()
     else:
         eprint(f"Unknown repro arg: {repro_arg}. Please see README.md")
         sys.exit(1)

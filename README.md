@@ -25,6 +25,12 @@ python flippy.py
 ## Results Reproduction
 
 These scripts reproduce results shown in [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf).
+
+To run everything:
+```bash
+python repro.py
+```
+
 ### `bwv846_feature`
 ```bash
 python repro.py bwv846_feature
