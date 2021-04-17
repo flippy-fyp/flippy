@@ -1,6 +1,6 @@
-from lib.eprint import eprint
-from lib.dtw.shared import cost
-from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue, FollowerOutputQueue
+from ..eprint import eprint
+from ..dtw.shared import cost
+from ..sharedtypes import ExtractedFeature, ExtractedFeatureQueue, FollowerOutputQueue
 from typing import Set, Tuple, List
 import numpy as np
 from enum import Enum

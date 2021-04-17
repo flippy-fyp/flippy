@@ -1,10 +1,10 @@
-from lib.mputils import write_list_to_queue
-from lib.cqt.base import BaseCQT
-from lib.eprint import eprint
-from lib.sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
-from lib.cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
+from ..mputils import write_list_to_queue
+from ..cqt.base import BaseCQT
+from ..eprint import eprint
+from ..sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
+from ..cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
 from typing import Optional, Dict, List, Union
-from lib.cqt.cqt_librosa import (
+from ..cqt.cqt_librosa import (
     LibrosaFullCQT,
     LibrosaSliceCQT,
     get_librosa_params,

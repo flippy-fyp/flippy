@@ -1,10 +1,10 @@
-from lib.cqt.base import BaseCQT
+from ..cqt.base import BaseCQT
 from typing import Any, Callable, Dict, List, Tuple
-from lib.utils import quantise_hz_midi
+from ..utils import quantise_hz_midi
 import librosa  # type: ignore
 import numpy as np  # type: ignore
-from lib.sharedtypes import ExtractedFeature, ExtractorFunctionType, LibrosaCQTs
-from lib.constants import DEFAULT_SAMPLE_RATE
+from ..sharedtypes import ExtractedFeature, ExtractorFunctionType, LibrosaCQTs
+from ..constants import DEFAULT_SAMPLE_RATE
 
 
 def get_librosa_params(

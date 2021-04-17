@@ -1,6 +1,6 @@
-from lib.eprint import eprint
+from ..eprint import eprint
 from typing import Callable, Iterator, List, Dict, Set
-from lib.sharedtypes import (
+from ..sharedtypes import (
     FollowerOutputQueue,
     ModeType,
     NoteInfo,

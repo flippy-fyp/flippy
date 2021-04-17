@@ -1,13 +1,13 @@
-from lib.scorepickle import ScorePickle
-from lib.components.player import Player
-from lib.components.follower import Follower
-from lib.components.backend import Backend
-from lib.mputils import consume_queue_into_conn
-from lib.components.audiopreprocessor import AudioPreprocessor
-from lib.components.synthesiser import Synthesiser
-from lib.args import Arguments
-from lib.midi import process_midi_to_note_info
-from lib.sharedtypes import (
+from .scorepickle import ScorePickle
+from .components.player import Player
+from .components.follower import Follower
+from .components.backend import Backend
+from .mputils import consume_queue_into_conn
+from .components.audiopreprocessor import AudioPreprocessor
+from .components.synthesiser import Synthesiser
+from .args import Arguments
+from .midi import process_midi_to_note_info
+from .sharedtypes import (
     ExtractedFeature,
     ExtractedFeatureQueue,
     FollowerOutputQueue,
@@ -15,7 +15,7 @@ from lib.sharedtypes import (
     NoteInfo,
 )
 from typing import Optional, Tuple, List
-from lib.eprint import eprint
+from .eprint import eprint
 import multiprocessing as mp
 import time
 

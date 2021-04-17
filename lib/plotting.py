@@ -1,4 +1,4 @@
-from lib.constants import DEFAULT_SAMPLE_RATE
+from .constants import DEFAULT_SAMPLE_RATE
 import matplotlib.pyplot as plt  # type: ignore
 import librosa  # type: ignore
 import librosa.display  # type: ignore

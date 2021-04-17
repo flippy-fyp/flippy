@@ -1,9 +1,9 @@
-from lib.eprint import eprint
-from lib.midi import midi_to_audio
+from ..eprint import eprint
+from ..midi import midi_to_audio
 import tempfile
 import os
 import soundfile as sf  # type: ignore
-from lib.constants import DEFAULT_SAMPLE_RATE
+from ..constants import DEFAULT_SAMPLE_RATE
 from typing import Optional
 
 

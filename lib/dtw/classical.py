@@ -1,7 +1,7 @@
-from lib.eprint import eprint
+from ..eprint import eprint
 from typing import List
-from lib.dtw.shared import cost
-from lib.sharedtypes import DTWPathElemType, ExtractedFeature
+from ..dtw.shared import cost
+from ..sharedtypes import DTWPathElemType, ExtractedFeature
 import numpy as np
 
 

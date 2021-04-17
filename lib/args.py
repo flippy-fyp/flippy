@@ -1,9 +1,9 @@
 from typing import Optional
-from lib.constants import DEFAULT_SAMPLE_RATE
-from lib.sharedtypes import ModeType, DTWType, CQTType, BackendType
-from lib.utils import quantise_hz_midi
+from .constants import DEFAULT_SAMPLE_RATE
+from .sharedtypes import ModeType, DTWType, CQTType, BackendType
+from .utils import quantise_hz_midi
 from tap import Tap  # type: ignore
-from lib.eprint import eprint
+from .eprint import eprint
 from sys import exit
 from os import path
 

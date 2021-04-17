@@ -1,4 +1,4 @@
-from lib.sharedtypes import MultiprocessingConnection
+from .sharedtypes import MultiprocessingConnection
 import multiprocessing as mp
 from typing import Optional, Any, List, NewType
 
