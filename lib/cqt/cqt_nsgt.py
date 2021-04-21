@@ -1,3 +1,4 @@
+from numpy.testing._private.utils import measure
 from ..cqt.base import BaseCQT
 from ..sharedtypes import ExtractedFeature, ExtractorFunctionType
 from ..utils import quantise_hz_midi
@@ -43,12 +44,10 @@ def extract_features_nsgt_cqt(
     cqt = np.asarray(cqt)
     # Transpose so that each row is for a time slice's spectra
     cqt = cqt.T
-    # Take abs value
-    cqt = np.abs(cqt)
 
     # The "hop length" of CQ_NSGT is 100, so to simulate the provided hop_length, approximately split
     # and average the obtained results--this means that the time is approximate!
-    averaged_cqt = np.empty((0, cqt.shape[1]), dtype=np.float64)
+    averaged_cqt: List[np.ndarray] = []
     quantized_hop_length = hop_length // 100
     split_n = cqt.shape[0] // quantized_hop_length
     for i in range(split_n):
@@ -56,20 +55,14 @@ def extract_features_nsgt_cqt(
         end = start + quantized_hop_length
         avg = np.average(cqt[start:end], axis=0)
 
-        averaged_cqt = np.vstack([averaged_cqt, avg])
+        averaged_cqt.append(avg)
 
-    cqt = averaged_cqt
+    cqt = np.array(averaged_cqt)
 
+    # Take abs value
+    cqt = np.abs(cqt)
     # L1 normalize
     cqt = librosa.util.normalize(cqt, norm=1, axis=1)
-    # Take the first element to pad later
-    cqt_0 = cqt[0]
-    # Calculate diff between consecutive rows
-    cqt = np.diff(cqt, axis=0)
-    # Clip negatives
-    cqt = cqt.clip(0)
-    # Insert the first element
-    cqt = np.insert(cqt, 0, cqt_0, axis=0)
 
     return cqt
 
