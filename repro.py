@@ -152,8 +152,6 @@ def bwv846_align():
                     "classical",
                     "--cqt",
                     cqt,
-                    "--hop_len",
-                    "2048",
                     "--perf_wave_path",
                     perf_wave_path,
                     "--backend_output",
@@ -173,6 +171,54 @@ def bwv846_align():
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
+            print("=============================================")
+
+
+def bwv846_follow():
+    pieces = ["prelude", "fugue"]
+    cqts = ["nsgt", "librosa_pseudo"]
+    for piece in pieces:
+        for cqt in cqts:
+            print("=============================================")
+            print(f"Starting to follow: {piece} with cqt: {cqt}")
+            print("=============================================")
+            score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
+            perf_wave_path = os.path.join(
+                BWV846_PATH, piece, f"{piece}.mp3"
+            )  # mp3 is fine
+
+            output_align_dir = os.path.join(
+                REPRO_RESULTS_PATH, "bwv846_follow", cqt, piece
+            )
+            os.makedirs(output_align_dir, exist_ok=True)
+            output_align_path = os.path.join(output_align_dir, "align.txt")
+
+            args = Arguments().parse_args(
+                [
+                    "--score_midi_path",
+                    score_midi_path,
+                    "--cqt",
+                    cqt,
+                    "--perf_wave_path",
+                    perf_wave_path,
+                    "--backend_output",
+                    output_align_path,
+                    "--simulate_performance",
+                ]
+            )
+
+            runner = Runner(args)
+            runner.start()
+
+            ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
+            align_result = bench(output_align_path, ref_align_path)
+
+            align_result_path = os.path.join(output_align_dir, "result.json")
+            with open(align_result_path, "w+") as f:
+                f.write(align_result)
+
+            print("=============================================")
+            print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
 
 
@@ -286,6 +332,7 @@ func_map = {
     "bach10_feature": bach10_feature,
     "bwv846_align": bwv846_align,
     "bach10_align": bach10_align,
+    "bwv846_follow": bwv846_follow,
 }
 
 if __name__ == "__main__":
