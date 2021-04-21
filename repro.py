@@ -19,6 +19,15 @@ from flippy_quantitative_testbench.utils.bench import bench
 import json
 
 
+def __write_total_results(precision_rates: List[float], output_base_dir: str):
+    total_precision_rate = sum(precision_rates) / len(precision_rates)
+    total_dict = {"total_precision_rate": total_precision_rate}
+    total_output_path = os.path.join(output_base_dir, "total_results.json")
+    with open(total_output_path, "w+") as f:
+        total_dict_str = json.dumps(total_dict, indent=4)
+        f.write(total_dict_str)
+
+
 def bach10_feature():
     repro_arg = "bach10_feature"
     bach10_piece_paths = [
@@ -130,8 +139,8 @@ def bwv846_align():
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
         precision_rates: List[float] = []
-        output_dir_base = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
-        os.makedirs(output_dir_base, exist_ok=True)
+        output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
+        os.makedirs(output_base_dir, exist_ok=True)
         for piece in pieces:
             print("=============================================")
             print(f"Starting to align: {piece} with cqt: {cqt}")
@@ -139,7 +148,7 @@ def bwv846_align():
             score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
             perf_wave_path = os.path.join(BWV846_PATH, piece, f"{piece}.wav")
 
-            output_align_dir = os.path.join(output_dir_base, piece)
+            output_align_dir = os.path.join(output_base_dir, piece)
             os.makedirs(output_align_dir, exist_ok=True)
             output_align_path = os.path.join(output_align_dir, "align.txt")
 
@@ -175,12 +184,7 @@ def bwv846_align():
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        total_precision_rate = sum(total_precision_rate) / len(total_precision_rate)
-        total_dict = {"total_precision_rate": total_precision_rate}
-        total_output_path = os.path.join(output_dir_base, "total_results.json")
-        with open(total_output_path, "w+") as f:
-            total_dict_str = json.dumps(total_dict, indent=4)
-            f.write(total_dict_str)
+        __write_total_results(precision_rates, output_base_dir)
 
 
 def bwv846_follow():
@@ -189,8 +193,8 @@ def bwv846_follow():
     cqts = ["nsgt", "librosa_pseudo"]
     for cqt in cqts:
         precision_rates: List[float] = []
-        output_dir_base = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
-        os.makedirs(output_dir_base, exist_ok=True)
+        output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
+        os.makedirs(output_base_dir, exist_ok=True)
         for piece in pieces:
             print("=============================================")
             print(f"Starting to follow: {piece} with cqt: {cqt}")
@@ -231,12 +235,7 @@ def bwv846_follow():
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        total_precision_rate = sum(total_precision_rate) / len(total_precision_rate)
-        total_dict = {"total_precision_rate": total_precision_rate}
-        total_output_path = os.path.join(output_dir_base, "total_results.json")
-        with open(total_output_path, "w+") as f:
-            total_dict_str = json.dumps(total_dict, indent=4)
-            f.write(total_dict_str)
+        __write_total_results(precision_rates, output_base_dir)
 
 
 def bach10_align():
@@ -249,8 +248,8 @@ def bach10_align():
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
         precision_rates: List[float] = []
-        output_dir_base = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
-        os.makedirs(output_dir_base, exist_ok=True)
+        output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
+        os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
             piece = os.path.basename(piece_path)
             print("=============================================")
@@ -297,12 +296,7 @@ def bach10_align():
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        total_precision_rate = sum(total_precision_rate) / len(total_precision_rate)
-        total_dict = {"total_precision_rate": total_precision_rate}
-        total_output_path = os.path.join(output_dir_base, "total_results.json")
-        with open(total_output_path, "w+") as f:
-            total_dict_str = json.dumps(total_dict, indent=4)
-            f.write(total_dict_str)
+        __write_total_results(precision_rates, output_base_dir)
 
 
 def bach10_follow():
@@ -315,8 +309,8 @@ def bach10_follow():
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
         precision_rates: List[float] = []
-        output_dir_base = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
-        os.makedirs(output_dir_base, exist_ok=True)
+        output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
+        os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
             piece = os.path.basename(piece_path)
             print("=============================================")
@@ -358,12 +352,7 @@ def bach10_follow():
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        total_precision_rate = sum(total_precision_rate) / len(total_precision_rate)
-        total_dict = {"total_precision_rate": total_precision_rate}
-        total_output_path = os.path.join(output_dir_base, "total_results.json")
-        with open(total_output_path, "w+") as f:
-            total_dict_str = json.dumps(total_dict, indent=4)
-            f.write(total_dict_str)
+        __write_total_results(precision_rates, output_base_dir)
 
 
 """
