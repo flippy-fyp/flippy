@@ -9,10 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          lfs: true
           submodules: recursive
-      - name: Checkout LFS objects
-        run: git lfs checkout
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
