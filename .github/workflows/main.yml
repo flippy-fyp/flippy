@@ -20,12 +20,6 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
-      - name: Install dependencies
-        if: steps.cache-requirements.outputs.cache-hit != 'true'
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install nsgt
       - name: Run install script
         run: scripts/install.sh
       - name: Mypy Check
@@ -49,12 +43,6 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
-      - name: Install dependencies
-        if: steps.cache-requirements.outputs.cache-hit != 'true'
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install nsgt
       - name: Run install script
         run: scripts/install.sh
       - name: Run repro
