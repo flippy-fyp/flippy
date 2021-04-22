@@ -95,7 +95,14 @@ class FeatureExtractor:
                 "librosa_pseudo": LibrosaFullCQT(
                     "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
                 ),
-                "nsgt": CQTNSGT(fmin, fmax, hop_len, sample_rate, nsgt_multithreading),
+                "nsgt": CQTNSGT(
+                    hop_len * slice_hop_ratio,
+                    slice_hop_ratio,
+                    fmin,
+                    fmax,
+                    sample_rate,
+                    nsgt_multithreading,
+                ),
             },
             "online": {
                 "librosa_hybrid": LibrosaSliceCQT(

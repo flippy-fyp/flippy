@@ -1,6 +1,5 @@
-from numpy.testing._private.utils import measure
 from ..cqt.base import BaseCQT
-from ..sharedtypes import ExtractedFeature, ExtractorFunctionType
+from ..sharedtypes import ExtractedFeature
 from ..utils import quantise_hz_midi
 from nsgt import CQ_NSGT_sliced, CQ_NSGT  # type: ignore
 from typing import List, Tuple
@@ -65,35 +64,6 @@ def extract_features_nsgt_cqt(
     cqt = librosa.util.normalize(cqt, norm=1, axis=1)
 
     return cqt
-
-
-class CQTNSGT(BaseCQT):
-    def __init__(
-        self,
-        fmin: float,
-        fmax: float,
-        hop_length: int = 2048,  # artificial
-        fs: int = DEFAULT_SAMPLE_RATE,
-        multithreading: bool = False,
-    ):
-        self.fmin = fmin
-        self.fmax = fmax
-        self.hop_length = hop_length
-        self.fs = fs
-        self.multithreading = multithreading
-
-    def extract(self, audio_slice: np.ndarray) -> List[ExtractedFeature]:
-        return [
-            x
-            for x in extract_features_nsgt_cqt(
-                audio_slice,
-                self.fmin,
-                self.fmax,
-                self.hop_length,
-                self.fs,
-                self.multithreading,
-            )
-        ]
 
 
 def get_slicq_engine(
@@ -170,3 +140,58 @@ class CQTNSGTSlicq(BaseCQT):
 
     def extract(self, audio_slice: np.ndarray) -> ExtractedFeature:
         return extract_features_nsgt_slicq(self.slicq, self.sl_tr_ratio, audio_slice)
+
+
+class CQTNSGT(BaseCQT):
+    def __init__(
+        self,
+        sl_len: int,
+        sl_tr_ratio: int,
+        fmin: float = 130.8,
+        fmax: float = 4186.0,
+        fs: int = DEFAULT_SAMPLE_RATE,
+        multithreading: bool = False,
+    ):
+        self.sl_len = sl_len
+        self.sl_tr_ratio = sl_tr_ratio
+        self.fmin = fmin
+        self.fmax = fmax
+        self.fs = fs
+        self.multithreading = multithreading
+
+    def extract(self, audio_slice: np.ndarray) -> List[ExtractedFeature]:
+        slicq_extractor = CQTNSGTSlicq(
+            self.sl_len,
+            self.sl_tr_ratio,
+            self.fmin,
+            self.fmax,
+            self.fs,
+            self.multithreading,
+        )
+        hop_len = self.sl_len // self.sl_tr_ratio
+        res: List[ExtractedFeature] = []
+        hop_start: int = 0
+        while hop_start <= len(audio_slice) - self.sl_len:
+            feat = slicq_extractor.extract(
+                audio_slice[hop_start : hop_start + self.sl_len]
+            )
+            res.append(feat)
+            hop_start += hop_len
+        return res
+
+    def full_extract(self, audio_slice: np.ndarray) -> List[ExtractedFeature]:
+        """
+        The hop length is determined by fmin.
+        """
+        hop_len = self.sl_len // self.sl_tr_ratio
+        return [
+            x
+            for x in extract_features_nsgt_cqt(
+                audio_slice,
+                self.fmin,
+                self.fmax,
+                hop_len,
+                self.fs,
+                self.multithreading,
+            )
+        ]
