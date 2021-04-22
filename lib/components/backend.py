@@ -100,12 +100,10 @@ class Backend:
         self.__log("Finished")
 
     def __start_timestamp(self):
-        self.__output_func("READY")
         prev_s = -1
         while True:
             e = self.follower_output_queue.get()
             if e is None:
-                self.__output_func("END")
                 return
             s = e[1]
             if (self.backend_backtrack and s != prev_s) or (
