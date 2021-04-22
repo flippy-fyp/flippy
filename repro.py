@@ -219,7 +219,7 @@ def bwv846_follow():
     pieces = ["prelude", "fugue"]
     cqts = ["nsgt", "librosa_pseudo"]
     for cqt in cqts:
-        precision_rates: List[float] = []
+        precision_rates: PrecisionRatesT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece in pieces:
@@ -276,7 +276,7 @@ def bach10_align():
     ]
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
-        precision_rates: List[float] = []
+        precision_rates: PrecisionRatesT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
@@ -339,7 +339,7 @@ def bach10_follow():
     ]
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
-        precision_rates: List[float] = []
+        precision_rates: PrecisionRatesT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
