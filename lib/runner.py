@@ -81,12 +81,12 @@ class Runner:
         if player_proc:
             player_proc.join()
             self.__log("Joined: player")
-        perf_ap_proc.join()
-        self.__log("Joined: performance")
-        follower_proc.join()
-        self.__log("Joined: follower")
         backend_proc.join()
         self.__log("Joined: backend")
+        follower_proc.join()
+        self.__log("Joined: follower")
+        perf_ap_proc.terminate()  # use terminate as sometimes it hangs forever
+        self.__log("Joined: performance")
 
     def __init_performance_processor(
         self, P_queue: ExtractedFeatureQueue

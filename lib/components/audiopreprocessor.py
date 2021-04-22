@@ -231,7 +231,6 @@ class AudioPreprocessor:
 
         if online_slicer_proc:
             online_slicer_proc.join()
-
         feature_extractor_proc.join()
         self.__log("Finished")
 
