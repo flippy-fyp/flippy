@@ -1,8 +1,12 @@
+from flippy_quantitative_testbench.utils.match import (
+    MISALIGN_THRESHOLD_MS_DEFAULT,
+    MatchResult,
+)
 from lib.runner import Runner
 from lib.audio import cut_wave
 from lib.cqt.cqt_nsgt import get_nsgt_params
 from lib.plotting import plot_cqt_to_file
-from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue
+from lib.sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue
 from lib.components.synthesiser import Synthesiser
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.components.audiopreprocessor import AudioPreprocessor
@@ -11,7 +15,7 @@ from lib.args import Arguments
 from consts import BACH10_PATH, BWV846_PATH, REPRO_RESULTS_PATH
 import os
 import multiprocessing as mp
-from typing import List
+from typing import Dict, List
 import numpy as np
 import sys
 import re
@@ -19,13 +23,34 @@ from flippy_quantitative_testbench.utils.bench import bench
 import json
 
 
-def __write_total_results(precision_rates: List[float], output_base_dir: str):
-    total_precision_rate = sum(precision_rates) / len(precision_rates)
-    total_dict = {"total_precision_rate": total_precision_rate}
+MISALIGN_THRESHOLD_MS_RANGE = range(50, 2050, 50)
+
+PrecisionRatesT = Dict[int, List[float]]  # misalign_threshold to precision rates
+AlignResultsT = Dict[int, MatchResult]
+
+
+def __write_total_results(precision_rates_dict: PrecisionRatesT, output_base_dir: str):
+    total_dict: Dict[int, Dict[str, float]] = {}
+    for thres, precision_rates in precision_rates_dict.items():
+        total_precision_rate = sum(precision_rates) / len(precision_rates)
+        total_dict[thres] = {"total_precision_rate": total_precision_rate}
     total_output_path = os.path.join(output_base_dir, "total_results.json")
     with open(total_output_path, "w+") as f:
         total_dict_str = json.dumps(total_dict, indent=4)
         f.write(total_dict_str)
+
+
+def __get_and_write_align_results(
+    output_align_path: str, ref_align_path: str, align_results_path: str
+) -> AlignResultsT:
+    align_results = {
+        thres: bench(output_align_path, ref_align_path, thres)
+        for thres in MISALIGN_THRESHOLD_MS_RANGE
+    }
+    with open(align_results_path, "w+") as f:
+        align_result_str = json.dumps(align_results, indent=4)
+        f.write(align_result_str)
+    return align_results
 
 
 def bach10_feature():
@@ -138,7 +163,7 @@ def bwv846_align():
     pieces = ["prelude", "fugue"]
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
-        precision_rates: List[float] = []
+        precision_rates: PrecisionRatesT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece in pieces:
@@ -173,13 +198,15 @@ def bwv846_align():
             runner.start()
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
-            align_result = bench(output_align_path, ref_align_path)
-            precision_rates.append(align_result["precision_rate"])
+            align_results_path = os.path.join(output_align_dir, "result.json")
+            align_results = __get_and_write_align_results(
+                output_align_path, ref_align_path, align_results_path
+            )
 
-            align_result_path = os.path.join(output_align_dir, "result.json")
-            with open(align_result_path, "w+") as f:
-                align_result_str = json.dumps(align_result, indent=4)
-                f.write(align_result_str)
+            for thres, align_result in align_results.items():
+                if thres not in precision_rates:
+                    precision_rates[thres] = []
+                precision_rates[thres].append(align_result["precision_rate"])
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
@@ -224,13 +251,15 @@ def bwv846_follow():
             runner.start()
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
-            align_result = bench(output_align_path, ref_align_path)
-            precision_rates.append(align_result["precision_rate"])
+            align_results_path = os.path.join(output_align_dir, "result.json")
+            align_results = __get_and_write_align_results(
+                output_align_path, ref_align_path, align_results_path
+            )
 
-            align_result_path = os.path.join(output_align_dir, "result.json")
-            with open(align_result_path, "w+") as f:
-                align_result_str = json.dumps(align_result, indent=4)
-                f.write(align_result_str)
+            for thres, align_result in align_results.items():
+                if thres not in precision_rates:
+                    precision_rates[thres] = []
+                precision_rates[thres].append(align_result["precision_rate"])
 
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
@@ -285,13 +314,15 @@ def bach10_align():
             runner.start()
 
             ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
-            align_result = bench(output_align_path, ref_align_path)
-            precision_rates.append(align_result["precision_rate"])
+            align_results_path = os.path.join(output_align_dir, "result.json")
+            align_results = __get_and_write_align_results(
+                output_align_path, ref_align_path, align_results_path
+            )
 
-            align_result_path = os.path.join(output_align_dir, "result.json")
-            with open(align_result_path, "w+") as f:
-                align_result_str = json.dumps(align_result, indent=4)
-                f.write(align_result_str)
+            for thres, align_result in align_results.items():
+                if thres not in precision_rates:
+                    precision_rates[thres] = []
+                precision_rates[thres].append(align_result["precision_rate"])
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
@@ -341,13 +372,15 @@ def bach10_follow():
             runner.start()
 
             ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
-            align_result = bench(output_align_path, ref_align_path)
-            precision_rates.append(align_result["precision_rate"])
+            align_results_path = os.path.join(output_align_dir, "result.json")
+            align_results = __get_and_write_align_results(
+                output_align_path, ref_align_path, align_results_path
+            )
 
-            align_result_path = os.path.join(output_align_dir, "result.json")
-            with open(align_result_path, "w+") as f:
-                align_result_str = json.dumps(align_result, indent=4)
-                f.write(align_result_str)
+            for thres, align_result in align_results.items():
+                if thres not in precision_rates:
+                    precision_rates[thres] = []
+                precision_rates[thres].append(align_result["precision_rate"])
 
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
