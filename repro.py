@@ -243,7 +243,8 @@ def bwv846_follow():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
-                    "--simulate_performance",
+                    # "--simulate_performance",
+                    "--backend_backtrack",
                 ]
             )
 
@@ -364,7 +365,8 @@ def bach10_follow():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
-                    "--simulate_performance",
+                    # "--simulate_performance",
+                    "--backend_backtrack",
                 ]
             )
 
