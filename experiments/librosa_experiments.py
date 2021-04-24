@@ -52,7 +52,7 @@ def plot_librosa_features(extractor=extract_features_librosa_cqt):
     )
 
     fmin, n_bins = get_librosa_params()
-    cqt = extractor(audio, fmin, n_bins)
+    cqt = extractor(audio, fmin, n_bins, hop=2000)
 
     plot_cqt(cqt, fmin)
 

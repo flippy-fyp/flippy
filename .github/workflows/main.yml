@@ -5,7 +5,7 @@ on: push
 
 jobs:
   ci:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -28,7 +28,18 @@ jobs:
         run: python -m unittest
 
   repro:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repro-arg:
+          [
+            "bwv846_feature",
+            "bach10_feature",
+            "bwv846_align",
+            "bach10_align",
+            "bwv846_follow",
+            "bach10_follow",
+          ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,9 +57,9 @@ jobs:
       - name: Run install script
         run: scripts/install.sh
       - name: Run repro
-        run: python repro.py
+        run: python repro.py ${{ matrix.repro-arg }}
       - name: Upload Repro results
         uses: actions/upload-artifact@v2
         with:
-          name: repro-results
-          path: repro_results
+          name: repro-results-${{ matrix.repro-arg }}
+          path: repro_results/${{ matrix.repro-arg }}

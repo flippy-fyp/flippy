@@ -21,8 +21,11 @@ def plot_nsgt_features():
     cqt = extract_features_nsgt_cqt(audio, fmin, fmax)
 
     # print(len(cqt[0]))
+    # print(cqt)
 
-    plot_cqt(cqt, fmin, hop_length=2048 // 100)  # 100 is the default hop len in nsgt
+    plot_cqt(
+        cqt, fmin, hop_length=2048 // 100 * 100
+    )  # 100 is the default hop len in nsgt
 
 
 def plot_nsgt_features_slice():

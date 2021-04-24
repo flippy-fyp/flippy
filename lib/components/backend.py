@@ -100,12 +100,10 @@ class Backend:
         self.__log("Finished")
 
     def __start_timestamp(self):
-        self.__output_func("READY")
         prev_s = -1
         while True:
             e = self.follower_output_queue.get()
             if e is None:
-                self.__output_func("END")
                 return
             s = e[1]
             if (self.backend_backtrack and s != prev_s) or (
@@ -148,7 +146,8 @@ class Backend:
                     self.__sorted_note_onsets, timestamp_s_ms
                 )
                 if len(closest_notes) == 0:
-                    self.__log(f"Ignoring unfound closest notes at {timestamp_s_ms}")
+                    # self.__log(f"Ignoring unfound closest notes at {timestamp_s_ms}")
+                    pass
                 elif closest_notes[0].note_start not in seen_closest_notes_time:
                     seen_closest_notes_time.add(closest_notes[0].note_start)
                     for closest_note in closest_notes:

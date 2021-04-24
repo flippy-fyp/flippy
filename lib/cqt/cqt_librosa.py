@@ -40,16 +40,6 @@ def full_cqt_helper(
     cqt = cqt.T
     # Take abs value
     cqt = np.abs(cqt)
-    # L1 normalize
-    cqt = librosa.util.normalize(cqt, norm=1, axis=1)
-    # Take the first element to pad later
-    cqt_0 = cqt[0]
-    # Calculate diff between consecutive rows
-    cqt = np.diff(cqt, axis=0)
-    # Clip negatives
-    cqt = cqt.clip(0)
-    # Insert the first element
-    cqt = np.insert(cqt, 0, cqt_0, axis=0)
 
     return cqt
 
