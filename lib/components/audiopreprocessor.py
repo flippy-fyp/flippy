@@ -3,7 +3,7 @@ from ..cqt.base import BaseCQT
 from ..eprint import eprint
 from ..sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue, ModeType
 from ..cqt.cqt_nsgt import CQTNSGTSlicq, CQTNSGT
-from typing import Optional, Dict, List, Union
+from typing import Callable, Optional, Dict, List, Union
 from ..cqt.cqt_librosa import (
     LibrosaFullCQT,
     LibrosaSliceCQT,
@@ -84,18 +84,18 @@ class FeatureExtractor:
         self.output_queue = output_queue
         fmin, n_bins = get_librosa_params(fmin, fmax)
 
-        extractor_map: Dict[ModeType, Dict[CQTType, BaseCQT]] = {
+        extractor_map: Dict[ModeType, Dict[CQTType, Callable[[], BaseCQT]]] = {
             "offline": {
-                "librosa": LibrosaFullCQT(
+                "librosa": lambda: LibrosaFullCQT(
                     "librosa", fmin, n_bins, hop_len, sample_rate
                 ),
-                "librosa_hybrid": LibrosaFullCQT(
+                "librosa_hybrid": lambda: LibrosaFullCQT(
                     "librosa_hybrid", fmin, n_bins, hop_len, sample_rate
                 ),
-                "librosa_pseudo": LibrosaFullCQT(
+                "librosa_pseudo": lambda: LibrosaFullCQT(
                     "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
                 ),
-                "nsgt": CQTNSGT(
+                "nsgt": lambda: CQTNSGT(
                     hop_len * slice_hop_ratio,
                     slice_hop_ratio,
                     fmin,
@@ -105,13 +105,13 @@ class FeatureExtractor:
                 ),
             },
             "online": {
-                "librosa_hybrid": LibrosaSliceCQT(
+                "librosa_hybrid": lambda: LibrosaSliceCQT(
                     "librosa_hybrid", fmin, n_bins, sample_rate
                 ),
-                "librosa_pseudo": LibrosaSliceCQT(
+                "librosa_pseudo": lambda: LibrosaSliceCQT(
                     "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
-                "nsgt": CQTNSGTSlicq(
+                "nsgt": lambda: CQTNSGTSlicq(
                     hop_len * slice_hop_ratio,
                     slice_hop_ratio,
                     fmin,
@@ -124,11 +124,12 @@ class FeatureExtractor:
         mode_map = extractor_map.get(mode)
         if mode_map is None:
             raise ValueError(f"Unknown mode: {mode}")
-        self.__extractor = mode_map.get(cqt)
-        if self.__extractor is None:
+        extractor_lambda = mode_map.get(cqt)
+        if extractor_lambda is None:
             raise ValueError(
                 f"Invalid or unknown combination of mode {mode} and cqt type {cqt}"
             )
+        self.__extractor = extractor_lambda()
 
         self.__log("Initialised successfully")
 
