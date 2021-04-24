@@ -1,12 +1,12 @@
 from flippy_quantitative_testbench.utils.match import (
-    MISALIGN_THRESHOLD_MS_DEFAULT,
     MatchResult,
+    safe_div,
 )
 from lib.runner import Runner
 from lib.audio import cut_wave
 from lib.cqt.cqt_nsgt import get_nsgt_params
 from lib.plotting import plot_cqt_to_file
-from lib.sharedtypes import CQTType, ExtractedFeature, ExtractedFeatureQueue
+from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue
 from lib.components.synthesiser import Synthesiser
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.components.audiopreprocessor import AudioPreprocessor
@@ -25,16 +25,28 @@ import json
 
 MISALIGN_THRESHOLD_MS_RANGE = range(50, 2050, 50)
 
-PrecisionRatesT = Dict[int, List[float]]  # misalign_threshold to precision rates
 AlignResultsT = Dict[int, MatchResult]
+OverallResultsT = Dict[int, List[MatchResult]]
 
 
-def __write_total_results(precision_rates_dict: PrecisionRatesT, output_base_dir: str):
+def __write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
     total_dict: Dict[int, Dict[str, float]] = {}
-    for thres, precision_rates in precision_rates_dict.items():
-        total_precision_rate = sum(precision_rates) / len(precision_rates)
-        total_dict[thres] = {"total_precision_rate": total_precision_rate}
-    total_output_path = os.path.join(output_base_dir, "total_results.json")
+    for thres, results in overall_results.items():
+        precision_rates = list(map(lambda x: x["precision_rate"], results))
+        piecewise_precision_rate = sum(precision_rates) / len(precision_rates)
+
+        total_num = sum(map(lambda x: x["total_num"], results))
+        miss_num = sum(map(lambda x: x["miss_num"], results))
+        misalign_num = sum(map(lambda x: x["misalign_num"], results))
+
+        align_num = total_num - miss_num - misalign_num
+        total_precision_rate = safe_div(float(align_num), total_num)
+
+        total_dict[thres] = {
+            "piecewise_precision_rate": piecewise_precision_rate,
+            "total_precision_rate": total_precision_rate,
+        }
+    total_output_path = os.path.join(output_base_dir, "results.json")
     with open(total_output_path, "w+") as f:
         total_dict_str = json.dumps(total_dict, indent=4)
         f.write(total_dict_str)
@@ -163,7 +175,7 @@ def bwv846_align():
     pieces = ["prelude", "fugue"]
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
-        precision_rates: PrecisionRatesT = {}
+        overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece in pieces:
@@ -204,14 +216,14 @@ def bwv846_align():
             )
 
             for thres, align_result in align_results.items():
-                if thres not in precision_rates:
-                    precision_rates[thres] = []
-                precision_rates[thres].append(align_result["precision_rate"])
+                if thres not in overall_results:
+                    overall_results[thres] = []
+                overall_results[thres].append(align_result)
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_total_results(precision_rates, output_base_dir)
+        __write_overall_results(overall_results, output_base_dir)
 
 
 def bwv846_follow():
@@ -219,7 +231,7 @@ def bwv846_follow():
     pieces = ["prelude", "fugue"]
     cqts = ["nsgt", "librosa_pseudo"]
     for cqt in cqts:
-        precision_rates: PrecisionRatesT = {}
+        overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece in pieces:
@@ -243,8 +255,6 @@ def bwv846_follow():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
-                    # "--simulate_performance",
-                    "--backend_backtrack",
                 ]
             )
 
@@ -258,14 +268,14 @@ def bwv846_follow():
             )
 
             for thres, align_result in align_results.items():
-                if thres not in precision_rates:
-                    precision_rates[thres] = []
-                precision_rates[thres].append(align_result["precision_rate"])
+                if thres not in overall_results:
+                    overall_results[thres] = []
+                overall_results[thres].append(align_result)
 
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_total_results(precision_rates, output_base_dir)
+        __write_overall_results(overall_results, output_base_dir)
 
 
 def bach10_align():
@@ -277,7 +287,7 @@ def bach10_align():
     ]
     cqts = ["nsgt", "librosa"]
     for cqt in cqts:
-        precision_rates: PrecisionRatesT = {}
+        overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
@@ -321,14 +331,14 @@ def bach10_align():
             )
 
             for thres, align_result in align_results.items():
-                if thres not in precision_rates:
-                    precision_rates[thres] = []
-                precision_rates[thres].append(align_result["precision_rate"])
+                if thres not in overall_results:
+                    overall_results[thres] = []
+                overall_results[thres].append(align_result)
 
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_total_results(precision_rates, output_base_dir)
+        __write_overall_results(overall_results, output_base_dir)
 
 
 def bach10_follow():
@@ -340,7 +350,7 @@ def bach10_follow():
     ]
     cqts = ["nsgt", "librosa_pseudo"]
     for cqt in cqts:
-        precision_rates: PrecisionRatesT = {}
+        overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
         os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
@@ -380,14 +390,14 @@ def bach10_follow():
             )
 
             for thres, align_result in align_results.items():
-                if thres not in precision_rates:
-                    precision_rates[thres] = []
-                precision_rates[thres].append(align_result["precision_rate"])
+                if thres not in overall_results:
+                    overall_results[thres] = []
+                overall_results[thres].append(align_result)
 
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_total_results(precision_rates, output_base_dir)
+        __write_overall_results(overall_results, output_base_dir)
 
 
 """
