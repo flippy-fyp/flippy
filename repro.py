@@ -413,8 +413,8 @@ def bach10_follow():
         _write_overall_results(overall_results, output_base_dir)
 
 
-def plot_precision():
-    repro_arg = "plot_precision"
+def bach10_plot_precision():
+    repro_arg = "bach10_plot_precision"
     output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
     os.makedirs(output_dir, exist_ok=True)
     repro_dict = {
@@ -531,7 +531,7 @@ func_map = {
     "bach10_align": bach10_align,
     "bwv846_follow": bwv846_follow,
     "bach10_follow": bach10_follow,
-    "plot_precision": plot_precision,
+    "bach10_plot_precision": bach10_plot_precision,
 }
 
 if __name__ == "__main__":

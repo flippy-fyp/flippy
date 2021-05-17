@@ -64,7 +64,7 @@ jobs:
           name: repro-results-${{ matrix.repro-arg }}
           path: repro_results/${{ matrix.repro-arg }}
 
-  repro-plot-precision:
+  repro-bach10-plot-precision:
     runs-on: ubuntu-latest
     needs:
       - repro
@@ -92,25 +92,15 @@ jobs:
         with:
           name: repro-results-bach10_align
           path: repro-results/bach10_align
-      - name: Download artifact (bwv846_align)
-        uses: actions/download-artifact@v2
-        with:
-          name: repro-results-bwv846_align
-          path: repro-results/bwv846_align
       - name: Download artifact (bach10_follow)
         uses: actions/download-artifact@v2
         with:
           name: repro-results-bach10_follow
           path: repro-results/bach10_follow
-      - name: Download artifact (bwv846_follow)
-        uses: actions/download-artifact@v2
-        with:
-          name: repro-results-bwv846_follow
-          path: repro-results/bwv846_follow
       - name: Run plot_precision
-        run: python repro.py plot_precision
+        run: python repro.py bach10_plot_precision
       - name: Upload Repro results
         uses: actions/upload-artifact@v2
         with:
-          name: repro-results-plot_precision
-          path: repro_results/plot_precision
+          name: repro-results-bach10_plot_precision
+          path: repro_results/bach10_plot_precision
