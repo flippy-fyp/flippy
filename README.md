@@ -113,3 +113,10 @@ python repro.py bach10_plot_precision
 ```
 
 Plots total precision results for Bach10--requires `bach10_align` and `bach10_follow` repro steps to be run a priori.
+
+### `bwv846_plot_precision`
+```bash
+python repro.py bwv846_plot_precision
+```
+
+Plots total precision results for Bach10--requires `bwv846_align` and `bwv846_follow` repro steps to be run a priori.
