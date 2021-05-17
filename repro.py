@@ -268,6 +268,10 @@ def bwv846_follow():
                     output_align_path,
                     # "--simulate_performance",
                     "--backend_backtrack",
+                    "--w_a",
+                    "0.5",
+                    "--search_window",
+                    "500",
                 ]
             )
 
@@ -390,6 +394,10 @@ def bach10_follow():
                     output_align_path,
                     # "--simulate_performance",
                     "--backend_backtrack",
+                    "--w_a",
+                    "0.5",
+                    "--search_window",
+                    "500",
                 ]
             )
 
