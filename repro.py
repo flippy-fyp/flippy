@@ -402,6 +402,29 @@ def bach10_follow():
         __write_overall_results(overall_results, output_base_dir)
 
 
+def plot_precision():
+    repro_arg = "plot_precision"
+    repro_dict = {
+        "bwv846_align": {
+            "librosa": "CQT Offline",
+            "nsgt": "NSGT-CQT Offline",
+        },
+        "bwv846_follow": {
+            "librosa_pseudo": "CQT (Pseudo) Online",
+            "nsgt": "NSGT-CQT Online",
+        },
+    }
+
+    # health check to make sure all required folders exist
+    for repro_dict_arg, cqts in repro_dict.items():
+        for cqt in cqts:
+            dir_to_check = os.path.join(REPRO_RESULTS_PATH, repro_dict_arg, cqt)
+            if not os.path.exists(dir_to_check):
+                raise ValueError(
+                    f"Please run repro for {repro_dict_arg} before running this step!"
+                )
+
+
 """
 def playground():
     fmin, fmax = get_nsgt_params()
@@ -458,6 +481,7 @@ func_map = {
     "bach10_align": bach10_align,
     "bwv846_follow": bwv846_follow,
     "bach10_follow": bach10_follow,
+    "plot_precision": plot_precision,
 }
 
 if __name__ == "__main__":
