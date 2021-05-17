@@ -1,4 +1,3 @@
-
 name: CI
 
 on: push
@@ -13,7 +12,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8.x'
+          python-version: "3.8.x"
       - name: Cache requirements
         id: cache-requirements
         uses: actions/cache@v2
@@ -47,7 +46,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8.x'
+          python-version: "3.8.x"
       - name: Cache requirements
         id: cache-requirements
         uses: actions/cache@v2
@@ -78,7 +77,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8.x'
+          python-version: "3.8.x"
       - name: Cache requirements
         id: cache-requirements
         uses: actions/cache@v2
@@ -104,3 +103,44 @@ jobs:
         with:
           name: repro-results-bach10_plot_precision
           path: repro_results/bach10_plot_precision
+
+  repro-bwv846-plot-precision:
+    runs-on: ubuntu-latest
+    needs:
+      - repro
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8.x"
+      - name: Cache requirements
+        id: cache-requirements
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+      - name: Run install script
+        run: scripts/install.sh
+      - name: Download artifact (bwv846_align)
+        uses: actions/download-artifact@v2
+        with:
+          name: repro-results-bwv846_align
+          path: repro-results/bwv846_align
+      - name: Download artifact (bwv846_follow)
+        uses: actions/download-artifact@v2
+        with:
+          name: repro-results-bwv846_follow
+          path: repro-results/bwv846_follow
+      - name: Run plot_precision
+        run: python repro.py bwv846_plot_precision
+      - name: Upload Repro results
+        uses: actions/upload-artifact@v2
+        with:
+          name: repro-results-bwv846_plot_precision
+          path: repro_results/bwv846_plot_precision
