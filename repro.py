@@ -72,8 +72,8 @@ def _read_overall_results(overall_results_path: str) -> Dict[str, Dict[str, floa
     f = open(overall_results_path)
     t = f.read().strip()
     f.close()
-    t = json.loads(t)
-    return t
+    x = json.loads(t)
+    return x
 
 
 def bach10_feature():
