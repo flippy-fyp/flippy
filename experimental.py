@@ -11,7 +11,7 @@ import re
 
 def w_a_search():
     experimental_arg = "w_a_search"
-    w_a_range = range(0.1, 2.1, 0.1)
+    w_a_range = [0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     bach10_piece_paths = [
         f.path
         for f in os.scandir(BACH10_PATH)
