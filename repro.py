@@ -1,18 +1,27 @@
 from flippy_quantitative_testbench.utils.match import (
-    MatchResult,
     safe_div,
 )
 from lib.runner import Runner
 from lib.audio import cut_wave
 from lib.cqt.cqt_nsgt import get_nsgt_params
 from lib.plotting import plot_cqt_to_file
-from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue
+from lib.sharedtypes import (
+    AlignResultsT,
+    ExtractedFeature,
+    ExtractedFeatureQueue,
+    OverallResultsT,
+)
 from lib.components.synthesiser import Synthesiser
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.eprint import eprint
 from lib.args import Arguments
-from consts import BACH10_PATH, BWV846_PATH, REPRO_RESULTS_PATH
+from consts import (
+    BACH10_PATH,
+    BWV846_PATH,
+    MISALIGN_THRESHOLD_MS_RANGE,
+    REPRO_RESULTS_PATH,
+)
 import os
 import multiprocessing as mp
 from typing import Dict, List
@@ -23,13 +32,7 @@ from flippy_quantitative_testbench.utils.bench import bench
 import json
 
 
-MISALIGN_THRESHOLD_MS_RANGE = range(50, 2050, 50)
-
-AlignResultsT = Dict[int, MatchResult]
-OverallResultsT = Dict[int, List[MatchResult]]
-
-
-def __write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
+def _write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
     total_dict: Dict[int, Dict[str, float]] = {}
     for thres, results in overall_results.items():
         precision_rates = list(map(lambda x: x["precision_rate"], results))
@@ -52,7 +55,7 @@ def __write_overall_results(overall_results: OverallResultsT, output_base_dir: s
         f.write(total_dict_str)
 
 
-def __get_and_write_align_results(
+def _get_and_write_align_results(
     output_align_path: str, ref_align_path: str, align_results_path: str
 ) -> AlignResultsT:
     align_results = {
@@ -211,7 +214,7 @@ def bwv846_align():
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -223,7 +226,7 @@ def bwv846_align():
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def bwv846_follow():
@@ -265,7 +268,7 @@ def bwv846_follow():
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -277,7 +280,7 @@ def bwv846_follow():
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def bach10_align():
@@ -328,7 +331,7 @@ def bach10_align():
 
             ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -340,7 +343,7 @@ def bach10_align():
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def bach10_follow():
@@ -387,7 +390,7 @@ def bach10_follow():
 
             ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -399,7 +402,7 @@ def bach10_follow():
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def plot_precision():
