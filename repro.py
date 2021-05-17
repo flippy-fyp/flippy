@@ -68,6 +68,14 @@ def _get_and_write_align_results(
     return align_results
 
 
+def _read_overall_results(overall_results_path: str) -> Dict[str, Dict[str, float]]:
+    f = open(overall_results_path)
+    t = f.read().strip()
+    f.close()
+    t = json.loads(t)
+    return t
+
+
 def bach10_feature():
     repro_arg = "bach10_feature"
     bach10_piece_paths = [
@@ -407,6 +415,8 @@ def bach10_follow():
 
 def plot_precision():
     repro_arg = "plot_precision"
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
     repro_dict = {
         "bwv846_align": {
             "librosa": "CQT Offline",
@@ -426,6 +436,43 @@ def plot_precision():
                 raise ValueError(
                     f"Please run repro for {repro_dict_arg} before running this step!"
                 )
+
+    # now read in all the OverallResults
+    # map from name to OverallResultsT
+    overall_results: Dict[str, Dict[str, float]] = {}
+    for repro_dict_arg, cqts in repro_dict.items():
+        for cqt, name in cqts.items():
+            overall_results_path = os.path.join(
+                REPRO_RESULTS_PATH, repro_dict_arg, cqt, "results.json"
+            )
+            overall_results = _read_overall_results(overall_results_path)
+            overall_results[name] = overall_results
+
+    # we're interested in total precision only
+    data = {
+        name: [(int(thres), x["total_precision_rate"]) for thres, x in results.items()]
+        for name, results in overall_results.items()
+    }
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(6.4, 3))
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+
+    # plt.title("")
+
+    plt.ylabel("Precision Rates")
+    plt.xlabel("Misalign Threshold")
+    plt.legend(data.keys(), loc="lower left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
 
 
 """

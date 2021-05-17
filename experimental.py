@@ -47,6 +47,8 @@ def w_a_search():
                     output_align_path,
                     # "--simulate_performance",
                     "--backend_backtrack",
+                    "--w_a",
+                    str(w_a),
                 ]
             )
 
