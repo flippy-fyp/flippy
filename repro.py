@@ -418,11 +418,11 @@ def plot_precision():
     output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
     os.makedirs(output_dir, exist_ok=True)
     repro_dict = {
-        "bwv846_align": {
+        "bach10_align": {
             "librosa": "CQT Offline",
             "nsgt": "NSGT-CQT Offline",
         },
-        "bwv846_follow": {
+        "bach10_follow": {
             "librosa_pseudo": "CQT (Pseudo) Online",
             "nsgt": "NSGT-CQT Online",
         },
