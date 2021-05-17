@@ -439,14 +439,14 @@ def plot_precision():
 
     # now read in all the OverallResults
     # map from name to OverallResultsT
-    overall_results: Dict[str, Dict[str, float]] = {}
+    overall_results: Dict[str, Dict[str, Dict[str, float]]] = {}
     for repro_dict_arg, cqts in repro_dict.items():
         for cqt, name in cqts.items():
             overall_results_path = os.path.join(
                 REPRO_RESULTS_PATH, repro_dict_arg, cqt, "results.json"
             )
-            overall_results = _read_overall_results(overall_results_path)
-            overall_results[name] = overall_results
+            res = _read_overall_results(overall_results_path)
+            overall_results[name] = res
 
     # we're interested in total precision only
     data = {
@@ -455,7 +455,7 @@ def plot_precision():
     }
     import matplotlib.pyplot as plt
 
-    plt.figure(figsize=(6.4, 3))
+    plt.figure()
     for name, scores in data.items():
         [x, y] = zip(*scores)
         plt.plot(x, y)
