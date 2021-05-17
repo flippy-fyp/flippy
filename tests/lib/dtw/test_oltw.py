@@ -23,7 +23,7 @@ class TestOLTW(unittest.TestCase):
 
         for S, excp_str in testcases:
             with self.assertRaises(Exception, msg=excp_str) as context:
-                oltw = OLTW(mp.Queue(), S, mp.Queue(), 999, 3)
+                oltw = OLTW(mp.Queue(), S, mp.Queue(), 999, 3, 1.0, 1.0, 1.0)
                 oltw.dtw()
             self.assertTrue(excp_str in str(context.exception), excp_str)
 
@@ -64,7 +64,7 @@ class TestOLTW(unittest.TestCase):
             output_queue = mp.Queue()
             P_queue = produce_queue(P)
 
-            oltw = OLTW(P_queue, S, output_queue, 999, 3)
+            oltw = OLTW(P_queue, S, output_queue, 999, 3, 1.0, 1.0, 1.0)
             oltw.dtw()
 
             got = consume_queue(output_queue)

@@ -6,7 +6,14 @@ import numpy as np
 
 
 class ClassicalDTW:
-    def __init__(self, P: List[ExtractedFeature], S: List[ExtractedFeature]):
+    def __init__(
+        self,
+        P: List[ExtractedFeature],
+        S: List[ExtractedFeature],
+        w_a: float = 1.0,
+        w_b: float = 1.0,
+        w_c: float = 1.0,
+    ):
         if len(P) == 0:
             raise ValueError(f"Empty P")
         if len(S) == 0:
@@ -15,6 +22,10 @@ class ClassicalDTW:
             raise ValueError(f"P must be 2D")
         if len(S[0].shape) != 1:
             raise ValueError(f"S must be 2D")
+
+        self.w_a = w_a
+        self.w_b = w_b
+        self.w_c = w_c
 
         import sys
 
@@ -96,11 +107,12 @@ class ClassicalDTW:
             if (r, c) == (0, 0):
                 self.D[r][c] = d
             else:
-                diag_cost = self.__dtw_helper(r - 1, c - 1)
-                down_cost = self.__dtw_helper(r - 1, c)
-                left_cost = self.__dtw_helper(r, c - 1)
+                min_cost = min(
+                    self.w_a * d + self.__dtw_helper(r - 1, c - 1),
+                    self.w_b * d + self.__dtw_helper(r - 1, c),
+                    self.w_c * d + self.__dtw_helper(r, c - 1),
+                )
 
-                min_cost = min(diag_cost, down_cost, left_cost)
                 curr_cost = d + min_cost
                 self.D[r][c] = curr_cost
 

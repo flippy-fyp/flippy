@@ -26,6 +26,9 @@ class Follower:
         # Performance and Score info
         P_queue: ExtractedFeatureQueue,
         S: List[ExtractedFeature],
+        w_a: float,
+        w_b: float,
+        w_c: float,
     ):
         self.mode = mode
         self.dtw = dtw
@@ -34,6 +37,9 @@ class Follower:
         self.follower_output_queue = follower_output_queue
         self.P_queue = P_queue
         self.S = S
+        self.w_a = w_a
+        self.w_b = w_b
+        self.w_c = w_c
 
         follower_start_map: Dict[ModeType, Dict[DTWType, Callable[[], None]]] = {
             "online": {
@@ -66,12 +72,15 @@ class Follower:
             self.follower_output_queue,
             self.max_run_count,
             self.search_window,
+            self.w_a,
+            self.w_b,
+            self.w_c,
         )
         oltw.dtw()
 
     def __start_classical(self):
         P: List[ExtractedFeature] = consume_queue(self.P_queue)
-        classical = ClassicalDTW(P, self.S)
+        classical = ClassicalDTW(P, self.S, self.w_a, self.w_b, self.w_c)
         dtw_elems = classical.dtw()
         write_list_to_queue(dtw_elems, self.follower_output_queue)
 

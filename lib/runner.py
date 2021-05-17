@@ -151,6 +151,9 @@ class Runner:
             follower_output_queue,
             P_queue,
             S,
+            args.w_a,
+            args.w_b,
+            args.w_c,
         )
 
     def __preprocess_score(self) -> Tuple[List[NoteInfo], List[ExtractedFeature]]:

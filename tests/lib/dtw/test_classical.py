@@ -32,7 +32,7 @@ class TestClassicalDTW(unittest.TestCase):
         ]
         for P, S, excp_str in testcases:
             with self.assertRaises(Exception, msg=excp_str) as context:
-                cdtw = ClassicalDTW(P, S)
+                cdtw = ClassicalDTW(P, S, 1.0, 1.0, 1.0)
                 cdtw.dtw()
             self.assertTrue(excp_str in str(context.exception), excp_str)
 
@@ -70,6 +70,6 @@ class TestClassicalDTW(unittest.TestCase):
         ]
 
         for name, P, S, want in testcases:
-            cdtw = ClassicalDTW(P, S)
+            cdtw = ClassicalDTW(P, S, 1.0, 1.0, 1.0)
             got = cdtw.dtw()
             self.assertEqual(want, got, name)

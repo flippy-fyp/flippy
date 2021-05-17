@@ -47,6 +47,12 @@ class Arguments(Tap):
 
     play_performance_audio: bool = False  # Whether to play the performance audio file when started. Requires `simulate_performance` to be set to True.
 
+    w_a: float = 1.0  # DTW or OLTW Weight to constrain the path for the i direction
+    w_b: float = 1.0  # DTW or OLTW Weight to constrain the path for the j direction
+    w_c: float = (
+        1.0  # DTW or OLTW Weight to constrain the path for the ij (diagonal) direction
+    )
+
     def __log_and_exit(self, msg: str):
         self.__log(f"Argument Error: {msg}.")
         self.__log("Use the `--help` flag to show the help message.")
