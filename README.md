@@ -61,3 +61,17 @@ python repro.py bach10_align
 ```
 
 Aligns (offline) Bach10 and then runs the testbench to output results in `repro_results/bwv846_align`.
+
+### `bach10_follow`
+```bash
+python repro.py bach10_follow
+```
+
+Follows (online) Bach10 and then runs the testbench to output results in `repro_results/bach10_follow`.
+
+### `bwv846_follow`
+```bash
+python repro.py bwv846_follow
+```
+
+Follows (online) BWV846 and then runs the testbench to output results in `repro_results/bwv846_follow`.
