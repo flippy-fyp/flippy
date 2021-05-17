@@ -24,7 +24,7 @@ from consts import (
 )
 import os
 import multiprocessing as mp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import numpy as np
 import sys
 import re
@@ -421,21 +421,27 @@ def bach10_follow():
         _write_overall_results(overall_results, output_base_dir)
 
 
-def bach10_plot_precision():
-    repro_arg = "bach10_plot_precision"
-    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
-    os.makedirs(output_dir, exist_ok=True)
-    repro_dict = {
-        "bach10_align": {
-            "librosa": "CQT Offline",
-            "nsgt": "NSGT-CQT Offline",
-        },
-        "bach10_follow": {
-            "librosa_pseudo": "CQT (Pseudo) Online",
-            "nsgt": "NSGT-CQT Online",
-        },
-    }
+def _plot_precision_plot(data: Dict[str, List[Tuple[int, float]]], output_dir: str):
+    import matplotlib.pyplot as plt
 
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Total Precision Rate")
+    plt.xlabel("Misalign Threshold (ms)")
+    plt.legend(data.keys(), loc="lower right")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
+
+
+def _plot_precision_wrapper(repro_dict: Dict[str, Dict[str, str]], output_dir: str):
     # health check to make sure all required folders exist
     for repro_dict_arg, cqts in repro_dict.items():
         for cqt in cqts:
@@ -461,26 +467,41 @@ def bach10_plot_precision():
         name: [(int(thres), x["total_precision_rate"]) for thres, x in results.items()]
         for name, results in overall_results.items()
     }
-    import matplotlib.pyplot as plt
+    _plot_precision_plot(data, output_dir)
 
-    plt.figure()
-    for name, scores in data.items():
-        [x, y] = zip(*scores)
-        plt.plot(x, y)
 
-    # plt.title("")
+def bach10_plot_precision():
+    repro_arg = "bach10_plot_precision"
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    repro_dict = {
+        "bach10_align": {
+            "librosa": "CQT Offline",
+            "nsgt": "NSGT-CQT Offline",
+        },
+        "bach10_follow": {
+            "librosa_pseudo": "CQT (Pseudo) Online",
+            "nsgt": "NSGT-CQT Online",
+        },
+    }
+    _plot_precision_wrapper(repro_dict, output_dir)
 
-    plt.ylabel("Total Precision Rate")
-    plt.xlabel("Misalign Threshold")
-    plt.legend(data.keys(), loc="lower right")
-    plt.tight_layout()
-    # Show the major grid lines with dark grey lines
-    plt.grid(b=True, which="major", color="#666666", linestyle="-")
 
-    # Show the minor grid lines with very faint and almost transparent grey lines
-    plt.minorticks_on()
-    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
-    plt.savefig(os.path.join(output_dir, "output.pdf"))
+def bwv846_plot_precision():
+    repro_arg = "bwv846_plot_precision"
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    repro_dict = {
+        "bwv846_align": {
+            "librosa": "CQT Offline",
+            "nsgt": "NSGT-CQT Offline",
+        },
+        "bwv846_follow": {
+            "librosa_pseudo": "CQT (Pseudo) Online",
+            "nsgt": "NSGT-CQT Online",
+        },
+    }
+    _plot_precision_wrapper(repro_dict, output_dir)
 
 
 """
