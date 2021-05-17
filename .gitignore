@@ -145,3 +145,7 @@ tmp
 repro_results
 
 fftw*
+
+.VSCodeCounter
+
+experimental_results

@@ -24,6 +24,9 @@ class OLTW:
         follower_output_queue: FollowerOutputQueue,
         max_run_count: int,
         search_window: int,  # c
+        w_a: float = 1.0,
+        w_b: float = 1.0,
+        w_c: float = 1.0,
     ):
         if len(S) == 0:
             raise ValueError(f"Empty S")
@@ -40,6 +43,9 @@ class OLTW:
         self.C = search_window
         self.D = np.ones((0, len(self.S)), dtype=np.float64) * np.inf
         self.P = np.zeros((0, self.S[0].shape[0]), dtype=np.float64)
+        self.w_a = w_a
+        self.w_b = w_b
+        self.w_c = w_c
 
         self.__log("Initialised successfully")
 
@@ -163,9 +169,9 @@ class OLTW:
             self.D[i][j] = d
         else:
             self.D[i][j] = d + min(
-                self.__D_get(i - 1, j - 1),
-                self.__D_get(i - 1, j),
-                self.__D_get(i, j - 1),
+                self.w_a * d + self.__D_get(i - 1, j - 1),
+                self.w_b * d + self.__D_get(i - 1, j),
+                self.w_c * d + self.__D_get(i, j - 1),
             )
 
     def __D_get(self, i: int, j: int) -> np.float64:

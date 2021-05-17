@@ -1,18 +1,27 @@
 from flippy_quantitative_testbench.utils.match import (
-    MatchResult,
     safe_div,
 )
 from lib.runner import Runner
 from lib.audio import cut_wave
 from lib.cqt.cqt_nsgt import get_nsgt_params
 from lib.plotting import plot_cqt_to_file
-from lib.sharedtypes import ExtractedFeature, ExtractedFeatureQueue
+from lib.sharedtypes import (
+    AlignResultsT,
+    ExtractedFeature,
+    ExtractedFeatureQueue,
+    OverallResultsT,
+)
 from lib.components.synthesiser import Synthesiser
 from lib.constants import DEFAULT_SAMPLE_RATE
 from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.eprint import eprint
 from lib.args import Arguments
-from consts import BACH10_PATH, BWV846_PATH, REPRO_RESULTS_PATH
+from consts import (
+    BACH10_PATH,
+    BWV846_PATH,
+    MISALIGN_THRESHOLD_MS_RANGE,
+    REPRO_RESULTS_PATH,
+)
 import os
 import multiprocessing as mp
 from typing import Dict, List
@@ -23,13 +32,7 @@ from flippy_quantitative_testbench.utils.bench import bench
 import json
 
 
-MISALIGN_THRESHOLD_MS_RANGE = range(50, 2050, 50)
-
-AlignResultsT = Dict[int, MatchResult]
-OverallResultsT = Dict[int, List[MatchResult]]
-
-
-def __write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
+def _write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
     total_dict: Dict[int, Dict[str, float]] = {}
     for thres, results in overall_results.items():
         precision_rates = list(map(lambda x: x["precision_rate"], results))
@@ -52,7 +55,7 @@ def __write_overall_results(overall_results: OverallResultsT, output_base_dir: s
         f.write(total_dict_str)
 
 
-def __get_and_write_align_results(
+def _get_and_write_align_results(
     output_align_path: str, ref_align_path: str, align_results_path: str
 ) -> AlignResultsT:
     align_results = {
@@ -63,6 +66,14 @@ def __get_and_write_align_results(
         align_result_str = json.dumps(align_results, indent=4)
         f.write(align_result_str)
     return align_results
+
+
+def _read_overall_results(overall_results_path: str) -> Dict[str, Dict[str, float]]:
+    f = open(overall_results_path)
+    t = f.read().strip()
+    f.close()
+    x = json.loads(t)
+    return x
 
 
 def bach10_feature():
@@ -211,7 +222,7 @@ def bwv846_align():
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -223,7 +234,7 @@ def bwv846_align():
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def bwv846_follow():
@@ -265,7 +276,7 @@ def bwv846_follow():
 
             ref_align_path = os.path.join(BWV846_PATH, piece, f"{piece}.align.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -277,7 +288,7 @@ def bwv846_follow():
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def bach10_align():
@@ -328,7 +339,7 @@ def bach10_align():
 
             ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -340,7 +351,7 @@ def bach10_align():
             print("=============================================")
             print(f"Finished aligning: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
 
 
 def bach10_follow():
@@ -387,7 +398,7 @@ def bach10_follow():
 
             ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
             align_results_path = os.path.join(output_align_dir, "result.json")
-            align_results = __get_and_write_align_results(
+            align_results = _get_and_write_align_results(
                 output_align_path, ref_align_path, align_results_path
             )
 
@@ -399,7 +410,69 @@ def bach10_follow():
             print("=============================================")
             print(f"Finished following: {piece} with cqt: {cqt}")
             print("=============================================")
-        __write_overall_results(overall_results, output_base_dir)
+        _write_overall_results(overall_results, output_base_dir)
+
+
+def plot_precision():
+    repro_arg = "plot_precision"
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    repro_dict = {
+        "bwv846_align": {
+            "librosa": "CQT Offline",
+            "nsgt": "NSGT-CQT Offline",
+        },
+        "bwv846_follow": {
+            "librosa_pseudo": "CQT (Pseudo) Online",
+            "nsgt": "NSGT-CQT Online",
+        },
+    }
+
+    # health check to make sure all required folders exist
+    for repro_dict_arg, cqts in repro_dict.items():
+        for cqt in cqts:
+            dir_to_check = os.path.join(REPRO_RESULTS_PATH, repro_dict_arg, cqt)
+            if not os.path.exists(dir_to_check):
+                raise ValueError(
+                    f"Please run repro for {repro_dict_arg} before running this step!"
+                )
+
+    # now read in all the OverallResults
+    # map from name to OverallResultsT
+    overall_results: Dict[str, Dict[str, float]] = {}
+    for repro_dict_arg, cqts in repro_dict.items():
+        for cqt, name in cqts.items():
+            overall_results_path = os.path.join(
+                REPRO_RESULTS_PATH, repro_dict_arg, cqt, "results.json"
+            )
+            overall_results = _read_overall_results(overall_results_path)
+            overall_results[name] = overall_results
+
+    # we're interested in total precision only
+    data = {
+        name: [(int(thres), x["total_precision_rate"]) for thres, x in results.items()]
+        for name, results in overall_results.items()
+    }
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(6.4, 3))
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+
+    # plt.title("")
+
+    plt.ylabel("Precision Rates")
+    plt.xlabel("Misalign Threshold")
+    plt.legend(data.keys(), loc="lower left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
 
 
 """
@@ -458,6 +531,7 @@ func_map = {
     "bach10_align": bach10_align,
     "bwv846_follow": bwv846_follow,
     "bach10_follow": bach10_follow,
+    "plot_precision": plot_precision,
 }
 
 if __name__ == "__main__":

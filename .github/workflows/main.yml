@@ -63,3 +63,54 @@ jobs:
         with:
           name: repro-results-${{ matrix.repro-arg }}
           path: repro_results/${{ matrix.repro-arg }}
+
+  repro-plot-precision:
+    runs-on: ubuntu-latest
+    needs:
+      - repro
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8.x'
+      - name: Cache requirements
+        id: cache-requirements
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+      - name: Run install script
+        run: scripts/install.sh
+      - name: Download artifact (bach10_align)
+        uses: actions/download-artifact@v2
+        with:
+          name: repro-results-bach10_align
+          path: repro-results/bach10_align
+      - name: Download artifact (bwv846_align)
+        uses: actions/download-artifact@v2
+        with:
+          name: repro-results-bwv846_align
+          path: repro-results/bwv846_align
+      - name: Download artifact (bach10_follow)
+        uses: actions/download-artifact@v2
+        with:
+          name: repro-results-bach10_follow
+          path: repro-results/bach10_follow
+      - name: Download artifact (bwv846_follow)
+        uses: actions/download-artifact@v2
+        with:
+          name: repro-results-bwv846_follow
+          path: repro-results/bwv846_follow
+      - name: Run plot_precision
+        run: python repro.py plot_precision
+      - name: Upload Repro results
+        uses: actions/upload-artifact@v2
+        with:
+          name: repro-results-plot_precision
+          path: repro_results/plot_precision

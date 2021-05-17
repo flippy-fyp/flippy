@@ -9,6 +9,7 @@ from os import path
 
 
 class Arguments(Tap):
+    # fmt: off
     mode: ModeType = "online"  # Mode: `offline` or `online`.
     dtw: DTWType = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
     cqt: CQTType = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`. `librosa` is only available for the `offline` mode.
@@ -16,22 +17,18 @@ class Arguments(Tap):
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
-    hop_len: int = (
-        2048  # Transition length for `nsgt` cqt, or hop_length in `librosa` cqt.
-    )
+    hop_len: int =  2048  # Transition length for `nsgt` cqt, or hop_length in `librosa` cqt.
+
     slice_hop_ratio: int = 4  # Slice to hop length ratio for `nsgt` cqt (effectively making this a frame_len). For `librosa`, frame_len == hop_len.
-    nsgt_multithreading: bool = (
-        False  # Whether to use multithreading for `nsgt` multithreading.
-    )
+    nsgt_multithreading: bool = False  # Whether to use multithreading for `nsgt` multithreading.
 
     perf_wave_path: str  # Path to performance WAVE file.
     score_midi_path: Optional[str] = None  # Path to score MIDI.
 
     score_pickle_path: Optional[str] = None  # Path to pickled score features.
 
-    backend: BackendType = (
-        "alignment"  # Alignment result type: `alignment` or `timestamp`.
-    )
+    backend: BackendType = "alignment"  # Alignment result type: `alignment` or `timestamp`.
+
 
     backend_output = "stdout"  # Where the backend is output to. Either `stdout`, `stderr`, `udp:<HOSTNAME>:<PORT>` for UDP sockets + stderr, or a path to a text file.
 
@@ -39,13 +36,18 @@ class Arguments(Tap):
 
     no_backend_compensation: bool = False  # Whether to report timestamps frame_len ahead for compensation due to the nature of the streaming. Only effectual when backend is `timestamp`.
 
-    simulate_performance: bool = (
-        False  # Whether to stream performance "live" into the system.
-    )
+    simulate_performance: bool = False  # Whether to stream performance "live" into the system.
+
 
     sample_rate: int = DEFAULT_SAMPLE_RATE  # Sample rate to synthesise score and load performance wave file.
 
     play_performance_audio: bool = False  # Whether to play the performance audio file when started. Requires `simulate_performance` to be set to True.
+
+    w_a: float = 1.0  # DTW or OLTW Weight to constrain the path for the i direction
+    w_b: float = 1.0  # DTW or OLTW Weight to constrain the path for the j direction
+    w_c: float = 1.0  # DTW or OLTW Weight to constrain the path for the ij (diagonal) direction
+
+    # fmt: on
 
     def __log_and_exit(self, msg: str):
         self.__log(f"Argument Error: {msg}.")

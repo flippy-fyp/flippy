@@ -1,4 +1,5 @@
-from typing import Callable, Literal, NewType, Tuple, Optional, Union
+from flippy_quantitative_testbench.utils.match import MatchResult
+from typing import Callable, Literal, NewType, Tuple, Optional, Union, Dict, List
 import numpy as np
 from dataclasses import dataclass
 import multiprocessing as mp
@@ -51,3 +52,7 @@ CQTType = Literal[
     "librosa", "librosa_pseudo", "librosa_hybrid", "nsgt"
 ]  # due to limitation of TAP
 BackendType = Literal["alignment", "timestamp"]
+
+# Repro & experimental
+AlignResultsT = Dict[int, MatchResult]
+OverallResultsT = Dict[int, List[MatchResult]]
