@@ -90,12 +90,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: repro-results-bach10_align
-          path: repro-results/bach10_align
+          path: repro_results/bach10_align
       - name: Download artifact (bach10_follow)
         uses: actions/download-artifact@v2
         with:
           name: repro-results-bach10_follow
-          path: repro-results/bach10_follow
+          path: repro_results/bach10_follow
       - name: List files
         run: ls -lR
       - name: Run plot_precision
@@ -133,12 +133,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: repro-results-bwv846_align
-          path: repro-results/bwv846_align
+          path: repro_results/bwv846_align
       - name: Download artifact (bwv846_follow)
         uses: actions/download-artifact@v2
         with:
           name: repro-results-bwv846_follow
-          path: repro-results/bwv846_follow
+          path: repro_results/bwv846_follow
       - name: List files
         run: ls -lR
       - name: Run plot_precision
