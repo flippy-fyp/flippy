@@ -363,7 +363,73 @@ def hop_len_search():
 
 
 def slice_hop_ratio_search():
-    pass
+    experimental_arg = "slice_hop_ratio_search"
+    slice_hop_ratio_range = [3, 4, 8, 16, 32]
+    bach10_piece_paths = [
+        f.path
+        for f in os.scandir(BACH10_PATH)
+        if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
+    ]
+    for slice_hop_ratio in slice_hop_ratio_range:
+        overall_results: OverallResultsT = {}
+        output_base_dir = os.path.join(
+            EXPERIMENTAL_RESULTS_PATH, experimental_arg, str(slice_hop_ratio)
+        )
+        os.makedirs(output_base_dir, exist_ok=True)
+        for piece_path in bach10_piece_paths:
+            piece = os.path.basename(piece_path)
+            print("=============================================")
+            print(
+                f"Starting to follow: {piece} with slice_hop_ratio: {slice_hop_ratio}"
+            )
+            print("=============================================")
+            score_midi_path = os.path.join(piece_path, f"{piece}.mid")
+            perf_wave_path = os.path.join(piece_path, f"{piece}.wav")
+
+            output_align_dir = os.path.join(output_base_dir, piece)
+            os.makedirs(output_align_dir, exist_ok=True)
+            output_align_path = os.path.join(output_align_dir, "align.txt")
+
+            args = Arguments().parse_args(
+                [
+                    "--score_midi_path",
+                    score_midi_path,
+                    "--cqt",
+                    "nsgt",
+                    "--perf_wave_path",
+                    perf_wave_path,
+                    "--backend_output",
+                    output_align_path,
+                    "--backend_backtrack",
+                    "--w_a",
+                    "0.5",
+                    "--search_window",
+                    "500",
+                    "--slice_hop_ratio",
+                    str(slice_hop_ratio),
+                ]
+            )
+
+            runner = Runner(args)
+            runner.start()
+
+            ref_align_path = os.path.join(BACH10_PATH, piece, f"{piece}.txt")
+            align_results_path = os.path.join(output_align_dir, "result.json")
+            align_results = _get_and_write_align_results(
+                output_align_path, ref_align_path, align_results_path
+            )
+
+            for thres, align_result in align_results.items():
+                if thres not in overall_results:
+                    overall_results[thres] = []
+                overall_results[thres].append(align_result)
+
+            print("=============================================")
+            print(
+                f"Finished following: {piece} with slice_hop_ratio: {slice_hop_ratio}"
+            )
+            print("=============================================")
+        _write_overall_results(overall_results, output_base_dir)
 
 
 func_map = {
@@ -371,8 +437,8 @@ func_map = {
     "backend_backtrack_search": backend_backtrack_search,  # no difference
     "search_window_search": search_window_search,  # 500 chosen
     "max_run_count_search": max_run_count_search,  # stay with 3 (no difference in [2,10])
-    "hop_len_search": hop_len_search,
-    "slice_hop_ratio_search": slice_hop_ratio_search,
+    "hop_len_search": hop_len_search,  # stay with 2048, best
+    "slice_hop_ratio_search": slice_hop_ratio_search,  # stay with 4, best
 }
 
 if __name__ == "__main__":
