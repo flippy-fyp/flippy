@@ -561,6 +561,7 @@ func_map = {
     "bwv846_follow": bwv846_follow,
     "bach10_follow": bach10_follow,
     "bach10_plot_precision": bach10_plot_precision,
+    "bwv846_plot_precision": bwv846_plot_precision,
 }
 
 if __name__ == "__main__":
