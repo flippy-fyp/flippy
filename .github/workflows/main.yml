@@ -96,6 +96,8 @@ jobs:
         with:
           name: repro-results-bach10_follow
           path: repro-results/bach10_follow
+      - name: List files
+        run: ls -lR
       - name: Run plot_precision
         run: python repro.py bach10_plot_precision
       - name: Upload Repro results
@@ -137,6 +139,8 @@ jobs:
         with:
           name: repro-results-bwv846_follow
           path: repro-results/bwv846_follow
+      - name: List files
+        run: ls -lR
       - name: Run plot_precision
         run: python repro.py bwv846_plot_precision
       - name: Upload Repro results
