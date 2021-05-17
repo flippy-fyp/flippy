@@ -19,7 +19,9 @@ def w_a_search():
     ]
     for w_a in w_a_range:
         overall_results: OverallResultsT = {}
-        output_base_dir = os.path.join(EXPERIMENTAL_RESULTS_PATH, experimental_arg, w_a)
+        output_base_dir = os.path.join(
+            EXPERIMENTAL_RESULTS_PATH, experimental_arg, str(w_a)
+        )
         os.makedirs(output_base_dir, exist_ok=True)
         for piece_path in bach10_piece_paths:
             piece = os.path.basename(piece_path)
@@ -29,9 +31,7 @@ def w_a_search():
             score_midi_path = os.path.join(piece_path, f"{piece}.mid")
             perf_wave_path = os.path.join(piece_path, f"{piece}.wav")
 
-            output_align_dir = os.path.join(
-                EXPERIMENTAL_RESULTS_PATH, experimental_arg, w_a, piece
-            )
+            output_align_dir = os.path.join(output_base_dir, piece)
             os.makedirs(output_align_dir, exist_ok=True)
             output_align_path = os.path.join(output_align_dir, "align.txt")
 
