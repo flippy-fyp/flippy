@@ -462,9 +462,9 @@ def plot_precision():
 
     # plt.title("")
 
-    plt.ylabel("Precision Rates")
+    plt.ylabel("Precision Rate")
     plt.xlabel("Misalign Threshold")
-    plt.legend(data.keys(), loc="lower left")
+    plt.legend(data.keys(), loc="lower right")
     plt.tight_layout()
     # Show the major grid lines with dark grey lines
     plt.grid(b=True, which="major", color="#666666", linestyle="-")
