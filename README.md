@@ -43,7 +43,7 @@ python flippy.py \
 
 ### Using the [Qualitative Testbench](https://github.com/flippy-fyp/flippy-qualitative-testbench)
 - The Qualitative Testbench can be found [here](https://github.com/flippy-fyp/flippy-qualitative-testbench)
-- You need to set up a UDP Port number in the testbench--see instructions in [that repository]((https://github.com/flippy-fyp/flippy-qualitative-testbench)
+- You need to set up a UDP Port number in the testbench--see instructions in [that repository](https://github.com/flippy-fyp/flippy-qualitative-testbench)
 - With the host name and UDP Port number of the testbench machine, run flippy on `online` mode and `timestamp` backend, an example that also plays the performance audio on the score-follower machine is:
 ```bash
 python flippy.py \
@@ -106,3 +106,17 @@ python repro.py bwv846_follow
 ```
 
 Follows (online) BWV846 and then runs the testbench to output results in `repro_results/bwv846_follow`.
+
+### `bach10_plot_precision`
+```bash
+python repro.py bach10_plot_precision
+```
+
+Plots total precision results for Bach10--requires `bach10_align` and `bach10_follow` repro steps to be run a priori.
+
+### `bwv846_plot_precision`
+```bash
+python repro.py bwv846_plot_precision
+```
+
+Plots total precision results for Bach10--requires `bwv846_align` and `bwv846_follow` repro steps to be run a priori.

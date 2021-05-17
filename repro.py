@@ -24,7 +24,7 @@ from consts import (
 )
 import os
 import multiprocessing as mp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import numpy as np
 import sys
 import re
@@ -266,8 +266,12 @@ def bwv846_follow():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
-                    # "--simulate_performance",
+                    "--simulate_performance",
                     "--backend_backtrack",
+                    "--w_a",
+                    "0.5",
+                    "--search_window",
+                    "500",
                 ]
             )
 
@@ -388,8 +392,12 @@ def bach10_follow():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
-                    # "--simulate_performance",
+                    "--simulate_performance",
                     "--backend_backtrack",
+                    "--w_a",
+                    "0.5",
+                    "--search_window",
+                    "500",
                 ]
             )
 
@@ -413,8 +421,74 @@ def bach10_follow():
         _write_overall_results(overall_results, output_base_dir)
 
 
-def plot_precision():
-    repro_arg = "plot_precision"
+def _plot_precision_plot(data: Dict[str, List[Tuple[int, float]]], output_dir: str):
+    import matplotlib.pyplot as plt
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Total Precision Rate")
+    plt.xlabel("Misalign Threshold (ms)")
+    plt.legend(data.keys(), loc="lower right")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
+
+
+def _plot_precision_wrapper(repro_dict: Dict[str, Dict[str, str]], output_dir: str):
+    # health check to make sure all required folders exist
+    for repro_dict_arg, cqts in repro_dict.items():
+        for cqt in cqts:
+            dir_to_check = os.path.join(REPRO_RESULTS_PATH, repro_dict_arg, cqt)
+            if not os.path.exists(dir_to_check):
+                raise ValueError(
+                    f"Please run repro for {repro_dict_arg} before running this step!"
+                )
+
+    # now read in all the OverallResults
+    # map from name to OverallResultsT
+    overall_results: Dict[str, Dict[str, Dict[str, float]]] = {}
+    for repro_dict_arg, cqts in repro_dict.items():
+        for cqt, name in cqts.items():
+            overall_results_path = os.path.join(
+                REPRO_RESULTS_PATH, repro_dict_arg, cqt, "results.json"
+            )
+            res = _read_overall_results(overall_results_path)
+            overall_results[name] = res
+
+    # we're interested in total precision only
+    data = {
+        name: [(int(thres), x["total_precision_rate"]) for thres, x in results.items()]
+        for name, results in overall_results.items()
+    }
+    _plot_precision_plot(data, output_dir)
+
+
+def bach10_plot_precision():
+    repro_arg = "bach10_plot_precision"
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    repro_dict = {
+        "bach10_align": {
+            "librosa": "CQT Offline",
+            "nsgt": "NSGT-CQT Offline",
+        },
+        "bach10_follow": {
+            "librosa_pseudo": "CQT (Pseudo) Online",
+            "nsgt": "NSGT-CQT Online",
+        },
+    }
+    _plot_precision_wrapper(repro_dict, output_dir)
+
+
+def bwv846_plot_precision():
+    repro_arg = "bwv846_plot_precision"
     output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
     os.makedirs(output_dir, exist_ok=True)
     repro_dict = {
@@ -427,52 +501,7 @@ def plot_precision():
             "nsgt": "NSGT-CQT Online",
         },
     }
-
-    # health check to make sure all required folders exist
-    for repro_dict_arg, cqts in repro_dict.items():
-        for cqt in cqts:
-            dir_to_check = os.path.join(REPRO_RESULTS_PATH, repro_dict_arg, cqt)
-            if not os.path.exists(dir_to_check):
-                raise ValueError(
-                    f"Please run repro for {repro_dict_arg} before running this step!"
-                )
-
-    # now read in all the OverallResults
-    # map from name to OverallResultsT
-    overall_results: Dict[str, Dict[str, float]] = {}
-    for repro_dict_arg, cqts in repro_dict.items():
-        for cqt, name in cqts.items():
-            overall_results_path = os.path.join(
-                REPRO_RESULTS_PATH, repro_dict_arg, cqt, "results.json"
-            )
-            overall_results = _read_overall_results(overall_results_path)
-            overall_results[name] = overall_results
-
-    # we're interested in total precision only
-    data = {
-        name: [(int(thres), x["total_precision_rate"]) for thres, x in results.items()]
-        for name, results in overall_results.items()
-    }
-    import matplotlib.pyplot as plt
-
-    plt.figure(figsize=(6.4, 3))
-    for name, scores in data.items():
-        [x, y] = zip(*scores)
-        plt.plot(x, y)
-
-    # plt.title("")
-
-    plt.ylabel("Precision Rates")
-    plt.xlabel("Misalign Threshold")
-    plt.legend(data.keys(), loc="lower left")
-    plt.tight_layout()
-    # Show the major grid lines with dark grey lines
-    plt.grid(b=True, which="major", color="#666666", linestyle="-")
-
-    # Show the minor grid lines with very faint and almost transparent grey lines
-    plt.minorticks_on()
-    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
-    plt.savefig(os.path.join(output_dir, "output.pdf"))
+    _plot_precision_wrapper(repro_dict, output_dir)
 
 
 """
@@ -531,7 +560,8 @@ func_map = {
     "bach10_align": bach10_align,
     "bwv846_follow": bwv846_follow,
     "bach10_follow": bach10_follow,
-    "plot_precision": plot_precision,
+    "bach10_plot_precision": bach10_plot_precision,
+    "bwv846_plot_precision": bwv846_plot_precision,
 }
 
 if __name__ == "__main__":

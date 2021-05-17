@@ -8,4 +8,4 @@ REPRO_RESULTS_PATH = os.path.join(REPO_ROOT, "repro_results")
 EXPERIMENTAL_RESULTS_PATH = os.path.join(REPO_ROOT, "experimental_results")
 BACH10_PATH = os.path.join(DATA_PATH, "bach10", "Bach10_v1.1")
 
-MISALIGN_THRESHOLD_MS_RANGE = range(50, 2050, 50)
+MISALIGN_THRESHOLD_MS_RANGE = range(50, 3050, 50)
