@@ -470,7 +470,7 @@ def bach10_plot_precision():
 
     # plt.title("")
 
-    plt.ylabel("Precision Rate")
+    plt.ylabel("Total Precision Rate")
     plt.xlabel("Misalign Threshold")
     plt.legend(data.keys(), loc="lower right")
     plt.tight_layout()

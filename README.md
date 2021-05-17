@@ -106,3 +106,10 @@ python repro.py bwv846_follow
 ```
 
 Follows (online) BWV846 and then runs the testbench to output results in `repro_results/bwv846_follow`.
+
+### `bach10_plot_precision`
+```bash
+python repro.py bach10_plot_precision
+```
+
+Plots total precision results for Bach10--requires `bach10_align` and `bach10_follow` repro steps to be run a priori.
