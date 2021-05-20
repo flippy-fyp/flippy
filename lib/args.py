@@ -39,6 +39,7 @@ class Arguments(Tap):
 
     simulate_performance: bool = False  # Whether to stream performance "live" into the system.
 
+    sleep_compensation: float = 0.0005  # When streaming performance, reduce sleep time between streaming slices as sleeping is not entirely precise.
 
     sample_rate: int = DEFAULT_SAMPLE_RATE  # Sample rate to synthesise score and load performance wave file.
 

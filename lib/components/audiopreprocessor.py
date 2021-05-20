@@ -24,6 +24,7 @@ class Slicer:
         sample_rate: int,
         slice_queue: ExtractedFeatureQueue,
         simulate_performance: bool = True,
+        sleep_compensation: float = 0.0005,
     ):
         self.wave_path = wave_path
         self.hop_length = hop_length
@@ -31,6 +32,7 @@ class Slicer:
         self.sample_rate = sample_rate
         self.slice_queue = slice_queue
         self.simulate_performance = simulate_performance
+        self.sleep_compensation = sleep_compensation
         self.__log("Initialised successfully")
 
     def start(self):
@@ -59,7 +61,11 @@ class Slicer:
     def __sleep_if_performance(self, samples: int, pre_sleep_time: float):
         if self.simulate_performance:
             sleep_time = float(samples) / self.sample_rate
-            time.sleep(sleep_time - (time.perf_counter() - pre_sleep_time) - 0.0005)
+            time.sleep(
+                sleep_time
+                - (time.perf_counter() - pre_sleep_time)
+                - self.sleep_compensation
+            )
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
@@ -167,6 +173,7 @@ class AudioPreprocessor:
         # slicer
         wave_path: str,
         simulate_performance: bool,
+        sleep_compensation: float,
         # extractor
         mode: ModeType,
         cqt: CQTType,
@@ -181,6 +188,7 @@ class AudioPreprocessor:
         self.hop_len = hop_len
         self.frame_len = frame_len
         self.simulate_performance = simulate_performance
+        self.sleep_compensation = sleep_compensation
 
         self.mode = mode
         self.cqt = cqt
@@ -207,6 +215,7 @@ class AudioPreprocessor:
                 self.sample_rate,
                 slice_queue,
                 self.simulate_performance,
+                self.sleep_compensation,
             )
             online_slicer_proc = mp.Process(target=slicer.start)
             online_slicer_proc.start()
