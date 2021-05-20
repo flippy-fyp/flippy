@@ -75,7 +75,7 @@ class FeatureExtractor:
         fmin: float,
         fmax: float,
         hop_len: int,
-        slice_hop_ratio: int,
+        frame_len: int,
         sample_rate: int,
         nsgt_multithreading: bool = False,
     ):
@@ -96,8 +96,8 @@ class FeatureExtractor:
                     "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
                 ),
                 "nsgt": lambda: CQTNSGT(
-                    hop_len * slice_hop_ratio,
-                    slice_hop_ratio,
+                    frame_len,
+                    hop_len,
                     fmin,
                     fmax,
                     sample_rate,
@@ -112,8 +112,8 @@ class FeatureExtractor:
                     "librosa_pseudo", fmin, n_bins, sample_rate
                 ),
                 "nsgt": lambda: CQTNSGTSlicq(
-                    hop_len * slice_hop_ratio,
-                    slice_hop_ratio,
+                    frame_len,
+                    hop_len,
                     fmin,
                     fmax,
                     sample_rate,
@@ -163,7 +163,7 @@ class AudioPreprocessor:
         self,
         sample_rate: int,
         hop_len: int,
-        slice_hop_ratio: int,
+        frame_len: int,
         # slicer
         wave_path: str,
         simulate_performance: bool,
@@ -179,7 +179,7 @@ class AudioPreprocessor:
         self.sample_rate = sample_rate
         self.wave_path = wave_path
         self.hop_len = hop_len
-        self.slice_hop_ratio = slice_hop_ratio
+        self.frame_len = frame_len
         self.simulate_performance = simulate_performance
 
         self.mode = mode
@@ -193,11 +193,6 @@ class AudioPreprocessor:
 
         self.__log("Initialised successfully")
 
-    def __get_frame_len(self) -> int:
-        if self.cqt == "nsgt":
-            return self.slice_hop_ratio * self.hop_len
-        return self.hop_len
-
     def start(self):
         self.__log("Starting...")
         slice_queue: ExtractedFeatureQueue = mp.Queue()
@@ -208,7 +203,7 @@ class AudioPreprocessor:
             slicer = Slicer(
                 self.wave_path,
                 self.hop_len,
-                self.__get_frame_len(),
+                self.frame_len,
                 self.sample_rate,
                 slice_queue,
                 self.simulate_performance,
@@ -230,7 +225,7 @@ class AudioPreprocessor:
             self.fmin,
             self.fmax,
             self.hop_len,
-            self.slice_hop_ratio,
+            self.frame_len,
             self.sample_rate,
             self.nsgt_multithreading,
         )

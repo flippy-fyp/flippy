@@ -17,9 +17,10 @@ class Arguments(Tap):
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
-    hop_len: int =  2048  # Transition length for `nsgt` cqt, or hop_length in `librosa` cqt.
 
-    slice_hop_ratio: int = 4  # Slice to hop length ratio for `nsgt` cqt (effectively making this a frame_len). For `librosa`, frame_len == hop_len.
+    hop_len: int = 2048  # Hop length for all `librosa` cqt algos, or transition length for `nsgt` cqt algos.
+    frame_len: int = 2048 * 4  # Frame length for `librosa` cqt algos, or slice length for `nsgt` cqt algos.
+
     nsgt_multithreading: bool = False  # Whether to use multithreading for `nsgt` multithreading.
 
     perf_wave_path: str  # Path to performance WAVE file.
@@ -73,8 +74,8 @@ class Arguments(Tap):
         if self.hop_len < 0:
             self.__log_and_exit(f"hop_len must be positive")
 
-        if self.slice_hop_ratio < 0:
-            self.__log_and_exit(f"slice_hop_ratio must be positive")
+        if self.frame_len < 0:
+            self.__log_and_exit(f"frame_len must be positive")
 
         if self.mode == "online":
             if self.dtw != "oltw":
