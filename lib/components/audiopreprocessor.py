@@ -87,13 +87,13 @@ class FeatureExtractor:
         extractor_map: Dict[ModeType, Dict[CQTType, Callable[[], BaseCQT]]] = {
             "offline": {
                 "librosa": lambda: LibrosaFullCQT(
-                    "librosa", fmin, n_bins, hop_len, sample_rate
+                    "librosa", frame_len, hop_len, fmin, n_bins, sample_rate
                 ),
                 "librosa_hybrid": lambda: LibrosaFullCQT(
-                    "librosa_hybrid", fmin, n_bins, hop_len, sample_rate
+                    "librosa_hybrid", frame_len, hop_len, fmin, n_bins, sample_rate
                 ),
                 "librosa_pseudo": lambda: LibrosaFullCQT(
-                    "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
+                    "librosa_pseudo", frame_len, hop_len, fmin, n_bins, sample_rate
                 ),
                 "nsgt": lambda: CQTNSGT(
                     frame_len,
@@ -106,10 +106,10 @@ class FeatureExtractor:
             },
             "online": {
                 "librosa_hybrid": lambda: LibrosaSliceCQT(
-                    "librosa_hybrid", fmin, n_bins, sample_rate
+                    "librosa_hybrid", hop_len, fmin, n_bins, sample_rate
                 ),
                 "librosa_pseudo": lambda: LibrosaSliceCQT(
-                    "librosa_pseudo", fmin, n_bins, sample_rate
+                    "librosa_pseudo", hop_len, fmin, n_bins, sample_rate
                 ),
                 "nsgt": lambda: CQTNSGTSlicq(
                     frame_len,

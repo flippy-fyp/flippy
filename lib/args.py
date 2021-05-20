@@ -19,7 +19,7 @@ class Arguments(Tap):
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
 
     hop_len: int = 2048  # Hop length for all `librosa` cqt algos, or transition length for `nsgt` cqt algos.
-    frame_len: int = 2048 * 4  # Frame length for `librosa` cqt algos, or slice length for `nsgt` cqt algos.
+    frame_len: int = 2048 * 4  # Frame length for `librosa_pseudo` and `librosa_hybrid` cqt algos, or slice length for `nsgt` cqt algos.
 
     nsgt_multithreading: bool = False  # Whether to use multithreading for `nsgt` multithreading.
 
