@@ -29,9 +29,8 @@ def plot_nsgt_features():
 
 
 def plot_nsgt_features_slice():
-    sl_tr_ratio = 4
     hop_length = 2048
-    frame_length = hop_length * sl_tr_ratio
+    frame_length = 2048 * 4
 
     audio_stream = librosa.stream(
         "./tmp/wtk1-prelude1.wav",
@@ -44,12 +43,12 @@ def plot_nsgt_features_slice():
     )
 
     fmin, fmax = get_nsgt_params()
-    slicq = get_slicq_engine(frame_length, sl_tr_ratio, fmin, fmax)
+    slicq = get_slicq_engine(frame_length, hop_length, fmin, fmax)
     cqt = []
 
     start_time = time.time()
     for audio_slice in audio_stream:
-        cqt_slice = extract_features_nsgt_slicq(slicq, sl_tr_ratio, audio_slice)
+        cqt_slice = extract_features_nsgt_slicq(slicq, hop_length, audio_slice)
         cqt.append(cqt_slice)
     # convert to ndarray
     cqt = np.array(cqt)

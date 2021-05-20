@@ -28,28 +28,46 @@ def get_librosa_params(
 def full_cqt_helper(
     cqt_func: Any,  # librosa.cqt, librosa.pseudo_cqt or librosa.hybrid_cqt
     audio: np.ndarray,
+    frame_len: int,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
-    hop: int = 2048,
+    consider_frames: bool = False,
 ) -> np.ndarray:
+    if consider_frames:
+        cqt = np.ndarray(
+            [
+                slice_cqt_helper(
+                    cqt_func,
+                    audio[i : min(len(audio), i + frame_len)],
+                    hop_len,
+                    fmin,
+                    n_bins,
+                    fs,
+                )
+                for i in range(0, len(audio) - frame_len + 1, hop_len)
+            ]
+        )
+        return cqt
+    else:
+        # Compute CQT
+        cqt = cqt_func(audio, sr=fs, hop_length=hop_len, fmin=fmin, n_bins=n_bins)
+        # Transpose so that each row is for a time slice's spectra
+        cqt = cqt.T
+        # Take abs value
+        cqt = np.abs(cqt)
 
-    # Compute CQT
-    cqt = cqt_func(audio, sr=fs, hop_length=hop, fmin=fmin, n_bins=n_bins)
-    # Transpose so that each row is for a time slice's spectra
-    cqt = cqt.T
-    # Take abs value
-    cqt = np.abs(cqt)
-
-    return cqt
+        return cqt
 
 
 def extract_features_librosa_cqt(
     audio: np.ndarray,
+    frame_len: int,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
-    hop: int = 2048,
 ) -> np.ndarray:
     """
     Extract features via librosa CQT.
@@ -57,19 +75,22 @@ def extract_features_librosa_cqt(
     return full_cqt_helper(
         librosa.cqt,
         audio,
+        frame_len,
+        hop_len,
         fmin,
         n_bins,
-        fs=fs,
-        hop=hop,
+        fs,
+        False,
     )
 
 
 def extract_features_librosa_pseudo_cqt(
     audio: np.ndarray,
+    frame_len: int,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
-    hop: int = 2048,
 ) -> np.ndarray:
     """
     Extract features via librosa pseudo CQT.
@@ -77,19 +98,22 @@ def extract_features_librosa_pseudo_cqt(
     return full_cqt_helper(
         librosa.pseudo_cqt,
         audio,
+        frame_len,
+        hop_len,
         fmin,
         n_bins,
-        fs=fs,
-        hop=hop,
+        fs,
+        True,
     )
 
 
 def extract_features_librosa_hybrid_cqt(
     audio: np.ndarray,
+    frame_len: int,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
-    hop: int = 2048,
 ) -> np.ndarray:
     """
     Extract features via librosa hybrid CQT.
@@ -97,16 +121,19 @@ def extract_features_librosa_hybrid_cqt(
     return full_cqt_helper(
         librosa.hybrid_cqt,
         audio,
+        frame_len,
+        hop_len,
         fmin,
         n_bins,
-        fs=fs,
-        hop=hop,
+        fs,
+        True,
     )
 
 
 def slice_cqt_helper(
     cqt_func: Any,  # librosa.cqt, librosa.pseudo_cqt or librosa.hybrid_cqt
     audio_slice: np.ndarray,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
@@ -122,6 +149,8 @@ def slice_cqt_helper(
     cqt = cqt.reshape(cqt.shape[1])
     # Take abs value
     cqt = np.abs(cqt)
+    # Take only the hop region of the time slices
+    cqt = cqt[:hop_len]
     # L1 normalize
     cqt = librosa.util.normalize(cqt, norm=1)
 
@@ -130,6 +159,7 @@ def slice_cqt_helper(
 
 def extract_slice_features_librosa_pseudo_cqt(
     audio_slice: np.ndarray,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
@@ -140,6 +170,7 @@ def extract_slice_features_librosa_pseudo_cqt(
     return slice_cqt_helper(
         librosa.pseudo_cqt,
         audio_slice,
+        hop_len,
         fmin,
         n_bins,
         fs=fs,
@@ -148,6 +179,7 @@ def extract_slice_features_librosa_pseudo_cqt(
 
 def extract_slice_features_librosa_hybrid_cqt(
     audio_slice: np.ndarray,
+    hop_len: int,
     fmin: float,
     n_bins: int,
     fs: int = DEFAULT_SAMPLE_RATE,
@@ -158,6 +190,7 @@ def extract_slice_features_librosa_hybrid_cqt(
     return slice_cqt_helper(
         librosa.hybrid_cqt,
         audio_slice,
+        hop_len,
         fmin,
         n_bins,
         fs=fs,
@@ -185,14 +218,20 @@ def extract_slice_features_librosa_hybrid_cqt(
 
 class LibrosaSliceCQT(BaseCQT):
     def __init__(
-        self, cqt: LibrosaCQTs, fmin: float, n_bins: int, fs: int = DEFAULT_SAMPLE_RATE
+        self,
+        cqt: LibrosaCQTs,
+        hop_len: int,
+        fmin: float,
+        n_bins: int,
+        fs: int = DEFAULT_SAMPLE_RATE,
     ):
         self.fmin = fmin
         self.n_bins = n_bins
         self.fs = fs
+        self.hop_len = hop_len
 
         f_map: Dict[
-            LibrosaCQTs, Callable[[np.ndarray, float, int, int], ExtractedFeature]
+            LibrosaCQTs, Callable[[np.ndarray, int, float, int, int], ExtractedFeature]
         ] = {
             "librosa_pseudo": extract_slice_features_librosa_pseudo_cqt,
             "librosa_hybrid": extract_slice_features_librosa_hybrid_cqt,
@@ -202,25 +241,28 @@ class LibrosaSliceCQT(BaseCQT):
             raise ValueError(f"Unknown or unsupported cqt algo: {cqt}")
 
     def extract(self, audio: np.ndarray) -> ExtractedFeature:
-        return self.__f(audio, self.fmin, self.n_bins, self.fs)  # type: ignore
+        return self.__f(audio, self.hop_len, self.fmin, self.n_bins, self.fs)  # type: ignore
 
 
 class LibrosaFullCQT(BaseCQT):
     def __init__(
         self,
         cqt: LibrosaCQTs,
+        frame_len: int,
+        hop_len: int,
         fmin: float,
         n_bins: int,
-        hop: int,
         fs: int = DEFAULT_SAMPLE_RATE,
     ):
         self.fmin = fmin
         self.n_bins = n_bins
-        self.hop = hop
+        self.frame_len = frame_len
+        self.hop_len = hop_len
         self.fs = fs
 
         f_map: Dict[
-            LibrosaCQTs, Callable[[np.ndarray, float, int, int, int], ExtractedFeature]
+            LibrosaCQTs,
+            Callable[[np.ndarray, int, int, float, int, int], ExtractedFeature],
         ] = {
             "librosa": extract_features_librosa_cqt,
             "librosa_pseudo": extract_features_librosa_pseudo_cqt,
@@ -231,4 +273,4 @@ class LibrosaFullCQT(BaseCQT):
             raise ValueError(f"Unknown or unsupported cqt algo: {cqt}")
 
     def extract(self, audio: np.ndarray) -> List[ExtractedFeature]:
-        return [x for x in self.__f(audio, self.fmin, self.n_bins, self.fs, self.hop)]  # type: ignore
+        return [x for x in self.__f(audio, self.frame_len, self.hop_len, self.fmin, self.n_bins, self.fs)]  # type: ignore

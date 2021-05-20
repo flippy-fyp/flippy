@@ -24,6 +24,7 @@ class Slicer:
         sample_rate: int,
         slice_queue: ExtractedFeatureQueue,
         simulate_performance: bool = True,
+        sleep_compensation: float = 0.0005,
     ):
         self.wave_path = wave_path
         self.hop_length = hop_length
@@ -31,6 +32,7 @@ class Slicer:
         self.sample_rate = sample_rate
         self.slice_queue = slice_queue
         self.simulate_performance = simulate_performance
+        self.sleep_compensation = sleep_compensation
         self.__log("Initialised successfully")
 
     def start(self):
@@ -59,7 +61,11 @@ class Slicer:
     def __sleep_if_performance(self, samples: int, pre_sleep_time: float):
         if self.simulate_performance:
             sleep_time = float(samples) / self.sample_rate
-            time.sleep(sleep_time - (time.perf_counter() - pre_sleep_time) - 0.0005)
+            time.sleep(
+                sleep_time
+                - (time.perf_counter() - pre_sleep_time)
+                - self.sleep_compensation
+            )
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
@@ -75,7 +81,7 @@ class FeatureExtractor:
         fmin: float,
         fmax: float,
         hop_len: int,
-        slice_hop_ratio: int,
+        frame_len: int,
         sample_rate: int,
         nsgt_multithreading: bool = False,
     ):
@@ -87,17 +93,17 @@ class FeatureExtractor:
         extractor_map: Dict[ModeType, Dict[CQTType, Callable[[], BaseCQT]]] = {
             "offline": {
                 "librosa": lambda: LibrosaFullCQT(
-                    "librosa", fmin, n_bins, hop_len, sample_rate
+                    "librosa", frame_len, hop_len, fmin, n_bins, sample_rate
                 ),
                 "librosa_hybrid": lambda: LibrosaFullCQT(
-                    "librosa_hybrid", fmin, n_bins, hop_len, sample_rate
+                    "librosa_hybrid", frame_len, hop_len, fmin, n_bins, sample_rate
                 ),
                 "librosa_pseudo": lambda: LibrosaFullCQT(
-                    "librosa_pseudo", fmin, n_bins, hop_len, sample_rate
+                    "librosa_pseudo", frame_len, hop_len, fmin, n_bins, sample_rate
                 ),
                 "nsgt": lambda: CQTNSGT(
-                    hop_len * slice_hop_ratio,
-                    slice_hop_ratio,
+                    frame_len,
+                    hop_len,
                     fmin,
                     fmax,
                     sample_rate,
@@ -106,14 +112,14 @@ class FeatureExtractor:
             },
             "online": {
                 "librosa_hybrid": lambda: LibrosaSliceCQT(
-                    "librosa_hybrid", fmin, n_bins, sample_rate
+                    "librosa_hybrid", hop_len, fmin, n_bins, sample_rate
                 ),
                 "librosa_pseudo": lambda: LibrosaSliceCQT(
-                    "librosa_pseudo", fmin, n_bins, sample_rate
+                    "librosa_pseudo", hop_len, fmin, n_bins, sample_rate
                 ),
                 "nsgt": lambda: CQTNSGTSlicq(
-                    hop_len * slice_hop_ratio,
-                    slice_hop_ratio,
+                    frame_len,
+                    hop_len,
                     fmin,
                     fmax,
                     sample_rate,
@@ -163,10 +169,11 @@ class AudioPreprocessor:
         self,
         sample_rate: int,
         hop_len: int,
-        slice_hop_ratio: int,
+        frame_len: int,
         # slicer
         wave_path: str,
         simulate_performance: bool,
+        sleep_compensation: float,
         # extractor
         mode: ModeType,
         cqt: CQTType,
@@ -179,8 +186,9 @@ class AudioPreprocessor:
         self.sample_rate = sample_rate
         self.wave_path = wave_path
         self.hop_len = hop_len
-        self.slice_hop_ratio = slice_hop_ratio
+        self.frame_len = frame_len
         self.simulate_performance = simulate_performance
+        self.sleep_compensation = sleep_compensation
 
         self.mode = mode
         self.cqt = cqt
@@ -193,11 +201,6 @@ class AudioPreprocessor:
 
         self.__log("Initialised successfully")
 
-    def __get_frame_len(self) -> int:
-        if self.cqt == "nsgt":
-            return self.slice_hop_ratio * self.hop_len
-        return self.hop_len
-
     def start(self):
         self.__log("Starting...")
         slice_queue: ExtractedFeatureQueue = mp.Queue()
@@ -208,10 +211,11 @@ class AudioPreprocessor:
             slicer = Slicer(
                 self.wave_path,
                 self.hop_len,
-                self.__get_frame_len(),
+                self.frame_len,
                 self.sample_rate,
                 slice_queue,
                 self.simulate_performance,
+                self.sleep_compensation,
             )
             online_slicer_proc = mp.Process(target=slicer.start)
             online_slicer_proc.start()
@@ -230,7 +234,7 @@ class AudioPreprocessor:
             self.fmin,
             self.fmax,
             self.hop_len,
-            self.slice_hop_ratio,
+            self.frame_len,
             self.sample_rate,
             self.nsgt_multithreading,
         )

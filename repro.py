@@ -93,9 +93,10 @@ def bach10_feature():
         ap = AudioPreprocessor(
             DEFAULT_SAMPLE_RATE,
             2048,
-            4,
+            8192,
             perf_wave_path,
             False,
+            0.0005,
             "online",
             "nsgt",
             fmin,
@@ -144,9 +145,10 @@ def bwv846_feature():
         ap = AudioPreprocessor(
             DEFAULT_SAMPLE_RATE,
             2048,
-            4,
+            8192,
             score_wave_path,
             False,
+            0.0005,
             "online",
             "nsgt",
             fmin,

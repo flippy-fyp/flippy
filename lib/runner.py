@@ -95,9 +95,10 @@ class Runner:
         ap = AudioPreprocessor(
             args.sample_rate,
             args.hop_len,
-            args.slice_hop_ratio,
+            args.frame_len,
             args.perf_wave_path,
             args.simulate_performance,
+            args.sleep_compensation,
             args.mode,
             args.cqt,
             args.fmin,
@@ -107,12 +108,6 @@ class Runner:
         )
 
         return ap
-
-    def __get_frame_len(self) -> int:
-        args = self.args
-        if args.cqt == "nsgt":
-            return args.slice_hop_ratio * args.hop_len
-        return args.hop_len
 
     def __init_backend(
         self,
@@ -129,7 +124,7 @@ class Runner:
             performance_stream_start_conn,
             score_note_onsets,
             args.hop_len,
-            self.__get_frame_len(),
+            args.frame_len,
             not args.no_backend_compensation,
             args.sample_rate,
             args.backend_output,
@@ -189,9 +184,10 @@ class Runner:
             audio_preprocessor = AudioPreprocessor(
                 args.sample_rate,
                 args.hop_len,
-                args.slice_hop_ratio,
+                args.frame_len,
                 score_wave_path,
                 False,
+                0.0,
                 args.mode,
                 args.cqt,
                 args.fmin,

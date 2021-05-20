@@ -362,6 +362,7 @@ def hop_len_search():
         _write_overall_results(overall_results, output_base_dir)
 
 
+"""
 def slice_hop_ratio_search():
     experimental_arg = "slice_hop_ratio_search"
     slice_hop_ratio_range = [3, 4, 8, 16, 32]
@@ -430,7 +431,7 @@ def slice_hop_ratio_search():
             )
             print("=============================================")
         _write_overall_results(overall_results, output_base_dir)
-
+"""
 
 func_map = {
     "w_a_search": w_a_search,  # 0.5 chosen
@@ -438,7 +439,7 @@ func_map = {
     "search_window_search": search_window_search,  # 500 chosen
     "max_run_count_search": max_run_count_search,  # stay with 3 (no difference in [2,10])
     "hop_len_search": hop_len_search,  # stay with 2048, best
-    "slice_hop_ratio_search": slice_hop_ratio_search,  # stay with 4, best
+    # "slice_hop_ratio_search": slice_hop_ratio_search,  # stay with 4, best
 }
 
 if __name__ == "__main__":
