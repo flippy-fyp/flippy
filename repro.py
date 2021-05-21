@@ -1,4 +1,9 @@
+from lib.mputils import write_list_to_queue
+from lib.components.follower import Follower
+import time
+import statistics
 from flippy_quantitative_testbench.utils.match import (
+    MatchResult,
     safe_div,
 )
 from lib.runner import Runner
@@ -24,16 +29,36 @@ from consts import (
 )
 import os
 import multiprocessing as mp
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypeVar, TypedDict, Union
 import numpy as np
 import sys
 import re
 from flippy_quantitative_testbench.utils.bench import bench
 import json
 
+MisalignThresT = int
+
+
+class AggregatedResult(TypedDict):
+    # piecewise: mean across pieces
+    piecewise_precision_rate: float
+    total_precision_rate: float
+    piecewise_results: MatchResult
+
+
+AggregatedResultsT = Dict[MisalignThresT, AggregatedResult]
+
+
+def _dict_mean(dict_list: List[Dict[str, Union[int, float]]]) -> Dict[str, float]:
+    mean_dict = {}
+    if len(dict_list) > 0:
+        for key in dict_list[0].keys():
+            mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
+    return mean_dict
+
 
 def _write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
-    total_dict: Dict[int, Dict[str, float]] = {}
+    total_dict: AggregatedResultsT = {}
     for thres, results in overall_results.items():
         precision_rates = list(map(lambda x: x["precision_rate"], results))
         piecewise_precision_rate = sum(precision_rates) / len(precision_rates)
@@ -44,11 +69,14 @@ def _write_overall_results(overall_results: OverallResultsT, output_base_dir: st
 
         align_num = total_num - miss_num - misalign_num
         total_precision_rate = safe_div(float(align_num), total_num)
+        piecewise_results = _dict_mean(results)
 
         total_dict[thres] = {
             "piecewise_precision_rate": piecewise_precision_rate,
             "total_precision_rate": total_precision_rate,
+            "piecewise_results": piecewise_results,
         }
+
     total_output_path = os.path.join(output_base_dir, "results.json")
     with open(total_output_path, "w+") as f:
         total_dict_str = json.dumps(total_dict, indent=4)
@@ -68,12 +96,254 @@ def _get_and_write_align_results(
     return align_results
 
 
-def _read_overall_results(overall_results_path: str) -> Dict[str, Dict[str, float]]:
+def _read_overall_results(overall_results_path: str) -> AggregatedResultsT:
     f = open(overall_results_path)
     t = f.read().strip()
     f.close()
     x = json.loads(t)
     return x
+
+
+"""
+def cqt_frame_time():
+    repro_arg = "cqt_frame_time"
+    piece_path = os.path.join(BACH10_PATH, "01-AchGottundHerr", "01-AchGottundHerr.wav")
+    fmin, fmax = get_nsgt_params()
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    results: Dict[str, Dict[int, float]] = {}
+    for cqt in ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]:
+        print("=============================================")
+        print(f"Running with cqt: {cqt}")
+        print("=============================================")
+        results[cqt] = {}
+        for frame_len in [8192, 16384, 32768, 65536]:
+            print(f"=== FRAME_LEN: {frame_len} ===")
+            q = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                frame_len,
+                piece_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                q,
+                False,
+                10,
+            )
+            start_time = time.perf_counter()
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            while True:
+                x = q.get()
+                if x is None:
+                    break
+            ap_proc.join()
+            end_time = time.perf_counter()
+            time_taken = end_time - start_time
+            print(f"=== TIME TAKEN: {time_taken}s ===")
+            results[cqt][frame_len] = time_taken
+    results_path = os.path.join(output_dir, "results.json")
+    with open(results_path, "w+") as f:
+        results_str = json.dumps(results, indent=4)
+        f.write(results_str)
+        import matplotlib.pyplot as plt
+
+    name_mapping = {
+        "librosa": "CQT",
+        "nsgt": "NSGT-CQT",
+        "librosa_pseudo": "CQT (Pseudo)",
+        "librosa_hybrid": "CQT (Hybrid)",
+    }
+
+    data: Dict[str, List[Tuple[int, float]]] = {
+        name_mapping[cqt]: [(x, y) for x, y in res.items()]
+        for cqt, res in results.items()
+    }
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Time Taken (s)")
+    plt.xlabel("Frame Length")
+    plt.legend(data.keys(), loc="upper left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
+"""
+
+
+def cqt_time():
+    repro_arg = "cqt_time"
+    piece_path = os.path.join(BACH10_PATH, "01-AchGottundHerr", "01-AchGottundHerr.wav")
+    fmin, fmax = get_nsgt_params()
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    results: Dict[str, Dict[int, float]] = {}
+    for cqt in ["nsgt", "librosa_pseudo"]:
+        print("=============================================")
+        print(f"Running with cqt: {cqt}")
+        print("=============================================")
+        results[cqt] = {}
+        for piece_len_s in range(10, 70, 10):
+            print(f"=== DURATION: {piece_len_s} ===")
+            q = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                8192,
+                piece_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                q,
+                False,
+                float(piece_len_s),
+            )
+            start_time = time.perf_counter()
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            while True:
+                x = q.get()
+                if x is None:
+                    break
+            ap_proc.join()
+            end_time = time.perf_counter()
+            time_taken = end_time - start_time
+            print(f"=== TIME TAKEN: {time_taken}s ===")
+            results[cqt][piece_len_s] = time_taken
+    results_path = os.path.join(output_dir, "results.json")
+    with open(results_path, "w+") as f:
+        results_str = json.dumps(results, indent=4)
+        f.write(results_str)
+        import matplotlib.pyplot as plt
+
+    name_mapping = {
+        "nsgt": "NSGT-CQT",
+        "librosa_pseudo": "CQT (Pseudo)",
+    }
+
+    data: Dict[str, List[Tuple[int, float]]] = {
+        name_mapping[cqt]: [(x, y) for x, y in res.items()]
+        for cqt, res in results.items()
+    }
+
+    data["Real-time boundary"] = [(x, float(x)) for x in range(10, 70, 10)]
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Time Taken (s)")
+    plt.xlabel("Audio Length (s)")
+    plt.legend(data.keys(), loc="upper left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
+
+
+def dtw_time():
+    repro_arg = "dtw_time"
+    np.random.seed(42)
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    full_results: Dict[str, Dict[int, List[float]]] = {}
+    seq_len_range = range(100, 3001, 100)
+    for seq_len in seq_len_range:
+        for i in range(1, 4):
+            print("=============================================")
+            print(f"({i}/3): Running with seq_len: {seq_len}")
+            print("=============================================")
+            S = np.random.rand(seq_len, 50)
+            P = np.random.rand(seq_len, 50)
+            for dtw in ["classical", "oltw"]:
+                print(f"=== DTW: {dtw} ===")
+                output_queue = mp.Queue()
+                P_queue = mp.Queue()
+                write_list_to_queue(P, P_queue)
+                follower = Follower(
+                    "offline", dtw, 500, 3, output_queue, P_queue, S, 1.0, 1.0, 1.0
+                )
+
+                start_time = time.perf_counter()
+                follower_proc = mp.Process(target=follower.start)
+                follower_proc.start()
+                while True:
+                    x = output_queue.get()
+                    if x is None:
+                        break
+                follower_proc.join()
+
+                end_time = time.perf_counter()
+                time_taken = end_time - start_time
+                print(f"=== TIME TAKEN: {time_taken}s ===")
+
+                if not dtw in full_results:
+                    full_results[dtw] = {}
+                if not seq_len in full_results[dtw]:
+                    full_results[dtw][seq_len] = []
+                full_results[dtw][seq_len].append(time_taken)
+    averaged_results: Dict[str, Dict[int, float]] = {
+        dtw: {seq_len: statistics.mean(times) for seq_len, times in res.items()}
+        for dtw, res in full_results.items()
+    }
+    full_results_path = os.path.join(output_dir, "full_results.json")
+    with open(full_results_path, "w+") as f:
+        results_str = json.dumps(full_results, indent=4)
+        f.write(results_str)
+
+    averaged_results_path = os.path.join(output_dir, "averaged_results.json")
+    with open(averaged_results_path, "w+") as f:
+        results_str = json.dumps(averaged_results, indent=4)
+        f.write(results_str)
+
+    import matplotlib.pyplot as plt
+
+    name_mapping = {
+        "oltw": "OLTW",
+        "classical": "Classical DTW",
+    }
+
+    data: Dict[str, List[Tuple[int, float]]] = {
+        name_mapping[cqt]: [(x, y) for x, y in res.items()]
+        for cqt, res in averaged_results.items()
+    }
+
+    # data["Real-time boundary"] = [(x, float(x)) for x in range(10, 70, 10)]
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Sequence Length")
+    plt.xlabel("Audio Length (s)")
+    plt.legend(data.keys(), loc="upper left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
 
 
 def bach10_feature():
@@ -83,104 +353,110 @@ def bach10_feature():
         for f in os.scandir(BACH10_PATH)
         if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
     ]
-    for piece_path in bach10_piece_paths:
-        piece_basename = os.path.basename(piece_path)
-        print(f"Processing {piece_basename}")
-        fmin, fmax = get_nsgt_params()
-        full_perf_wave_path = os.path.join(piece_path, f"{piece_basename}.wav")
-        perf_wave_path = cut_wave(0, 15, full_perf_wave_path)
-        output_queue: ExtractedFeatureQueue = mp.Queue()
-        ap = AudioPreprocessor(
-            DEFAULT_SAMPLE_RATE,
-            2048,
-            8192,
-            perf_wave_path,
-            False,
-            0.0005,
-            "online",
-            "nsgt",
-            fmin,
-            fmax,
-            output_queue,
-        )
-        ap_proc = mp.Process(target=ap.start)
-        ap_proc.start()
-        features: List[ExtractedFeature] = []
-        while True:
-            feat = output_queue.get()
-            if feat is None:
-                break
-            features.append(feat)
-        ap_proc.join()
-        print(f"Features for {piece_basename} extracted successfully")
-        # convert to ndarray
-        features_ndarray = np.array(features)
-        output_plot_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, piece_basename)
-        os.makedirs(output_plot_dir, exist_ok=True)
-        output_plot_path = os.path.join(output_plot_dir, "features.pdf")
-        print(f"Plotting features for {piece_basename} to {output_plot_path}")
-        plot_cqt_to_file(
-            output_plot_path,
-            features_ndarray,
-            fmin,
-            2048,
-            DEFAULT_SAMPLE_RATE,
-            8,
-            5,
-        )
-        print(f"Finished plotting features for {piece_basename} to {output_plot_path}")
+    for cqt in ["nsgt", "librosa_pseudo"]:
+        for piece_path in bach10_piece_paths:
+            piece_basename = os.path.basename(piece_path)
+            print(f"Processing {piece_basename}")
+            fmin, fmax = get_nsgt_params()
+            full_perf_wave_path = os.path.join(piece_path, f"{piece_basename}.wav")
+            perf_wave_path = cut_wave(0, 15, full_perf_wave_path)
+            output_queue: ExtractedFeatureQueue = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                8192,
+                perf_wave_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                output_queue,
+            )
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            features: List[ExtractedFeature] = []
+            while True:
+                feat = output_queue.get()
+                if feat is None:
+                    break
+                features.append(feat)
+            ap_proc.join()
+            print(f"Features for {piece_basename} extracted successfully")
+            # convert to ndarray
+            features_ndarray = np.array(features)
+            output_plot_dir = os.path.join(
+                REPRO_RESULTS_PATH, repro_arg, cqt, piece_basename
+            )
+            os.makedirs(output_plot_dir, exist_ok=True)
+            output_plot_path = os.path.join(output_plot_dir, "features.pdf")
+            print(f"Plotting features for {piece_basename} to {output_plot_path}")
+            plot_cqt_to_file(
+                output_plot_path,
+                features_ndarray,
+                fmin,
+                2048,
+                DEFAULT_SAMPLE_RATE,
+                8,
+                5,
+            )
+            print(
+                f"Finished plotting features for {piece_basename} to {output_plot_path}"
+            )
 
 
 def bwv846_feature():
     repro_arg = "bwv846_feature"
     pieces = ["prelude", "fugue"]
-    for piece in pieces:
-        fmin, fmax = get_nsgt_params()
-        score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
-        score_wave_path = Synthesiser(score_midi_path, DEFAULT_SAMPLE_RATE).synthesise(
-            15
-        )
-        print(f"Synthesised to: {score_wave_path}")
-        output_queue: ExtractedFeatureQueue = mp.Queue()
-        ap = AudioPreprocessor(
-            DEFAULT_SAMPLE_RATE,
-            2048,
-            8192,
-            score_wave_path,
-            False,
-            0.0005,
-            "online",
-            "nsgt",
-            fmin,
-            fmax,
-            output_queue,
-        )
-        ap_proc = mp.Process(target=ap.start)
-        ap_proc.start()
-        features: List[ExtractedFeature] = []
-        while True:
-            feat = output_queue.get()
-            if feat is None:
-                break
-            features.append(feat)
-        ap_proc.join()
-        print(f"Features for {piece} extracted successfully")
-        # convert to ndarray
-        features_ndarray = np.array(features)
-        output_plot_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, piece)
-        os.makedirs(output_plot_dir, exist_ok=True)
-        output_plot_path = os.path.join(output_plot_dir, "features.pdf")
-        print(f"Plotting features for {piece} to {output_plot_path}")
-        plot_cqt_to_file(
-            output_plot_path,
-            features_ndarray,
-            fmin,
-            2048,
-            DEFAULT_SAMPLE_RATE,
-            8,
-            5,
-        )
-        print(f"Finished plotting features for {piece} to {output_plot_path}")
+    for cqt in ["nsgt", "librosa_pseudo"]:
+        for piece in pieces:
+            fmin, fmax = get_nsgt_params()
+            score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
+            score_wave_path = Synthesiser(
+                score_midi_path, DEFAULT_SAMPLE_RATE
+            ).synthesise(15)
+            print(f"Synthesised to: {score_wave_path}")
+            output_queue: ExtractedFeatureQueue = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                8192,
+                score_wave_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                output_queue,
+            )
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            features: List[ExtractedFeature] = []
+            while True:
+                feat = output_queue.get()
+                if feat is None:
+                    break
+                features.append(feat)
+            ap_proc.join()
+            print(f"Features for {piece} extracted successfully")
+            # convert to ndarray
+            features_ndarray = np.array(features)
+            output_plot_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt, piece)
+            os.makedirs(output_plot_dir, exist_ok=True)
+            output_plot_path = os.path.join(output_plot_dir, "features.pdf")
+            print(f"Plotting features for {piece} to {output_plot_path}")
+            plot_cqt_to_file(
+                output_plot_path,
+                features_ndarray,
+                fmin,
+                2048,
+                DEFAULT_SAMPLE_RATE,
+                8,
+                5,
+            )
+            print(f"Finished plotting features for {piece} to {output_plot_path}")
 
 
 def bwv846_align():
@@ -455,7 +731,7 @@ def _plot_precision_wrapper(repro_dict: Dict[str, Dict[str, str]], output_dir: s
 
     # now read in all the OverallResults
     # map from name to OverallResultsT
-    overall_results: Dict[str, Dict[str, Dict[str, float]]] = {}
+    overall_results: Dict[str, AggregatedResultsT] = {}
     for repro_dict_arg, cqts in repro_dict.items():
         for cqt, name in cqts.items():
             overall_results_path = os.path.join(
@@ -556,6 +832,9 @@ def playground():
 """
 
 func_map = {
+    # "cqt_frame_time": cqt_frame_time,
+    "cqt_time": cqt_time,
+    "dtw_time": dtw_time,
     "bwv846_feature": bwv846_feature,
     "bach10_feature": bach10_feature,
     "bwv846_align": bwv846_align,

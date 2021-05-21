@@ -32,6 +32,7 @@ jobs:
       matrix:
         repro-arg:
           [
+            "cqt_time",
             "bwv846_feature",
             "bach10_feature",
             "bwv846_align",
@@ -68,9 +69,6 @@ jobs:
     needs:
       - repro
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - uses: actions/checkout@v2
         with:
           submodules: recursive
@@ -111,9 +109,6 @@ jobs:
     needs:
       - repro
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
       - uses: actions/checkout@v2
         with:
           submodules: recursive

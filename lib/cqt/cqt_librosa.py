@@ -157,6 +157,26 @@ def slice_cqt_helper(
     return cqt
 
 
+def extract_slice_features_librosa_cqt(
+    audio_slice: np.ndarray,
+    hop_len: int,
+    fmin: float,
+    n_bins: int,
+    fs: int = DEFAULT_SAMPLE_RATE,
+) -> np.ndarray:
+    """
+    Extract features for an audio slice via librosa pseudo CQT.
+    """
+    return slice_cqt_helper(
+        librosa.cqt,
+        audio_slice,
+        hop_len,
+        fmin,
+        n_bins,
+        fs=fs,
+    )
+
+
 def extract_slice_features_librosa_pseudo_cqt(
     audio_slice: np.ndarray,
     hop_len: int,
@@ -233,6 +253,7 @@ class LibrosaSliceCQT(BaseCQT):
         f_map: Dict[
             LibrosaCQTs, Callable[[np.ndarray, int, float, int, int], ExtractedFeature]
         ] = {
+            "librosa": extract_slice_features_librosa_cqt,
             "librosa_pseudo": extract_slice_features_librosa_pseudo_cqt,
             "librosa_hybrid": extract_slice_features_librosa_hybrid_cqt,
         }
