@@ -190,7 +190,7 @@ def cqt_time():
     output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
     os.makedirs(output_dir, exist_ok=True)
     results: Dict[str, Dict[int, float]] = {}
-    for cqt in ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]:
+    for cqt in ["nsgt", "librosa_pseudo"]:
         print("=============================================")
         print(f"Running with cqt: {cqt}")
         print("=============================================")
@@ -232,10 +232,8 @@ def cqt_time():
         import matplotlib.pyplot as plt
 
     name_mapping = {
-        "librosa": "CQT",
         "nsgt": "NSGT-CQT",
         "librosa_pseudo": "CQT (Pseudo)",
-        "librosa_hybrid": "CQT (Hybrid)",
     }
 
     data: Dict[str, List[Tuple[int, float]]] = {
@@ -355,7 +353,7 @@ def bach10_feature():
         for f in os.scandir(BACH10_PATH)
         if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
     ]
-    for cqt in ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]:
+    for cqt in ["nsgt", "librosa_pseudo"]:
         for piece_path in bach10_piece_paths:
             piece_basename = os.path.basename(piece_path)
             print(f"Processing {piece_basename}")
@@ -411,7 +409,7 @@ def bach10_feature():
 def bwv846_feature():
     repro_arg = "bwv846_feature"
     pieces = ["prelude", "fugue"]
-    for cqt in ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]:
+    for cqt in ["nsgt", "librosa_pseudo"]:
         for piece in pieces:
             fmin, fmax = get_nsgt_params()
             score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
@@ -520,7 +518,7 @@ def bwv846_align():
 def bwv846_follow():
     repro_arg = "bwv846_follow"
     pieces = ["prelude", "fugue"]
-    cqts = ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]
+    cqts = ["nsgt", "librosa_pseudo"]
     for cqt in cqts:
         overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
@@ -645,7 +643,7 @@ def bach10_follow():
         for f in os.scandir(BACH10_PATH)
         if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
     ]
-    cqts = ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]
+    cqts = ["nsgt", "librosa_pseudo"]
     for cqt in cqts:
         overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
@@ -760,10 +758,8 @@ def bach10_plot_precision():
             "nsgt": "NSGT-CQT Offline",
         },
         "bach10_follow": {
-            "librosa_hybrid": "CQT (Hybrid) Online",
             "librosa_pseudo": "CQT (Pseudo) Online",
             "nsgt": "NSGT-CQT Online",
-            "librosa": "CQT Online",
         },
     }
     _plot_precision_wrapper(repro_dict, output_dir)
@@ -779,10 +775,8 @@ def bwv846_plot_precision():
             "nsgt": "NSGT-CQT Offline",
         },
         "bwv846_follow": {
-            "librosa_hybrid": "CQT (Hybrid) Online",
             "librosa_pseudo": "CQT (Pseudo) Online",
             "nsgt": "NSGT-CQT Online",
-            "librosa": "CQT Online",
         },
     }
     _plot_precision_wrapper(repro_dict, output_dir)
