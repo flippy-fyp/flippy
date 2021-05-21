@@ -1,5 +1,7 @@
+from lib.mputils import write_list_to_queue
+from lib.components.follower import Follower
 import time
-import librosa
+import statistics
 from flippy_quantitative_testbench.utils.match import (
     MatchResult,
     safe_div,
@@ -248,6 +250,92 @@ def cqt_time():
         [x, y] = zip(*scores)
         plt.plot(x, y)
     plt.ylabel("Time Taken (s)")
+    plt.xlabel("Audio Length (s)")
+    plt.legend(data.keys(), loc="upper left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
+
+
+def dtw_time():
+    repro_arg = "dtw_time"
+    np.random.seed(42)
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    full_results: Dict[str, Dict[int, List[float]]] = {}
+    seq_len_range = range(100, 3001, 100)
+    for seq_len in seq_len_range:
+        for i in range(1, 4):
+            print("=============================================")
+            print(f"({i}/3): Running with seq_len: {seq_len}")
+            print("=============================================")
+            S = np.random.rand(seq_len, 50)
+            P = np.random.rand(seq_len, 50)
+            for dtw in ["classical", "oltw"]:
+                print(f"=== DTW: {dtw} ===")
+                output_queue = mp.Queue()
+                P_queue = mp.Queue()
+                write_list_to_queue(P, P_queue)
+                follower = Follower(
+                    "offline", dtw, 500, 3, output_queue, P_queue, S, 1.0, 1.0, 1.0
+                )
+
+                start_time = time.perf_counter()
+                follower_proc = mp.Process(target=follower.start)
+                follower_proc.start()
+                while True:
+                    x = output_queue.get()
+                    if x is None:
+                        break
+                follower_proc.join()
+
+                end_time = time.perf_counter()
+                time_taken = end_time - start_time
+                print(f"=== TIME TAKEN: {time_taken}s ===")
+
+                if not dtw in full_results:
+                    full_results[dtw] = {}
+                if not seq_len in full_results[dtw]:
+                    full_results[dtw][seq_len] = []
+                full_results[dtw][seq_len].append(time_taken)
+    averaged_results: Dict[str, Dict[int, float]] = {
+        dtw: {seq_len: statistics.mean(times) for seq_len, times in res.items()}
+        for dtw, res in full_results.items()
+    }
+    full_results_path = os.path.join(output_dir, "full_results.json")
+    with open(full_results_path, "w+") as f:
+        results_str = json.dumps(full_results, indent=4)
+        f.write(results_str)
+
+    averaged_results_path = os.path.join(output_dir, "averaged_results.json")
+    with open(averaged_results_path, "w+") as f:
+        results_str = json.dumps(averaged_results, indent=4)
+        f.write(results_str)
+
+    import matplotlib.pyplot as plt
+
+    name_mapping = {
+        "oltw": "OLTW",
+        "classical": "Classical DTW",
+    }
+
+    data: Dict[str, List[Tuple[int, float]]] = {
+        name_mapping[cqt]: [(x, y) for x, y in res.items()]
+        for cqt, res in averaged_results.items()
+    }
+
+    # data["Real-time boundary"] = [(x, float(x)) for x in range(10, 70, 10)]
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Sequence Length")
     plt.xlabel("Audio Length (s)")
     plt.legend(data.keys(), loc="upper left")
     plt.tight_layout()
@@ -752,6 +840,7 @@ def playground():
 func_map = {
     # "cqt_frame_time": cqt_frame_time,
     "cqt_time": cqt_time,
+    "dtw_time": dtw_time,
     "bwv846_feature": bwv846_feature,
     "bach10_feature": bach10_feature,
     "bwv846_align": bwv846_align,
