@@ -1,3 +1,5 @@
+import time
+import librosa
 from flippy_quantitative_testbench.utils.match import (
     MatchResult,
     safe_div,
@@ -25,7 +27,7 @@ from consts import (
 )
 import os
 import multiprocessing as mp
-from typing import Any, Dict, List, Tuple, TypedDict
+from typing import Any, Dict, List, Tuple, TypeVar, TypedDict, Union
 import numpy as np
 import sys
 import re
@@ -45,7 +47,7 @@ class AggregatedResult(TypedDict):
 AggregatedResultsT = Dict[MisalignThresT, AggregatedResult]
 
 
-def dict_mean(dict_list: Dict[Any, Any]) -> Dict[Any, Any]:
+def _dict_mean(dict_list: List[Dict[str, Union[int, float]]]) -> Dict[str, float]:
     mean_dict = {}
     if len(dict_list) > 0:
         for key in dict_list[0].keys():
@@ -65,11 +67,12 @@ def _write_overall_results(overall_results: OverallResultsT, output_base_dir: st
 
         align_num = total_num - miss_num - misalign_num
         total_precision_rate = safe_div(float(align_num), total_num)
+        piecewise_results = _dict_mean(results)
 
         total_dict[thres] = {
             "piecewise_precision_rate": piecewise_precision_rate,
             "total_precision_rate": total_precision_rate,
-            "piecewise_results": dict_mean(results),
+            "piecewise_results": piecewise_results,
         }
 
     total_output_path = os.path.join(output_base_dir, "results.json")
@@ -99,6 +102,54 @@ def _read_overall_results(overall_results_path: str) -> AggregatedResultsT:
     return x
 
 
+def cqt_time():
+    repro_arg = "cqt_time"
+    piece_path = os.path.join(BACH10_PATH, "01-AchGottundHerr", "01-AchGottundHerr.wav")
+    fmin, fmax = get_nsgt_params()
+    output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_base_dir, exist_ok=True)
+    results: Dict[str, Dict[int, float]] = {}
+    for cqt in ["nsgt", "librosa_pseudo", "librosa"]:
+        print("=============================================")
+        print(f"Running with cqt: {cqt}")
+        print("=============================================")
+        results[cqt] = {}
+        for piece_len_s in range(10, 70, 10):
+            print(f"=== DURATION: {piece_len_s} ===")
+            q = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                8192,
+                piece_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                q,
+                False,
+                float(piece_len_s),
+            )
+            start_time = time.perf_counter()
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            while True:
+                x = q.get()
+                if x is None:
+                    break
+            ap_proc.join()
+            end_time = time.perf_counter()
+            time_taken = end_time - start_time
+            print(f"=== TIME TAKEN: {time_taken}s ===")
+            results[cqt][piece_len_s] = time_taken
+    results_path = os.path.join(output_base_dir, "results.json")
+    with open(results_path, "w+") as f:
+        results_str = json.dumps(results, indent=4)
+        f.write(results_str)
+
+
 def bach10_feature():
     repro_arg = "bach10_feature"
     bach10_piece_paths = [
@@ -106,104 +157,110 @@ def bach10_feature():
         for f in os.scandir(BACH10_PATH)
         if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
     ]
-    for piece_path in bach10_piece_paths:
-        piece_basename = os.path.basename(piece_path)
-        print(f"Processing {piece_basename}")
-        fmin, fmax = get_nsgt_params()
-        full_perf_wave_path = os.path.join(piece_path, f"{piece_basename}.wav")
-        perf_wave_path = cut_wave(0, 15, full_perf_wave_path)
-        output_queue: ExtractedFeatureQueue = mp.Queue()
-        ap = AudioPreprocessor(
-            DEFAULT_SAMPLE_RATE,
-            2048,
-            8192,
-            perf_wave_path,
-            False,
-            0.0005,
-            "online",
-            "nsgt",
-            fmin,
-            fmax,
-            output_queue,
-        )
-        ap_proc = mp.Process(target=ap.start)
-        ap_proc.start()
-        features: List[ExtractedFeature] = []
-        while True:
-            feat = output_queue.get()
-            if feat is None:
-                break
-            features.append(feat)
-        ap_proc.join()
-        print(f"Features for {piece_basename} extracted successfully")
-        # convert to ndarray
-        features_ndarray = np.array(features)
-        output_plot_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, piece_basename)
-        os.makedirs(output_plot_dir, exist_ok=True)
-        output_plot_path = os.path.join(output_plot_dir, "features.pdf")
-        print(f"Plotting features for {piece_basename} to {output_plot_path}")
-        plot_cqt_to_file(
-            output_plot_path,
-            features_ndarray,
-            fmin,
-            2048,
-            DEFAULT_SAMPLE_RATE,
-            8,
-            5,
-        )
-        print(f"Finished plotting features for {piece_basename} to {output_plot_path}")
+    for cqt in ["nsgt", "librosa_pseudo", "librosa"]:
+        for piece_path in bach10_piece_paths:
+            piece_basename = os.path.basename(piece_path)
+            print(f"Processing {piece_basename}")
+            fmin, fmax = get_nsgt_params()
+            full_perf_wave_path = os.path.join(piece_path, f"{piece_basename}.wav")
+            perf_wave_path = cut_wave(0, 15, full_perf_wave_path)
+            output_queue: ExtractedFeatureQueue = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                8192,
+                perf_wave_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                output_queue,
+            )
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            features: List[ExtractedFeature] = []
+            while True:
+                feat = output_queue.get()
+                if feat is None:
+                    break
+                features.append(feat)
+            ap_proc.join()
+            print(f"Features for {piece_basename} extracted successfully")
+            # convert to ndarray
+            features_ndarray = np.array(features)
+            output_plot_dir = os.path.join(
+                REPRO_RESULTS_PATH, repro_arg, cqt, piece_basename
+            )
+            os.makedirs(output_plot_dir, exist_ok=True)
+            output_plot_path = os.path.join(output_plot_dir, "features.pdf")
+            print(f"Plotting features for {piece_basename} to {output_plot_path}")
+            plot_cqt_to_file(
+                output_plot_path,
+                features_ndarray,
+                fmin,
+                2048,
+                DEFAULT_SAMPLE_RATE,
+                8,
+                5,
+            )
+            print(
+                f"Finished plotting features for {piece_basename} to {output_plot_path}"
+            )
 
 
 def bwv846_feature():
     repro_arg = "bwv846_feature"
     pieces = ["prelude", "fugue"]
-    for piece in pieces:
-        fmin, fmax = get_nsgt_params()
-        score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
-        score_wave_path = Synthesiser(score_midi_path, DEFAULT_SAMPLE_RATE).synthesise(
-            15
-        )
-        print(f"Synthesised to: {score_wave_path}")
-        output_queue: ExtractedFeatureQueue = mp.Queue()
-        ap = AudioPreprocessor(
-            DEFAULT_SAMPLE_RATE,
-            2048,
-            8192,
-            score_wave_path,
-            False,
-            0.0005,
-            "online",
-            "nsgt",
-            fmin,
-            fmax,
-            output_queue,
-        )
-        ap_proc = mp.Process(target=ap.start)
-        ap_proc.start()
-        features: List[ExtractedFeature] = []
-        while True:
-            feat = output_queue.get()
-            if feat is None:
-                break
-            features.append(feat)
-        ap_proc.join()
-        print(f"Features for {piece} extracted successfully")
-        # convert to ndarray
-        features_ndarray = np.array(features)
-        output_plot_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, piece)
-        os.makedirs(output_plot_dir, exist_ok=True)
-        output_plot_path = os.path.join(output_plot_dir, "features.pdf")
-        print(f"Plotting features for {piece} to {output_plot_path}")
-        plot_cqt_to_file(
-            output_plot_path,
-            features_ndarray,
-            fmin,
-            2048,
-            DEFAULT_SAMPLE_RATE,
-            8,
-            5,
-        )
-        print(f"Finished plotting features for {piece} to {output_plot_path}")
+    for cqt in ["nsgt", "librosa_pseudo", "librosa"]:
+        for piece in pieces:
+            fmin, fmax = get_nsgt_params()
+            score_midi_path = os.path.join(BWV846_PATH, piece, f"{piece}.r.mid")
+            score_wave_path = Synthesiser(
+                score_midi_path, DEFAULT_SAMPLE_RATE
+            ).synthesise(15)
+            print(f"Synthesised to: {score_wave_path}")
+            output_queue: ExtractedFeatureQueue = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                8192,
+                score_wave_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                output_queue,
+            )
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            features: List[ExtractedFeature] = []
+            while True:
+                feat = output_queue.get()
+                if feat is None:
+                    break
+                features.append(feat)
+            ap_proc.join()
+            print(f"Features for {piece} extracted successfully")
+            # convert to ndarray
+            features_ndarray = np.array(features)
+            output_plot_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt, piece)
+            os.makedirs(output_plot_dir, exist_ok=True)
+            output_plot_path = os.path.join(output_plot_dir, "features.pdf")
+            print(f"Plotting features for {piece} to {output_plot_path}")
+            plot_cqt_to_file(
+                output_plot_path,
+                features_ndarray,
+                fmin,
+                2048,
+                DEFAULT_SAMPLE_RATE,
+                8,
+                5,
+            )
+            print(f"Finished plotting features for {piece} to {output_plot_path}")
 
 
 def bwv846_align():
@@ -579,6 +636,7 @@ def playground():
 """
 
 func_map = {
+    "cqt_time": cqt_time,
     "bwv846_feature": bwv846_feature,
     "bach10_feature": bach10_feature,
     "bwv846_align": bwv846_align,

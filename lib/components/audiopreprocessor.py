@@ -25,6 +25,7 @@ class Slicer:
         slice_queue: ExtractedFeatureQueue,
         simulate_performance: bool = True,
         sleep_compensation: float = 0.0005,
+        duration: Optional[float] = None,
     ):
         self.wave_path = wave_path
         self.hop_length = hop_length
@@ -33,6 +34,7 @@ class Slicer:
         self.slice_queue = slice_queue
         self.simulate_performance = simulate_performance
         self.sleep_compensation = sleep_compensation
+        self.duration = duration
         self.__log("Initialised successfully")
 
     def start(self):
@@ -44,6 +46,7 @@ class Slicer:
             self.hop_length,
             mono=True,
             fill_value=0,
+            duration=self.duration,
         )
 
         # before starting, sleep for frame_length if performance
@@ -111,6 +114,9 @@ class FeatureExtractor:
                 ),
             },
             "online": {
+                "librosa": lambda: LibrosaSliceCQT(
+                    "librosa", hop_len, fmin, n_bins, sample_rate
+                ),
                 "librosa_hybrid": lambda: LibrosaSliceCQT(
                     "librosa_hybrid", hop_len, fmin, n_bins, sample_rate
                 ),
@@ -182,6 +188,8 @@ class AudioPreprocessor:
         # output features
         output_queue: ExtractedFeatureQueue,
         nsgt_multithreading: bool = False,
+        # testing
+        duration: Optional[float] = None,
     ):
         self.sample_rate = sample_rate
         self.wave_path = wave_path
@@ -198,6 +206,8 @@ class AudioPreprocessor:
         self.output_queue = output_queue
 
         self.nsgt_multithreading = nsgt_multithreading
+
+        self.duration = duration
 
         self.__log("Initialised successfully")
 
@@ -216,11 +226,14 @@ class AudioPreprocessor:
                 slice_queue,
                 self.simulate_performance,
                 self.sleep_compensation,
+                self.duration,
             )
             online_slicer_proc = mp.Process(target=slicer.start)
             online_slicer_proc.start()
         elif self.mode == "offline":
-            audio, _ = librosa.load(self.wave_path, sr=self.sample_rate, mono=True)
+            audio, _ = librosa.load(
+                self.wave_path, sr=self.sample_rate, mono=True, duration=self.duration
+            )
             slice_queue.put(audio)
             slice_queue.put(None)  # end
         else:

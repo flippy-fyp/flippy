@@ -65,6 +65,13 @@ To run everything:
 python repro.py
 ```
 
+### `cqt_time`
+```bash
+python repro.py cqt_time
+```
+
+Plots the time taken to extract CQT featuers on different lengths of audio using the `librosa`, `nsgt` and `librosa_pseudo` techniques.
+
 ### `bwv846_feature`
 ```bash
 python repro.py bwv846_feature
