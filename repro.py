@@ -1,4 +1,5 @@
 from flippy_quantitative_testbench.utils.match import (
+    MatchResult,
     safe_div,
 )
 from lib.runner import Runner
@@ -24,16 +25,36 @@ from consts import (
 )
 import os
 import multiprocessing as mp
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, TypedDict
 import numpy as np
 import sys
 import re
 from flippy_quantitative_testbench.utils.bench import bench
 import json
 
+MisalignThresT = int
+
+
+class AggregatedResult(TypedDict):
+    # piecewise: mean across pieces
+    piecewise_precision_rate: float
+    total_precision_rate: float
+    piecewise_results: MatchResult
+
+
+AggregatedResultsT = Dict[MisalignThresT, AggregatedResult]
+
+
+def dict_mean(dict_list: Dict[Any, Any]) -> Dict[Any, Any]:
+    mean_dict = {}
+    if len(dict_list) > 0:
+        for key in dict_list[0].keys():
+            mean_dict[key] = sum(d[key] for d in dict_list) / len(dict_list)
+    return mean_dict
+
 
 def _write_overall_results(overall_results: OverallResultsT, output_base_dir: str):
-    total_dict: Dict[int, Dict[str, float]] = {}
+    total_dict: AggregatedResultsT = {}
     for thres, results in overall_results.items():
         precision_rates = list(map(lambda x: x["precision_rate"], results))
         piecewise_precision_rate = sum(precision_rates) / len(precision_rates)
@@ -48,7 +69,9 @@ def _write_overall_results(overall_results: OverallResultsT, output_base_dir: st
         total_dict[thres] = {
             "piecewise_precision_rate": piecewise_precision_rate,
             "total_precision_rate": total_precision_rate,
+            "piecewise_results": dict_mean(results),
         }
+
     total_output_path = os.path.join(output_base_dir, "results.json")
     with open(total_output_path, "w+") as f:
         total_dict_str = json.dumps(total_dict, indent=4)
@@ -68,7 +91,7 @@ def _get_and_write_align_results(
     return align_results
 
 
-def _read_overall_results(overall_results_path: str) -> Dict[str, Dict[str, float]]:
+def _read_overall_results(overall_results_path: str) -> AggregatedResultsT:
     f = open(overall_results_path)
     t = f.read().strip()
     f.close()
@@ -455,7 +478,7 @@ def _plot_precision_wrapper(repro_dict: Dict[str, Dict[str, str]], output_dir: s
 
     # now read in all the OverallResults
     # map from name to OverallResultsT
-    overall_results: Dict[str, Dict[str, Dict[str, float]]] = {}
+    overall_results: Dict[str, AggregatedResultsT] = {}
     for repro_dict_arg, cqts in repro_dict.items():
         for cqt, name in cqts.items():
             overall_results_path = os.path.join(
