@@ -72,9 +72,9 @@ python repro.py cqt_time
 
 Plots the time taken to extract CQT featuers on different lengths of audio using the `librosa`, `nsgt` and `librosa_pseudo` and `librosa_hybrid` techniques.
 
-### `oltw_time`
+### `dtw_time`
 ```bash
-python repro.py oltw_time
+python repro.py dtw_time
 ```
 
 Plots the time taken to align sequences of different lengths using the `oltw` and `classical` DTW methods.
