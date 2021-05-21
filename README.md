@@ -70,7 +70,7 @@ python repro.py
 python repro.py cqt_time
 ```
 
-Plots the time taken to extract CQT featuers on different lengths of audio using the `librosa`, `nsgt` and `librosa_pseudo` techniques.
+Plots the time taken to extract CQT featuers on different lengths of audio using the `librosa`, `nsgt` and `librosa_pseudo` and `librosa_hybrid` techniques.
 
 ### `bwv846_feature`
 ```bash

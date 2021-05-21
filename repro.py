@@ -102,6 +102,85 @@ def _read_overall_results(overall_results_path: str) -> AggregatedResultsT:
     return x
 
 
+"""
+def cqt_frame_time():
+    repro_arg = "cqt_frame_time"
+    piece_path = os.path.join(BACH10_PATH, "01-AchGottundHerr", "01-AchGottundHerr.wav")
+    fmin, fmax = get_nsgt_params()
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
+    results: Dict[str, Dict[int, float]] = {}
+    for cqt in ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]:
+        print("=============================================")
+        print(f"Running with cqt: {cqt}")
+        print("=============================================")
+        results[cqt] = {}
+        for frame_len in [8192, 16384, 32768, 65536]:
+            print(f"=== FRAME_LEN: {frame_len} ===")
+            q = mp.Queue()
+            ap = AudioPreprocessor(
+                DEFAULT_SAMPLE_RATE,
+                2048,
+                frame_len,
+                piece_path,
+                False,
+                0.0005,
+                "online",
+                cqt,
+                fmin,
+                fmax,
+                q,
+                False,
+                10,
+            )
+            start_time = time.perf_counter()
+            ap_proc = mp.Process(target=ap.start)
+            ap_proc.start()
+            while True:
+                x = q.get()
+                if x is None:
+                    break
+            ap_proc.join()
+            end_time = time.perf_counter()
+            time_taken = end_time - start_time
+            print(f"=== TIME TAKEN: {time_taken}s ===")
+            results[cqt][frame_len] = time_taken
+    results_path = os.path.join(output_dir, "results.json")
+    with open(results_path, "w+") as f:
+        results_str = json.dumps(results, indent=4)
+        f.write(results_str)
+        import matplotlib.pyplot as plt
+
+    name_mapping = {
+        "librosa": "CQT",
+        "nsgt": "NSGT-CQT",
+        "librosa_pseudo": "CQT (Pseudo)",
+        "librosa_hybrid": "CQT (Hybrid)",
+    }
+
+    data: Dict[str, List[Tuple[int, float]]] = {
+        name_mapping[cqt]: [(x, y) for x, y in res.items()]
+        for cqt, res in results.items()
+    }
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Time Taken (s)")
+    plt.xlabel("Frame Length")
+    plt.legend(data.keys(), loc="upper left")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
+"""
+
+
 def cqt_time():
     repro_arg = "cqt_time"
     piece_path = os.path.join(BACH10_PATH, "01-AchGottundHerr", "01-AchGottundHerr.wav")
@@ -162,13 +241,15 @@ def cqt_time():
         for cqt, res in results.items()
     }
 
+    data["Real-time boundary"] = [(x, float(x)) for x in range(10, 70, 10)]
+
     plt.figure()
     for name, scores in data.items():
         [x, y] = zip(*scores)
         plt.plot(x, y)
     plt.ylabel("Time Taken (s)")
     plt.xlabel("Audio Length (s)")
-    plt.legend(data.keys(), loc="lower right")
+    plt.legend(data.keys(), loc="upper left")
     plt.tight_layout()
     # Show the major grid lines with dark grey lines
     plt.grid(b=True, which="major", color="#666666", linestyle="-")
@@ -669,6 +750,7 @@ def playground():
 """
 
 func_map = {
+    # "cqt_frame_time": cqt_frame_time,
     "cqt_time": cqt_time,
     "bwv846_feature": bwv846_feature,
     "bach10_feature": bach10_feature,
