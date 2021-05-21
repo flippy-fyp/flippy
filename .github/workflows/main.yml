@@ -33,6 +33,7 @@ jobs:
         repro-arg:
           [
             "cqt_time",
+            "dtw_time",
             "bwv846_feature",
             "bach10_feature",
             "bwv846_align",

@@ -266,7 +266,7 @@ def dtw_time():
     output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
     os.makedirs(output_dir, exist_ok=True)
     full_results: Dict[str, Dict[int, List[float]]] = {}
-    seq_len_range = range(100, 3001, 100)
+    seq_len_range = range(100, 5001, 100)
     for seq_len in seq_len_range:
         for i in range(1, 4):
             print("=============================================")
@@ -333,8 +333,8 @@ def dtw_time():
     for name, scores in data.items():
         [x, y] = zip(*scores)
         plt.plot(x, y)
-    plt.ylabel("Sequence Length")
-    plt.xlabel("Audio Length (s)")
+    plt.ylabel("Time Taken (s)")
+    plt.xlabel("Sequence Length")
     plt.legend(data.keys(), loc="upper left")
     plt.tight_layout()
     # Show the major grid lines with dark grey lines
