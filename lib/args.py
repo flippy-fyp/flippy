@@ -12,7 +12,7 @@ class Arguments(Tap):
     # fmt: off
     mode: ModeType = "online"  # Mode: `offline` or `online`.
     dtw: DTWType = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
-    cqt: CQTType = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`. `librosa` is only available for the `offline` mode.
+    cqt: CQTType = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`.
     max_run_count: int = 3  # `MaxRunCount` for `online` mode with `oltw` DTW.
     search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
@@ -81,10 +81,6 @@ class Arguments(Tap):
         if self.mode == "online":
             if self.dtw != "oltw":
                 self.__log_and_exit("For `online` mode only `oltw` dtw is accepted")
-            if self.cqt not in ("nsgt", "librosa_pseudo", "librosa_hybrid"):
-                self.__log_and_exit(
-                    "For `online` mode only `nsgt`, `librosa_pseudo` or `librosa_hybrid` cqt is accepted"
-                )
 
         if not path.isfile(self.perf_wave_path):
             self.__log_and_exit(

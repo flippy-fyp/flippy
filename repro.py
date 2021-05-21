@@ -322,7 +322,7 @@ def bwv846_align():
 def bwv846_follow():
     repro_arg = "bwv846_follow"
     pieces = ["prelude", "fugue"]
-    cqts = ["nsgt", "librosa_pseudo"]
+    cqts = ["nsgt", "librosa_pseudo", "librosa"]
     for cqt in cqts:
         overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
@@ -447,7 +447,7 @@ def bach10_follow():
         for f in os.scandir(BACH10_PATH)
         if f.is_dir() and bool(re.search(r"^[0-9]{2}-\w+$", os.path.basename(f.path)))
     ]
-    cqts = ["nsgt", "librosa_pseudo"]
+    cqts = ["nsgt", "librosa_pseudo", "librosa"]
     for cqt in cqts:
         overall_results: OverallResultsT = {}
         output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt)
@@ -581,6 +581,7 @@ def bwv846_plot_precision():
         "bwv846_follow": {
             "librosa_pseudo": "CQT (Pseudo) Online",
             "nsgt": "NSGT-CQT Online",
+            "librosa": "CQT Online",
         },
     }
     _plot_precision_wrapper(repro_dict, output_dir)
