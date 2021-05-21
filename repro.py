@@ -106,8 +106,8 @@ def cqt_time():
     repro_arg = "cqt_time"
     piece_path = os.path.join(BACH10_PATH, "01-AchGottundHerr", "01-AchGottundHerr.wav")
     fmin, fmax = get_nsgt_params()
-    output_base_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
-    os.makedirs(output_base_dir, exist_ok=True)
+    output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
+    os.makedirs(output_dir, exist_ok=True)
     results: Dict[str, Dict[int, float]] = {}
     for cqt in ["nsgt", "librosa_pseudo", "librosa_hybrid", "librosa"]:
         print("=============================================")
@@ -144,10 +144,39 @@ def cqt_time():
             time_taken = end_time - start_time
             print(f"=== TIME TAKEN: {time_taken}s ===")
             results[cqt][piece_len_s] = time_taken
-    results_path = os.path.join(output_base_dir, "results.json")
+    results_path = os.path.join(output_dir, "results.json")
     with open(results_path, "w+") as f:
         results_str = json.dumps(results, indent=4)
         f.write(results_str)
+        import matplotlib.pyplot as plt
+
+    name_mapping = {
+        "librosa": "CQT",
+        "nsgt": "NSGT-CQT",
+        "librosa_pseudo": "CQT (Pseudo)",
+        "librosa_hybrid": "CQT (Hybrid)",
+    }
+
+    data: Dict[str, List[Tuple[int, float]]] = {
+        name_mapping[cqt]: [(x, y) for x, y in res.items()]
+        for cqt, res in results.items()
+    }
+
+    plt.figure()
+    for name, scores in data.items():
+        [x, y] = zip(*scores)
+        plt.plot(x, y)
+    plt.ylabel("Time Taken (s)")
+    plt.xlabel("Audio Length (s)")
+    plt.legend(data.keys(), loc="lower right")
+    plt.tight_layout()
+    # Show the major grid lines with dark grey lines
+    plt.grid(b=True, which="major", color="#666666", linestyle="-")
+
+    # Show the minor grid lines with very faint and almost transparent grey lines
+    plt.minorticks_on()
+    plt.grid(b=True, which="minor", color="#999999", linestyle="-", alpha=0.2)
+    plt.savefig(os.path.join(output_dir, "output.pdf"))
 
 
 def bach10_feature():
