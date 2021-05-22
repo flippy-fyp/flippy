@@ -169,7 +169,7 @@ class OLTW:
             to_add = required_len - self.P.shape[0]
             self.D = np.append(
                 self.D,
-                np.ones((to_add, self.S[0].shape[0]), dtype=np.float64) * np.inf,
+                np.ones((to_add, len(self.S)), dtype=np.float64) * np.inf,
                 axis=0,
             )
         if (i, j) == (0, 0):
