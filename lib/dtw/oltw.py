@@ -43,7 +43,8 @@ class OLTW:
         self.C = search_window
         # Preallocate D to a square self.S
         self.D = np.ones((len(self.S), len(self.S)), dtype=np.float64) * np.inf
-        self.P = np.zeros((0, self.S[0].shape[0]), dtype=np.float64)
+        # Preallocate P
+        self.P = np.zeros((self.S[0].shape[0], self.S[0].shape[0]), dtype=np.float64)
         self.w_a = w_a
         self.w_b = w_b
         self.w_c = w_c
@@ -71,7 +72,7 @@ class OLTW:
         if p_i is None:
             self.follower_output_queue.put(None)
             return
-        self.P = np.vstack([self.P, p_i])
+        self.__receive_p_i(i, p_i)
         s_j = self.S[j]
 
         ### Step 3
@@ -97,7 +98,7 @@ class OLTW:
                 if p_i is None:
                     self.follower_output_queue.put(None)
                     return
-                self.P = np.vstack([self.P, p_i])
+                self.__receive_p_i(i, p_i)
                 # compute required D elements
                 for J in range(max(0, j - self.C + 1), j + 1):
                     s_J = self.S[J]
@@ -163,9 +164,14 @@ class OLTW:
         """
         at (i, j) and cost d assign to self.D
         """
-        # print(i, j, d)
-        while i >= self.D.shape[0]:
-            self.D = np.vstack([self.D, np.ones(len(self.S)) * np.inf])
+        if i >= self.D.shape[0]:
+            required_len = int(i * 1.5)  # 1.5x leeway
+            to_add = required_len - self.P.shape[0]
+            self.D = np.append(
+                self.D,
+                np.ones((to_add, self.S[0].shape[0]), dtype=np.float64) * np.inf,
+                axis=0,
+            )
         if (i, j) == (0, 0):
             self.D[i][j] = d
         else:
@@ -184,6 +190,15 @@ class OLTW:
             return np.float64(np.inf)
 
         return self.D[i][j]
+
+    def __receive_p_i(self, i: int, p_i: np.ndarray):
+        if i >= self.P.shape[0]:
+            required_len = int(i * 1.5)  # 1.5x leeway
+            to_add = required_len - self.P.shape[0]
+            self.P = np.append(
+                self.P, np.zeros((to_add, self.S[0].shape[0]), dtype=np.float64), axis=0
+            )
+        self.P[i] = p_i
 
     def __log(self, msg: str):
         eprint(f"[{self.__class__.__name__}] {msg}")
