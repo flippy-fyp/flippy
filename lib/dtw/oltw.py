@@ -41,7 +41,8 @@ class OLTW:
         self.MAX_RUN_COUNT = max_run_count
         self.run_count: int = 1
         self.C = search_window
-        self.D = np.ones((0, len(self.S)), dtype=np.float64) * np.inf
+        # Preallocate D to a square self.S
+        self.D = np.ones((len(self.S), len(self.S)), dtype=np.float64) * np.inf
         self.P = np.zeros((0, self.S[0].shape[0]), dtype=np.float64)
         self.w_a = w_a
         self.w_b = w_b
