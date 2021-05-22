@@ -266,7 +266,7 @@ def dtw_time():
     output_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg)
     os.makedirs(output_dir, exist_ok=True)
     full_results: Dict[str, Dict[int, List[float]]] = {}
-    seq_len_range = range(100, 3001, 100)
+    seq_len_range = range(100, 1001, 100)
     for seq_len in seq_len_range:
         for i in range(1, 4):
             print("=============================================")
