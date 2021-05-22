@@ -134,7 +134,7 @@ class OLTW:
                 i_prime, j_prime = (curr_i, j)
                 min_D = self.D[i_prime][j_prime]
             curr_i -= 1
-        curr_j = j
+        curr_j = j - 1
         while curr_j >= 0 and curr_j > (j - self.C):
             if self.D[i][curr_j] < min_D:
                 i_prime, j_prime = (i, curr_j)
