@@ -548,8 +548,6 @@ def bwv846_follow():
                     "--backend_backtrack",
                     "--w_a",
                     "0.5",
-                    "--search_window",
-                    "500",
                 ]
             )
 
@@ -674,8 +672,6 @@ def bach10_follow():
                     "--backend_backtrack",
                     "--w_a",
                     "0.5",
-                    "--search_window",
-                    "500",
                 ]
             )
 
