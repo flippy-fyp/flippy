@@ -492,6 +492,8 @@ def bwv846_align():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
+                    "--fmin",
+                    "27.5",
                 ]
             )
 
@@ -548,6 +550,8 @@ def bwv846_follow():
                     "--backend_backtrack",
                     "--w_a",
                     "0.5",
+                    "--fmin",
+                    "27.5",
                 ]
             )
 
@@ -611,6 +615,8 @@ def bach10_align():
                     perf_wave_path,
                     "--backend_output",
                     output_align_path,
+                    "--fmin",
+                    "27.5",
                 ]
             )
 
@@ -672,6 +678,8 @@ def bach10_follow():
                     "--backend_backtrack",
                     "--w_a",
                     "0.5",
+                    "--fmin",
+                    "27.5",
                 ]
             )
 
