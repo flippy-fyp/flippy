@@ -14,7 +14,7 @@ class Arguments(Tap):
     dtw: DTWType = "oltw"  # DTW Algo: `classical` or `oltw`. `classical` is only available for the `offline` mode.
     cqt: CQTType = "nsgt"  # CQT Algo: `nsgt`, `librosa_pseudo`, `librosa_hybrid` or `librosa`.
     max_run_count: int = 3  # `MaxRunCount` for `online` mode with `oltw` DTW.
-    search_window: int = 250  # `SearchWindow` for `online` mode with `oltw` DTW.
+    search_window: int = 500  # `SearchWindow` for `online` mode with `oltw` DTW.
     fmin: float = 130.8  # Minimum frequency (Hz) for CQT.
     fmax: float = 4186.0  # Maximum frequency (Hz) for CQT.
 
