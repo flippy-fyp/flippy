@@ -26,5 +26,6 @@ python ./flippy.py \
     --play_performance_audio \
     --simulate_performance \
     --w_a 0.5 \
+    --sleep_compensation 0.0008 \
     2>&1 | tee -a /dev/stderr
 echo "FINISHED"
