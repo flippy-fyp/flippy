@@ -42,6 +42,8 @@ python flippy.py \
 
 
 ### Using the [Qualitative Testbench](https://github.com/flippy-fyp/flippy-qualitative-testbench)
+
+#### Running your own pieces
 - The Qualitative Testbench can be found [here](https://github.com/flippy-fyp/flippy-qualitative-testbench)
 - You need to set up a UDP Port number in the testbench--see instructions in [that repository](https://github.com/flippy-fyp/flippy-qualitative-testbench)
 - With the host name and UDP Port number of the testbench machine, run flippy on `online` mode and `timestamp` backend, an example that also plays the performance audio on the score-follower machine is:
@@ -56,7 +58,16 @@ python flippy.py \
     --simulate_performance                     # stream the performance wave audio slices "live" into the system
 ```
 
+#### Demos
+See Demos subsection below.
+
+## Demos
+
+Demo videos are provided in the [`demos`](./demos) directory. To understand the structure and reproduce these, see the Demos Reproduction subsection below.
+
 ## Results Reproduction
+
+### Report Results
 
 These scripts reproduce results shown in the [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf).
 
@@ -65,72 +76,141 @@ To run everything:
 python repro.py
 ```
 
-### `cqt_time`
+#### `cqt_time`
 ```bash
 python repro.py cqt_time
 ```
 
 Plots the time taken to extract CQT featuers on different lengths of audio using the `librosa`, `nsgt` and `librosa_pseudo` and `librosa_hybrid` techniques.
 
-### `dtw_time`
+#### `dtw_time`
 ```bash
 python repro.py dtw_time
 ```
 
 Plots the time taken to align sequences of different lengths using the `oltw` and `classical` DTW methods.
 
-### `bwv846_feature`
+#### `bwv846_feature`
 ```bash
 python repro.py bwv846_feature
 ```
 
 Plots the extracted features from the first 15 seconds of the Prelude and Fugue of Bach's BWV846 to `repro_results/bwv846_feature`.
 
-### `bach10_feature`
+#### `bach10_feature`
 ```bash
 python repro.py bach10_feature
 ```
 
 Plots the extracted features from the first 15 seconds of all Bach10 pieces to `repro_results/bach10_feature`.
 
-### `bwv846_align`
+#### `bwv846_align`
 ```bash
 python repro.py bwv846_align
 ```
 
 Aligns (offline) BWV846 and then runs the testbench to output results in `repro_results/bwv846_align`.
 
-### `bach10_align`
+#### `bach10_align`
 ```bash
 python repro.py bach10_align
 ```
 
 Aligns (offline) Bach10 and then runs the testbench to output results in `repro_results/bwv846_align`.
 
-### `bach10_follow`
+#### `bach10_follow`
 ```bash
 python repro.py bach10_follow
 ```
 
 Follows (online) Bach10 and then runs the testbench to output results in `repro_results/bach10_follow`.
 
-### `bwv846_follow`
+#### `bwv846_follow`
 ```bash
 python repro.py bwv846_follow
 ```
 
 Follows (online) BWV846 and then runs the testbench to output results in `repro_results/bwv846_follow`.
 
-### `bach10_plot_precision`
+#### `bach10_plot_precision`
 ```bash
 python repro.py bach10_plot_precision
 ```
 
 Plots total precision results for Bach10--requires `bach10_align` and `bach10_follow` repro steps to be run a priori.
 
-### `bwv846_plot_precision`
+#### `bwv846_plot_precision`
 ```bash
 python repro.py bwv846_plot_precision
 ```
 
 Plots total precision results for Bach10--requires `bwv846_align` and `bwv846_follow` repro steps to be run a priori.
+
+### Demos Reproduction
+
+#### Introduction
+
+Each demo for a `<PIECE>` is linked to a `<GROUP>`, which denotes the instrumentation of the piece. See the [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf) for more information regarding eacH PIECE.
+
+Possible combinations of `<GROUP>` and `<PIECE>` are:
+
+```
+cello
+|---suite1
+octet
+|---mendelssohn
+orchestra
+|---peer
+piano
+|---clair
+    entertainer
+    fugue
+    gnossienne
+    moonlight
+    prelude
+    turkish
+    unsospiro
+violin
+|---chaconne-arp
+    chaconne-front
+```
+
+#### [`demos`](./demos) structure
+
+This directory contains videos of the following in action (using the qualitative testbench to visualise the following).
+
+```
+demos
+|---videos
+    |---<GROUP>
+        |---<PIECE>.mkv
+```
+
+#### [`data/qual`](./data/qual) structure
+
+This directory contains data used for creating the demos
+
+```bash
+data
+|---qual
+    |---<GROUP>
+        |---<PIECE>
+            |---<PIECE>.mid     # score midi
+                <PIECE>.mscz    # MuseScore file
+                <PIECE>.mxl     # MusicXML file
+                <PIECE>.pdf     # PDF file
+                <PIECE>.pickle  # Score features pickle file (optional, for compatible systems only, see below.)
+                <PIECE>.wav     # Performance wave file
+            |---raw             # Contains raw files used to create the data in the parent directory (e.g. full preformance mp3, full MuseScore file, etc.)
+```
+
+#### Reproduction scripts
+
+```bash
+./scripts/qual/qual.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH PORT>
+```
+
+You may try to use the preprocessed pickle files, which should work on Python 3.8.x systems:
+```bash
+./scripts/qual/qual_pickle.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH PORT>
+```
