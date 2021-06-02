@@ -150,11 +150,11 @@ Plots total precision results for Bach10--requires `bwv846_align` and `bwv846_fo
 
 #### Introduction
 
-Each demo for a `<PIECE>` is linked to a `<GROUP>`, which denotes the instrumentation of the piece. See the [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf) for more information regarding eacH PIECE.
+Each demo for a `<PIECE>` is linked to a `<GROUP>`, which denotes the instrumentation of the piece. See the [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf) for more information regarding each piece.
 
 Possible combinations of `<GROUP>` and `<PIECE>` are:
 
-```
+```bash
 cello
 |---suite1
 octet
@@ -182,7 +182,7 @@ violin
 
 This directory contains videos of the following in action (using the qualitative testbench to visualise the following).
 
-```
+```bash
 demos
 |---videos
     |---<GROUP>
@@ -210,10 +210,10 @@ data
 #### Reproduction scripts
 
 ```bash
-./scripts/qual/qual.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH PORT>
+./scripts/qual/qual.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH_PORT>
 ```
 
 You may try to use the preprocessed pickle files, which should work on Python 3.8.x systems:
 ```bash
-./scripts/qual/qual_pickle.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH PORT>
+./scripts/qual/qual_pickle.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH_PORT>
 ```
