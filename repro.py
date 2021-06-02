@@ -22,7 +22,6 @@ from lib.components.audiopreprocessor import AudioPreprocessor
 from lib.eprint import eprint
 from lib.args import Arguments
 from consts import (
-    BACH10_PATCH_PATH,
     BACH10_PATH,
     BWV846_PATH,
     MISALIGN_THRESHOLD_MS_RANGE,
@@ -589,7 +588,7 @@ def bach10_align():
             print("=============================================")
             print(f"Starting to align: {piece} with cqt: {cqt}")
             print("=============================================")
-            score_midi_path = os.path.join(BACH10_PATCH_PATH, piece, f"{piece}.mid")
+            score_midi_path = os.path.join(piece_path, f"{piece}.mid")
             perf_wave_path = os.path.join(piece_path, f"{piece}.wav")
 
             output_align_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt, piece)
@@ -652,7 +651,7 @@ def bach10_follow():
             print("=============================================")
             print(f"Starting to follow: {piece} with cqt: {cqt}")
             print("=============================================")
-            score_midi_path = os.path.join(BACH10_PATCH_PATH, piece, f"{piece}.mid")
+            score_midi_path = os.path.join(piece_path, f"{piece}.mid")
             perf_wave_path = os.path.join(piece_path, f"{piece}.wav")
 
             output_align_dir = os.path.join(REPRO_RESULTS_PATH, repro_arg, cqt, piece)
