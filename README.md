@@ -148,72 +148,30 @@ Plots total precision results for Bach10--requires `bwv846_align` and `bwv846_fo
 
 ### Demos Reproduction
 
-#### Introduction
-
-Each demo for a `<PIECE>` is linked to a `<GROUP>`, which denotes the instrumentation of the piece. See the [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf) for more information regarding eacH PIECE.
-
-Possible combinations of `<GROUP>` and `<PIECE>` are:
-
-```
-cello
-|---suite1
-octet
-|---mendelssohn
-orchestra
-|---peer
-    eine
-    1812-1
-    1812-2
-piano
-|---clair
-    entertainer
-    fugue
-    gnossienne
-    moonlight
-    prelude
-    turkish
-    unsospiro
-violin
-|---chaconne-arp
-    chaconne-front
-```
+Possible combinations of `<GROUP_ID>` and `<PIECE_ID>` are defined in the [QualScofo dataset](https://github.com/flippy-fyp/QualScofo).
 
 #### [`demos`](./demos) structure
 
 This directory contains videos of the following in action (using the qualitative testbench to visualise the following).
 
-```
+```bash
 demos
 |---videos
-    |---<GROUP>
-        |---<PIECE>.mkv
-```
-
-#### [`data/qual`](./data/qual) structure
-
-This directory contains data used for creating the demos
-
-```bash
-data
-|---qual
-    |---<GROUP>
-        |---<PIECE>
-            |---<PIECE>.mid     # score midi
-                <PIECE>.mscz    # MuseScore file
-                <PIECE>.mxl     # MusicXML file
-                <PIECE>.pdf     # PDF file
-                <PIECE>.pickle  # Score features pickle file (optional, for compatible systems only, see below.)
-                <PIECE>.wav     # Performance wave file
-            |---raw             # Contains raw files used to create the data in the parent directory (e.g. full preformance mp3, full MuseScore file, etc.)
+    |---<GROUP_ID>
+        |---<PIECE_ID>.mkv
 ```
 
 #### Reproduction scripts
 
 ```bash
-./scripts/qual/qual.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH PORT>
+./scripts/qual/qual.sh <GROUP_ID> <PIECE_ID> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH_PORT>
 ```
 
 You may try to use the preprocessed pickle files, which should work on Python 3.8.x systems:
 ```bash
-./scripts/qual/qual_pickle.sh <GROUP> <PIECE> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH PORT>
+./scripts/qual/qual_pickle.sh <GROUP_ID> <PIECE_ID> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH_PORT>
 ```
+
+## Citing
+
+TBA.

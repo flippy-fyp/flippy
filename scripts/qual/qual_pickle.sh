@@ -20,8 +20,8 @@ echo "Piece Name: $piece_name"
 echo "UDP Host: $udphost"
 echo "UDP Port: $udpport"
 
-perf_wave_path="data/qual/$piece_group/$piece_name/$piece_name.wav"
-score_pickle_path="data/qual/$piece_group/$piece_name/$piece_name.pickle"
+perf_wave_path="data/QualScofo/$piece_group/$piece_name/$piece_name.wav"
+score_pickle_path="data/QualScofo-pickle/$piece_group/$piece_name/$piece_name.pickle"
 
 echo "perf_wave_path: $perf_wave_path"
 echo "score_pickle_path: $score_pickle_path"
