@@ -1,3 +1,6 @@
 [submodule "flippy-quantitative-testbench"]
 	path = flippy_quantitative_testbench
 	url = https://github.com/flippy-fyp/flippy-quantitative-testbench.git
+[submodule "data/Bach10_v1.1"]
+	path = data/Bach10_v1.1
+	url = https://github.com/flippy-fyp/Bach10_v1.1
