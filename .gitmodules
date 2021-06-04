@@ -4,3 +4,6 @@
 [submodule "data/Bach10_v1.1"]
 	path = data/Bach10_v1.1
 	url = https://github.com/flippy-fyp/Bach10_v1.1
+[submodule "data/QualScofo"]
+	path = data/QualScofo
+	url = https://github.com/flippy-fyp/QualScofo
