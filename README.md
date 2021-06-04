@@ -14,11 +14,9 @@ git clone <REPO_URL> --recurse-submodules
 - [FluidSynth](https://github.com/FluidSynth/fluidsynth/releases)
 - Requirements: `pip install -r requirements.txt`
 - Install `nsgt` separately: `pip install nsgt`
+- Initialise pre-commit: `pre-commit install`
 - [Optional] Install [`fftw`](http://fftw.org/download.html)
 - [Optional] Audio playback: `ffmpeg`
-
-## Development
-- Initialise pre-commit: `pre-commit install`
 
 ### WSL2 Note
 - For audio playback, PulseAudio is required. See [here](https://www.linuxuprising.com/2021/03/how-to-get-sound-pulseaudio-to-work-on.html) for a guide.
@@ -171,6 +169,12 @@ You may try to use the preprocessed pickle files, which should work on Python 3.
 ```bash
 ./scripts/qual/qual_pickle.sh <GROUP_ID> <PIECE_ID> <QUALITATIVE_TESTBENCH_IP> <QUALITATIVE_TESTBENCH_PORT>
 ```
+
+## Contributing
+
+* File bugs and/or feature requests in the [GitHub repository](https://github.com/flippy/flippy)
+* Pull requests are welcome in the [GitHub repository](https://github.com/flippy/flippy)
+* Buy me a Coffee ☕️ via [PayPal](https://paypal.me/lhl2617)
 
 ## Citing
 
