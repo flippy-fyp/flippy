@@ -67,7 +67,7 @@ Demo videos are provided in the [`demos`](./demos) directory. To understand the 
 
 ### Report Results
 
-These scripts reproduce results shown in the [project report](https://github.com/flippy-fyp/flippy-report/blob/main/main.pdf).
+These scripts reproduce results shown in the [project report](https://arxiv.org/abs/2205.03247).
 
 To run everything:
 ```bash
@@ -178,4 +178,16 @@ You may try to use the preprocessed pickle files, which should work on Python 3.
 
 ## Citing
 
-TBA.
+### BibTeX
+```
+@misc{https://doi.org/10.48550/arxiv.2205.03247,
+  doi = {10.48550/ARXIV.2205.03247},
+  url = {https://arxiv.org/abs/2205.03247},
+  author = {Lee, Lin Hao},
+  keywords = {Sound (cs.SD), Audio and Speech Processing (eess.AS), FOS: Computer and information sciences, FOS: Computer and information sciences, FOS: Electrical engineering, electronic engineering, information engineering, FOS: Electrical engineering, electronic engineering, information engineering},
+  title = {Musical Score Following and Audio Alignment},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {Creative Commons Attribution 4.0 International}
+}
+```
